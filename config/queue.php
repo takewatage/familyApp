@@ -1,7 +1,6 @@
 <?php
 
 return [
-
     /*
     |--------------------------------------------------------------------------
     | Default Queue Connection Name
@@ -29,7 +28,6 @@ return [
     */
 
     'connections' => [
-
         'sync' => [
             'driver' => 'sync',
         ],
@@ -74,12 +72,8 @@ return [
 
         'failover' => [
             'driver' => 'failover',
-            'connections' => [
-                'database',
-                'sync',
-            ],
+            'connections' => ['database', 'sync'],
         ],
-
     ],
 
     /*
@@ -116,5 +110,4 @@ return [
         'database' => env('DB_CONNECTION', 'sqlite'),
         'table' => 'failed_jobs',
     ],
-
 ];

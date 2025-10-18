@@ -1,0 +1,12 @@
+plugins:
+  - "@prettier/plugin-php"
+printWidth: 130
+tabWidth: 4
+singleQuote: true
+semi: false
+singleAttributePerLine: true
+trailingComma: all
+bracketSpacing: true
+bracketSameLine: true
+arrowParens: always
+htmlWhitespaceSensitivity: ignore
