@@ -1,17 +1,13 @@
-<script setup>
+<script setup lang="ts">
 import GuestLayout from '@/Layouts/GuestLayout.vue'
-import InputError from '@/Components/InputError.vue'
-import InputLabel from '@/Components/InputLabel.vue'
-import PrimaryButton from '@/Components/PrimaryButton.vue'
-import TextInput from '@/Components/TextInput.vue'
 import { Head, useForm } from '@inertiajs/vue3'
+import AuthCard from '@/Components/Auth/AuthCard.vue'
 
-defineProps({
-    status: {
-        type: String,
-        default: '',
-    },
-})
+defineProps<{
+    status?: string
+}>()
+
+defineOptions({ layout: GuestLayout })
 
 const form = useForm({
     email: '',
@@ -23,47 +19,44 @@ const submit = () => {
 </script>
 
 <template>
-    <GuestLayout>
-        <Head title="Forgot Password" />
+    <Head title="パスワードリセット" />
 
-        <div class="mb-4 text-sm text-gray-600">
-            Forgot your password? No problem. Just let us know your email address and we will email you a password reset link that
-            will allow you to choose a new one.
-        </div>
-
-        <div
+    <auth-card>
+        <v-alert
             v-if="status"
-            class="mb-4 text-sm font-medium text-green-600">
+            color="success"
+            class="mb-5">
             {{ status }}
-        </div>
+        </v-alert>
 
-        <form @submit.prevent="submit">
+        <p class="mb-4">パスワードを変更するには、アカウントに登録されたメールアドレスを入力してください。</p>
+        <v-form @submit.prevent="submit">
             <div>
-                <InputLabel
-                    for="email"
-                    value="Email" />
-
-                <TextInput
-                    id="email"
+                <v-text-field
                     v-model="form.email"
-                    type="email"
-                    class="mt-1 block w-full"
-                    required
                     autofocus
-                    autocomplete="username" />
-
-                <InputError
-                    class="mt-2"
-                    :message="form.errors.email" />
+                    label="メールアドレス"
+                    :error="form.errors.hasOwnProperty('email')"
+                    :error-messages="form.errors.email || []"
+                    density="compact"
+                    placeholder="example.com"
+                    prepend-inner-icon="mdi-email-outline"
+                    variant="outlined"></v-text-field>
             </div>
 
-            <div class="mt-4 flex items-center justify-end">
-                <PrimaryButton
-                    :class="{ 'opacity-25': form.processing }"
-                    :disabled="form.processing">
-                    Email Password Reset Link
-                </PrimaryButton>
+            <div class="mt-2">
+                <v-btn
+                    type="submit"
+                    block
+                    class="mb-8"
+                    color="blue"
+                    size="large"
+                    variant="tonal"
+                    :disabled="form.processing"
+                    :loading="form.processing">
+                    パスワードリセットリンク送信
+                </v-btn>
             </div>
-        </form>
-    </GuestLayout>
+        </v-form>
+    </auth-card>
 </template>

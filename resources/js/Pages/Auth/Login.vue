@@ -1,107 +1,110 @@
-<script setup>
-import Checkbox from '@/Components/Checkbox.vue'
+<script setup lang="ts">
 import GuestLayout from '@/Layouts/GuestLayout.vue'
 import InputError from '@/Components/InputError.vue'
-import InputLabel from '@/Components/InputLabel.vue'
-import PrimaryButton from '@/Components/PrimaryButton.vue'
-import TextInput from '@/Components/TextInput.vue'
-import { Head, Link, useForm } from '@inertiajs/vue3'
+import { Head, useForm, usePage } from '@inertiajs/vue3'
+import { ref } from 'vue'
+import AuthCard from '@/Components/Auth/AuthCard.vue'
 
-defineProps({
-    canResetPassword: {
-        type: Boolean,
-    },
-    status: {
-        type: String,
-        default: '',
-    },
-})
+defineProps<{
+    canResetPassword?: boolean
+    status?: string
+}>()
 
+defineOptions({ layout: GuestLayout })
+
+const visible = ref(false)
+const page = usePage()
+
+const appName: string = page.props.appName
 const form = useForm({
     email: '',
     password: '',
-    remember: false,
+    family_code: '',
 })
 
 const submit = () => {
     form.post(route('login'), {
-        onFinish: () => form.reset('password'),
+        onFinish: () => {
+            form.reset('password')
+        },
     })
 }
 </script>
 
 <template>
-    <GuestLayout>
-        <Head title="Log in" />
+    <Head title="Login" />
 
-        <div
-            v-if="status"
-            class="mb-4 text-sm font-medium text-green-600">
-            {{ status }}
-        </div>
-
+    <AuthCard :title="appName">
         <form @submit.prevent="submit">
-            <div>
-                <InputLabel
-                    for="email"
-                    value="Email" />
+            <InputError
+                class="mt-2 mb-4"
+                :message="form.errors.email || form.errors.password || form.errors.family_code" />
 
-                <TextInput
-                    id="email"
-                    v-model="form.email"
-                    type="email"
-                    class="mt-1 block w-full"
-                    required
-                    autofocus
-                    autocomplete="username" />
+            <v-text-field
+                v-model="form.email"
+                label="アカウント"
+                :error="form.errors.hasOwnProperty('email')"
+                density="compact"
+                placeholder="メールアドレス"
+                prepend-inner-icon="mdi-email-outline"
+                variant="outlined"></v-text-field>
 
-                <InputError
-                    class="mt-2"
-                    :message="form.errors.email" />
-            </div>
+            <v-text-field
+                v-model="form.family_code"
+                density="compact"
+                prepend-inner-icon="mdi-home-outline"
+                variant="outlined"
+                label="家族コード"
+                :error="form.errors.hasOwnProperty('family_code')"
+                @click:append-inner="visible = !visible"></v-text-field>
 
-            <div class="mt-4">
-                <InputLabel
-                    for="password"
-                    value="Password" />
+            <!--            <div class="text-subtitle-1 text-medium-emphasis d-flex align-center justify-space-between">-->
+            <!--                <Link-->
+            <!--                    v-if="canResetPassword"-->
+            <!--                    class="text-caption text-primary ml-auto"-->
+            <!--                    :href="route('password.request')">-->
+            <!--                    パスワードを忘れた場合はこちら-->
+            <!--                </Link>-->
+            <!--            </div>-->
 
-                <TextInput
-                    id="password"
-                    v-model="form.password"
-                    type="password"
-                    class="mt-1 block w-full"
-                    required
-                    autocomplete="current-password" />
+            <v-text-field
+                v-model="form.password"
+                :append-inner-icon="visible ? 'mdi-eye-off' : 'mdi-eye'"
+                :type="visible ? 'text' : 'password'"
+                density="compact"
+                placeholder="Enter your password"
+                prepend-inner-icon="mdi-lock-outline"
+                variant="outlined"
+                label="Password"
+                :error="form.errors.hasOwnProperty('email')"
+                @click:append-inner="visible = !visible"></v-text-field>
+            <v-btn
+                type="submit"
+                block
+                class="mb-8"
+                color="blue"
+                size="large"
+                variant="tonal"
+                :disabled="form.processing"
+                :loading="form.processing">
+                ログイン
+            </v-btn>
 
-                <InputError
-                    class="mt-2"
-                    :message="form.errors.password" />
-            </div>
-
-            <div class="mt-4 block">
-                <label class="flex items-center">
-                    <Checkbox
-                        v-model:checked="form.remember"
-                        name="remember" />
-                    <span class="ms-2 text-sm text-gray-600">Remember me</span>
-                </label>
-            </div>
-
-            <div class="mt-4 flex items-center justify-end">
-                <Link
-                    v-if="canResetPassword"
-                    :href="route('password.request')"
-                    class="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
-                    Forgot your password?
-                </Link>
-
-                <PrimaryButton
-                    class="ms-4"
-                    :class="{ 'opacity-25': form.processing }"
-                    :disabled="form.processing">
-                    Log in
-                </PrimaryButton>
-            </div>
+            <!--            <v-card-text class="text-center">-->
+            <!--                <Link-->
+            <!--                    class="text-primary"-->
+            <!--                    :href="route('register')">-->
+            <!--                    アカウントをお持ちでない場合は登録-->
+            <!--                    <v-icon icon="mdi-chevron-right"></v-icon>-->
+            <!--                </Link>-->
+            <!--            </v-card-text>-->
         </form>
-    </GuestLayout>
+    </AuthCard>
 </template>
+
+<style scoped lang="scss">
+@use '/resources/sass/variables.module';
+.test {
+    font-size: variables.$font-small;
+}
+</style>

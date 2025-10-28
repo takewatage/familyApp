@@ -1,15 +1,14 @@
-<script setup>
+<script setup lang="ts">
 import { computed } from 'vue'
 import GuestLayout from '@/Layouts/GuestLayout.vue'
-import PrimaryButton from '@/Components/PrimaryButton.vue'
-import { Head, Link, useForm } from '@inertiajs/vue3'
+import { Head, router, useForm } from '@inertiajs/vue3'
+import AuthCard from '@/Components/Auth/AuthCard.vue'
 
-const props = defineProps({
-    status: {
-        type: String,
-        default: '',
-    },
-})
+const props = defineProps<{
+    status?: string
+}>()
+
+defineOptions({ layout: GuestLayout })
 
 const form = useForm({})
 
@@ -21,36 +20,46 @@ const verificationLinkSent = computed(() => props.status === 'verification-link-
 </script>
 
 <template>
-    <GuestLayout>
-        <Head title="Email Verification" />
+    <Head title="Email Verification" />
 
-        <div class="mb-4 text-sm text-gray-600">
-            Thanks for signing up! Before getting started, could you verify your email address by clicking on the link we just
-            emailed to you? If you didn't receive the email, we will gladly send you another.
-        </div>
-
-        <div
+    <AuthCard>
+        <v-alert
             v-if="verificationLinkSent"
-            class="mb-4 text-sm font-medium text-green-600">
-            A new verification link has been sent to the email address you provided during registration.
-        </div>
-
+            color="success"
+            class="mb-5">
+            新しい確認リンクが、登録時に指定した電子メール アドレスに送信されました。
+        </v-alert>
+        <p>
+            ご登録いただきありがとうございます! 始める前に、リンクをクリックしてメールアドレスを確認してください。
+            <br />
+            メールが届いていない場合は、再送信ボタンから再送信してください。
+        </p>
         <form @submit.prevent="submit">
             <div class="mt-4 flex items-center justify-between">
-                <PrimaryButton
-                    :class="{ 'opacity-25': form.processing }"
-                    :disabled="form.processing">
-                    Resend Verification Email
-                </PrimaryButton>
+                <v-btn
+                    block
+                    type="submit"
+                    class="mb-8"
+                    size="large"
+                    color="blue"
+                    :disabled="form.processing"
+                    :loading="form.processing">
+                    再送信
+                </v-btn>
 
-                <Link
-                    :href="route('logout')"
-                    method="post"
-                    as="button"
-                    class="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
-                    Log Out
-                </Link>
+                <v-btn
+                    variant="outlined"
+                    color="white"
+                    class="mb-8"
+                    size="large"
+                    @click="
+                        () => {
+                            router.post('logout')
+                        }
+                    ">
+                    ログアウト
+                </v-btn>
             </div>
         </form>
-    </GuestLayout>
+    </AuthCard>
 </template>

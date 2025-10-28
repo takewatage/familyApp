@@ -1,15 +1,12 @@
-<script setup>
-defineProps({
-    message: {
-        type: String,
-        default: '',
-    },
-})
+<script setup lang="ts">
+defineProps<{
+    message?: string
+}>()
 </script>
 
 <template>
     <div v-show="message">
-        <p class="text-sm text-red-600">
+        <p class="text-red-darken-2">
             {{ message }}
         </p>
     </div>

@@ -1,0 +1,16 @@
+html {
+    // ダブルタップでのズーム防止
+    touch-action: manipulation;
+}
+
+a {
+    text-decoration: none;
+    color: unset;
+    &:hover {
+        text-decoration: underline;
+    }
+}
+
+.h-fit {
+    height: fit-content!important;
+}

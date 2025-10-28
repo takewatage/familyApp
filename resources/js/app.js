@@ -1,4 +1,3 @@
-import '../css/app.css'
 import './bootstrap'
 
 import { createInertiaApp } from '@inertiajs/vue3'
@@ -7,6 +6,7 @@ import { createApp, h } from 'vue'
 import { ZiggyVue } from '../../vendor/tightenco/ziggy'
 import '@mdi/font/css/materialdesignicons.css'
 import 'vuetify/styles'
+import '../sass/app.scss'
 import { vuetify } from '../../plugins/vuetfly.js'
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel'

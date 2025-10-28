@@ -1,21 +1,14 @@
-<script setup>
+<script setup lang="ts">
 import GuestLayout from '@/Layouts/GuestLayout.vue'
-import InputError from '@/Components/InputError.vue'
-import InputLabel from '@/Components/InputLabel.vue'
-import PrimaryButton from '@/Components/PrimaryButton.vue'
-import TextInput from '@/Components/TextInput.vue'
 import { Head, useForm } from '@inertiajs/vue3'
+import AuthCard from '@/Components/Auth/AuthCard.vue'
 
-const props = defineProps({
-    email: {
-        type: String,
-        required: true,
-    },
-    token: {
-        type: String,
-        required: true,
-    },
-})
+const props = defineProps<{
+    email: string
+    token: string
+}>()
+
+defineOptions({ layout: GuestLayout })
 
 const form = useForm({
     token: props.token,
@@ -26,78 +19,66 @@ const form = useForm({
 
 const submit = () => {
     form.post(route('password.store'), {
-        onFinish: () => form.reset('password', 'password_confirmation'),
+        onFinish: () => {
+            form.reset('password', 'password_confirmation')
+        },
     })
 }
 </script>
 
 <template>
-    <GuestLayout>
-        <Head title="Reset Password" />
+    <Head title="パスワードリセット" />
 
-        <form @submit.prevent="submit">
+    <AuthCard card-title="パスワードリセット">
+        <v-form @submit.prevent="submit">
             <div>
-                <InputLabel
-                    for="email"
-                    value="Email" />
-
-                <TextInput
-                    id="email"
+                <v-text-field
                     v-model="form.email"
-                    type="email"
-                    class="mt-1 block w-full"
-                    required
                     autofocus
-                    autocomplete="username" />
-
-                <InputError
-                    class="mt-2"
-                    :message="form.errors.email" />
+                    label="メールアドレス"
+                    :error="form.errors.hasOwnProperty('email')"
+                    :error-messages="form.errors.email || []"
+                    density="compact"
+                    placeholder="example.com"
+                    prepend-inner-icon="mdi-email-outline"
+                    variant="outlined"></v-text-field>
             </div>
 
             <div class="mt-4">
-                <InputLabel
-                    for="password"
-                    value="Password" />
-
-                <TextInput
-                    id="password"
+                <v-text-field
                     v-model="form.password"
-                    type="password"
-                    class="mt-1 block w-full"
-                    required
-                    autocomplete="new-password" />
-
-                <InputError
-                    class="mt-2"
-                    :message="form.errors.password" />
+                    label="パスワード"
+                    :error="form.errors.hasOwnProperty('password')"
+                    :error-messages="form.errors.password || []"
+                    density="compact"
+                    variant="outlined"
+                    prepend-inner-icon="mdi-lock-outline"></v-text-field>
             </div>
 
             <div class="mt-4">
-                <InputLabel
-                    for="password_confirmation"
-                    value="Confirm Password" />
-
-                <TextInput
-                    id="password_confirmation"
+                <v-text-field
                     v-model="form.password_confirmation"
-                    type="password"
-                    class="mt-1 block w-full"
-                    required
-                    autocomplete="new-password" />
-
-                <InputError
-                    class="mt-2"
-                    :message="form.errors.password_confirmation" />
+                    label="パスワード（確認）"
+                    :error="form.errors.hasOwnProperty('password_confirmation')"
+                    :error-messages="form.errors.password_confirmation || []"
+                    density="compact"
+                    variant="outlined"
+                    prepend-inner-icon="mdi-lock-outline"></v-text-field>
             </div>
 
-            <div class="mt-4 flex items-center justify-end">
-                <PrimaryButton
-                    :class="{ 'opacity-25': form.processing }"
-                    :disabled="form.processing">
-                    Reset Password
-                </PrimaryButton>
+            <div class="flex items-center justify-end mt-4">
+                <v-btn
+                    type="submit"
+                    block
+                    class="mb-8"
+                    color="blue"
+                    size="large"
+                    variant="tonal"
+                    :disabled="form.processing"
+                    :loading="form.processing">
+                    パスワードリセット
+                </v-btn>
             </div>
-        </form>
-    </GuestLayout>
+        </v-form>
+    </AuthCard>
 </template>
