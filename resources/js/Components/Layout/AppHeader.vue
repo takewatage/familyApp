@@ -1,15 +1,10 @@
 <script setup lang="ts">
 import variables from '../../../sass/variables.module.scss'
 import { usePage, Link } from '@inertiajs/vue3'
-import { ref } from 'vue'
 import AppHeaderMenuIcon from '@/Components/Layout/AppHeaderMenuIcon.vue'
 
 const { headerHeight } = variables
 const page = usePage()
-
-const dialog = ref(false)
-
-const tabValue = ref(route().current())
 </script>
 
 <template>

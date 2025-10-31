@@ -1,24 +1,39 @@
-<script setup>
-import { ref } from 'vue'
-const showingNavigationDropdown = ref(false)
+<script setup lang="ts">
+import AppHeader from '@/Components/Layout/AppHeader.vue'
+import { Head } from '@inertiajs/vue3'
 </script>
 
 <template>
-    <div>
-        <div class="min-h-screen bg-gray-100">
-            <!-- Page Heading -->
-            <header
-                v-if="$slots.header"
-                class="bg-white shadow">
-                <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-                    <slot name="header" />
-                </div>
-            </header>
+    <v-app>
+        <Head title="HOME">
+            <meta
+                name="description"
+                content="FamilyApp" />
+        </Head>
 
-            <!-- Page Content -->
-            <main>
-                <slot />
-            </main>
-        </div>
-    </div>
+        <AppHeader />
+
+        <v-main>
+            <Transition
+                name="page"
+                mode="out-in"
+                appear>
+                <div :key="$page.url">
+                    <slot />
+                </div>
+            </Transition>
+        </v-main>
+    </v-app>
 </template>
+
+<style lang="scss" scoped>
+.page-enter-active,
+.page-leave-active {
+    transition: all 0.5s ease-out;
+}
+
+.page-enter-from,
+.page-leave-to {
+    opacity: 0;
+}
+</style>

@@ -1,5 +1,7 @@
 <script setup>
-import { Head, Link } from '@inertiajs/vue3'
+import { Head } from '@inertiajs/vue3'
+import GuestLayout from '@/Layouts/GuestLayout.vue'
+defineOptions({ layout: GuestLayout })
 
 defineProps({
     canLogin: {
@@ -17,18 +19,13 @@ defineProps({
         required: true,
     },
 })
-
-function handleImageError() {
-    document.getElementById('screenshot-container')?.classList.add('!hidden')
-    document.getElementById('docs-card')?.classList.add('!row-span-1')
-    document.getElementById('docs-card-content')?.classList.add('!flex-row')
-    document.getElementById('background')?.classList.add('!hidden')
-}
 </script>
 
 <template>
     <Head title="Welcome" />
     <div>
         <v-btn color="primary">test</v-btn>
+        <p class="text-body-1">laravelVersion: {{ laravelVersion }}</p>
+        <p class="text-body-1">phpVersion: {{ phpVersion }}</p>
     </div>
 </template>
