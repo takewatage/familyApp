@@ -10,8 +10,8 @@ import '../sass/app.scss'
 import { vuetify } from '@/Plugins/vuetifly'
 import GuestLayout from '@/Layouts/GuestLayout.vue'
 import { keysToSnake, keysToCamel } from '@/Utils/caseConverter'
-// import { setupDialogPlugin } from '@/composables/common/useDialogService'
-// import { setupOverlayPlugin } from '@/composables/common/useOverlayService'
+import { setupDialogPlugin } from '@/Composables/Common/useDialogService'
+import { setupOverlayPlugin } from '@/Composables/Common/useOverlayService'
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel'
 
@@ -34,8 +34,8 @@ createInertiaApp({
         app.use(vuetify)
 
         // ダイアログプラグインのセットアップ
-        // setupDialogPlugin(app, vuetify)
-        // setupOverlayPlugin(app, vuetify)
+        setupDialogPlugin(app, vuetify)
+        setupOverlayPlugin(app, vuetify)
         app.mount(el)
     },
     progress: {
