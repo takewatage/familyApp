@@ -13,7 +13,8 @@
         "skipLibCheck": true,
         "paths": {
             "@/*": ["./resources/js/*"]
-        }
+        },
+        "types": ["./resources/js/ziggy.d.ts"]
     },
     "include": ["resources/js/**/*.ts", "resources/js/**/*.d.ts", "resources/js/**/*.vue"]
 }

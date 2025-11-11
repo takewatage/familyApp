@@ -4,6 +4,7 @@ import InputError from '@/Components/InputError.vue'
 import { Head, useForm, usePage } from '@inertiajs/vue3'
 import { ref } from 'vue'
 import AuthCard from '@/Components/Auth/AuthCard.vue'
+import { keysToCamel } from '@/Utils/caseConverter'
 
 defineProps<{
     canResetPassword?: boolean
@@ -19,13 +20,20 @@ const appName: string = page.props.appName
 const form = useForm({
     email: '',
     password: '',
-    family_code: '',
+    familyCode: '',
 })
 
 const submit = () => {
     form.post(route('login'), {
         onFinish: () => {
             form.reset('password')
+        },
+        onError: (errors) => {
+            // エラーのキーをcamelCaseに変換
+            const camelErrors = keysToCamel(errors)
+            // 既存のエラーをクリアして、変換後のエラーを設定
+            form.clearErrors()
+            form.setError(camelErrors)
         },
     })
 }
@@ -38,7 +46,7 @@ const submit = () => {
         <form @submit.prevent="submit">
             <InputError
                 class="mt-2 mb-4"
-                :message="form.errors.email || form.errors.password || form.errors.family_code" />
+                :message="form.errors.email || form.errors.password || form.errors.familyCode" />
 
             <v-text-field
                 v-model="form.email"
@@ -50,12 +58,12 @@ const submit = () => {
                 variant="outlined"></v-text-field>
 
             <v-text-field
-                v-model="form.family_code"
+                v-model="form.familyCode"
                 density="compact"
                 prepend-inner-icon="mdi-home-outline"
                 variant="outlined"
                 label="家族コード"
-                :error="form.errors.hasOwnProperty('family_code')"
+                :error="form.errors.hasOwnProperty('familyCode')"
                 @click:append-inner="visible = !visible"></v-text-field>
 
             <!--            <div class="text-subtitle-1 text-medium-emphasis d-flex align-center justify-space-between">-->

@@ -1,6 +1,7 @@
 <script setup>
 import { Head } from '@inertiajs/vue3'
 import GuestLayout from '@/Layouts/GuestLayout.vue'
+import TodoList from '@/Components/TodoList.vue'
 defineOptions({ layout: GuestLayout })
 
 defineProps({
@@ -28,4 +29,6 @@ defineProps({
         <p class="text-body-1">laravelVersion: {{ laravelVersion }}</p>
         <p class="text-body-1">phpVersion: {{ phpVersion }}</p>
     </div>
+
+    <TodoList></TodoList>
 </template>
