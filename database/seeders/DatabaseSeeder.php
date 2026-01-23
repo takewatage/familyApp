@@ -117,5 +117,10 @@ class DatabaseSeeder extends Seeder
             'email' => 'tanaka@example.com',
             'password' => Hash::make('testtest'),
         ]);
+
+        $this->call([
+            CategorySeeder::class,
+            TaskSeeder::class,
+        ]);
     }
 }

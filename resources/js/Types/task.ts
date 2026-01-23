@@ -1,12 +1,13 @@
 export type Task = {
     id: string
-    description: string
-    category_id: string
-    is_completed: boolean
-    created_at: string
+    content: string
+    categoryId: string
+    isCompleted: boolean
+    createdAt: string
 }
 
 export type Category = {
     id: string
     name: string
+    color: string
 }

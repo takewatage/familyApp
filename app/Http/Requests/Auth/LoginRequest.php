@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Auth;
 
 use App\Models\Family;
+use App\Services\CurrentFamilyService;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
@@ -76,6 +77,10 @@ class LoginRequest extends FormRequest
                 'family_code' => 'この家族に所属していません。',
             ]);
         }
+
+        // 認証成功後、ログインした家族IDをセッションに保存
+        $currentFamilyService = app(CurrentFamilyService::class);
+        $currentFamilyService->setCurrentFamily($family->id);
 
         RateLimiter::clear($this->throttleKey());
     }

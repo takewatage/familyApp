@@ -482,6 +482,11 @@
   resolved "https://registry.yarnpkg.com/@types/lodash/-/lodash-4.17.20.tgz#1ca77361d7363432d29f5e55950d9ec1e1c6ea93"
   integrity sha512-H3MHACvFUEiujabxhaI/ImO6gUrd8oOurg7LQtS7mbwIXA/cUqWrvBsaeJ23aZEPk1TAYkurjfMbSELfoCXlGA==
 
+"@types/web-bluetooth@^0.0.21":
+  version "0.0.21"
+  resolved "https://registry.yarnpkg.com/@types/web-bluetooth/-/web-bluetooth-0.0.21.tgz#525433c784aed9b457aaa0ee3d92aeb71f346b63"
+  integrity sha512-oIQLCGWtcFZy2JW77j9k8nHzAOpqMHLQejDA48XXMWH6tjCQHz5RCFz1bzsmROyL6PUm+LLnUiI4BCn221inxA==
+
 "@types/ziggy-js@^1.8.0":
   version "1.8.0"
   resolved "https://registry.yarnpkg.com/@types/ziggy-js/-/ziggy-js-1.8.0.tgz#d440cdbc8cd8ffd405fd29aaa6181907f47b1861"
@@ -683,6 +688,25 @@
   integrity sha512-jSZTzTYaoiv8iwonFCVZQ0YYX/M+Uyl4ng+C4egMJT0Hcmh9gIxJL89qfZICDeo3g0IhqrvipW2FFKKRDMtVcA==
   dependencies:
     upath "^2.0.1"
+
+"@vueuse/core@^14.0.0":
+  version "14.0.0"
+  resolved "https://registry.yarnpkg.com/@vueuse/core/-/core-14.0.0.tgz#a3d9520935a191b167cb91e08f698545e46bf0a6"
+  integrity sha512-d6tKRWkZE8IQElX2aHBxXOMD478fHIYV+Dzm2y9Ag122ICBpNKtGICiXKOhWU3L1kKdttDD9dCMS4bGP3jhCTQ==
+  dependencies:
+    "@types/web-bluetooth" "^0.0.21"
+    "@vueuse/metadata" "14.0.0"
+    "@vueuse/shared" "14.0.0"
+
+"@vueuse/metadata@14.0.0":
+  version "14.0.0"
+  resolved "https://registry.yarnpkg.com/@vueuse/metadata/-/metadata-14.0.0.tgz#139231dc8503f172a7a45ce1ceaa7a415befbf3c"
+  integrity sha512-6yoGqbJcMldVCevkFiHDBTB1V5Hq+G/haPlGIuaFZHpXC0HADB0EN1ryQAAceiW+ryS3niUwvdFbGiqHqBrfVA==
+
+"@vueuse/shared@14.0.0":
+  version "14.0.0"
+  resolved "https://registry.yarnpkg.com/@vueuse/shared/-/shared-14.0.0.tgz#15a424285fd6d453d1a99d1caba8cc293992868d"
+  integrity sha512-mTCA0uczBgurRlwVaQHfG0Ja7UdGe4g9mwffiJmvLiTtp1G4AQyIjej6si/k8c8pUwTfVpNufck+23gXptPAkw==
 
 acorn-jsx@^5.3.2:
   version "5.3.2"

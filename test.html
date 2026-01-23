@@ -1,0 +1,650 @@
+@using Hello2020.Models.AvailabilityMonitorModels
+@model Hello2020.Models.AvailabilityMonitorModels.IndexViewModel
+@{
+var model = Model;
+Layout = "_Layout";
+}
+<div id="container" class="clearfix">
+    <div v-if="initialized">
+                <div class="schedules">
+                    <div v-if="!timeTicket.isSalesEnd && timeTicket.displaySchedules && timeTicket.displaySchedules.length > 0">
+                        <div v-for="schedule in timeTicket.displaySchedules"
+                             class="schedule"
+                             v-bind:class="getScheduleStatusInfo(schedule).class">
+                            <div class="start-time">{{`${schedule.startTime.slice(0, 2)}:${schedule.startTime.slice(2)}`}}</div>
+                            <div v-if="schedule.displayEndTime" class="end-time">- {{`${schedule.endTime.slice(0, 2)}:${schedule.endTime.slice(2)}`}}</div>
+                            <div class="status">
+                                <i v-if="getScheduleStatusInfo(schedule).icon"
+                                   class="bi"
+                                   v-bind:class="getScheduleStatusInfo(schedule).icon"></i>
+                                <template v-if="!getScheduleStatusInfo(schedule).icon">{{getScheduleStatusInfo(schedule).name}}</template>
+                            </div>
+                        </div>
+                    </div>
+                    <div v-if="timeTicket.isSalesEnd || !timeTicket.displaySchedules || timeTicket.displaySchedules.length <= 0"
+                         class="message">
+                        <template v-if="!timeTicket.isSalesEnd && (!timeTicket.displaySchedules || timeTicket.displaySchedules.length <= 0)">
+                            {{getScheduleNotFoundMessage()}}
+                        </template>
+                        <template v-if="timeTicket.isSalesEnd">{{getSalesEndMessage()}}</template>
+                    </div>
+                </div>
+<!--        <div class="schedules">-->
+<!--            <div v-if="!timeTicket.isSalesEnd && timeTicket.displaySchedules && timeTicket.displaySchedules.length > 0">-->
+<!--                <div v-for="schedule in timeTicket.displaySchedules"-->
+<!--                     class="schedule"-->
+<!--                     v-bind:class="getScheduleStatusInfo(schedule).class">-->
+<!--                    <div class="start-time">{{`${schedule.startTime.slice(0, 2)}:${schedule.startTime.slice(2)}`}}</div>-->
+<!--                    <div v-if="schedule.displayEndTime" class="end-time">- {{`${schedule.endTime.slice(0, 2)}:${schedule.endTime.slice(2)}`}}</div>-->
+<!--                    <div class="status">-->
+<!--                        <i v-if="getScheduleStatusInfo(schedule).icon"-->
+<!--                           class="bi"-->
+<!--                           v-bind:class="getScheduleStatusInfo(schedule).icon"></i>-->
+<!--                        <template v-if="!getScheduleStatusInfo(schedule).icon">{{getScheduleStatusInfo(schedule).name}}</template>-->
+<!--                    </div>-->
+<!--                </div>-->
+<!--            </div>-->
+<!--            <div v-if="timeTicket.isSalesEnd || !timeTicket.displaySchedules || timeTicket.displaySchedules.length <= 0"-->
+<!--                 class="message">-->
+<!--                <template v-if="!timeTicket.isSalesEnd && (!timeTicket.displaySchedules || timeTicket.displaySchedules.length <= 0)">-->
+<!--                    {{getScheduleNotFoundMessage()}}-->
+<!--                </template>-->
+<!--                <template v-if="timeTicket.isSalesEnd">{{getSalesEndMessage()}}</template>-->
+<!--            </div>-->
+<!--        </div>-->
+<!--        <div v-for="category in displayColumnTimeTickets"-->
+<!--             v-bind:class="{'hidden': !category.visible}">-->
+<!--            <div class="category-content">-->
+<!--                <h3>{{category.names[currentLanguage] ?? category.name}}</h3>-->
+<!--                <div class="time-ticket-row"-->
+<!--                     v-for="timeTicket in category.displayTimeTickets">-->
+<!--                    <div v-if="getTimeTicketName(timeTicket)" class="time-ticket-area">-->
+<!--                        <div class="time-ticket-title">{{getTimeTicketName(timeTicket)}}</div>-->
+<!--                    </div>-->
+<!--                    <div class="schedules">-->
+<!--                        <div class="d-flex flex-wrap">-->
+<!--                            <div v-if="!timeTicket.isSalesEnd"-->
+<!--                                 v-for="schedule in timeTicket.displaySchedules"-->
+<!--                                 class="schedule"-->
+<!--                                 v-bind:class="[timeTicket.visible ? '' : 'hidden', getScheduleStatusInfo(schedule).class]">-->
+<!--                                <div class="start-time">{{`${schedule.startTime.slice(0, 2)}:${schedule.startTime.slice(2)}`}}</div>-->
+<!--                                <div v-if="schedule.displayEndTime" class="end-time">- {{`${schedule.endTime.slice(0, 2)}:${schedule.endTime.slice(2)}`}}</div>-->
+<!--                                <div class="status">-->
+<!--                                    <i v-if="isLowStockDisplay(category) && getScheduleStatusInfo(schedule).icon"-->
+<!--                                       class="bi"-->
+<!--                                       v-bind:class="getScheduleStatusInfo(schedule).icon"></i>-->
+<!--                                    <template v-if="!isLowStockDisplay(category) || !getScheduleStatusInfo(schedule).icon">{{getScheduleStatusInfo(schedule).name}}</template>-->
+<!--                                </div>-->
+<!--                            </div>-->
+<!--                            <div v-if="timeTicket.isSalesEnd || timeTicket.displaySchedules.length <= 0"-->
+<!--                                 class="message">-->
+<!--                                <template v-if="!timeTicket.isSalesEnd && timeTicket.displaySchedules.length <= 0">-->
+<!--                                    {{getScheduleNotFoundMessage()}}-->
+<!--                                </template>-->
+<!--                                <template v-if="timeTicket.isSalesEnd">{{getSalesEndMessage()}}</template>-->
+<!--                            </div>-->
+<!--                        </div>-->
+<!--                    </div>-->
+<!--                </div>-->
+<!--            </div>-->
+<!--        </div>-->
+        <div v-if="displayDescription" v-html="displayDescription"
+             v-bind:class="{ 'hidden': !descriptionVisible }" class="discription"></div>
+        <div v-if="result.dataNotFound" class="data-not-found-message">
+            <i class="bi bi-exclamation-circle"></i>{{getDataNotFoundMessage()}}
+        </div>
+    </div>
+    <div v-if="!initialized">
+        <div class="spinner-border spinner" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script type="text/javascript">
+    var app = Vue.createApp({
+        data: () => {
+            return {
+                result: {
+                    // サーバーから取得する設定・データ
+                    settingId: '@Model.SettingId',
+                    title: null,
+                    titles: [],
+                    dataNotFound: false,
+                    columnTimeTickets: [],
+                    categories: [],  // けす
+                    languages: [],
+                    isDark: false,
+                    logoDataUri: null,
+                    topBannerDataUri: null,
+                    backgroundDataUrl: null,
+                    themeColor: null,
+                    themeFontColor: null,
+                    description: null,
+                    descriptions: null,
+                    transitionTime: 5000,
+                },
+                languageIndex: -1,
+                currentLanguage: null,
+                displayColumnTimeTickets: [],
+                timeTicketIndex: 0,
+                displayDescription: null,
+                descriptionVisible: false,
+                isOverflow: false,
+                overflowCount: 0,
+                initialized: false,
+            }
+        },
+        created: function () {
+            const app = this;
+            app.getData();
+        },
+        methods: {
+            getData: function() {
+                const app = this;
+                const data = app.$data;
+
+                fetch(`/availability-monitor/@(Model.SettingId)/data`)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! Status: ${response.status}`);
+                        }
+
+                        return response.json();
+                    })
+                    .then(result => {
+                        // 取得データをVueの状態に反映
+                        data.result.title = result.title;
+                        data.result.titles = result.titles;
+                        data.result.dataNotFound = result.dataNotFound;
+                        data.result.categories = result.categories; // けす
+                        data.result.columnTimeTickets = result.columnTimeTickets;
+                        data.result.languages = result.languages;
+                        data.result.isDark = result.isDark;
+                        data.result.logoDataUri = result.logoDataUri;
+                        data.result.topBannerDataUri = result.topBannerDataUri;
+                        data.result.backgroundDataUrl = result.backgroundDataUrl;
+                        data.result.themeColor = result.themeColor;
+                        data.result.themeFontColor = result.themeFontColor;
+                        data.result.description = result.description;
+                        data.result.descriptions = result.descriptions;
+                        data.result.transitionTime = result.transitionTime * 1000;
+
+                        // 画面状態を初期化
+                        data.languageIndex = -1;
+                        data.currentLanguage = null;
+                        data.displayColumnTimeTickets = [];
+                        data.timeTicketIndex = 0;
+                        data.displayDescription = null;
+                        data.descriptionVisible = false;
+                        data.isOverflow = false;
+                        data.overflowCount = 0;
+
+                        app.setStyle();
+                        app.switchLanguage();
+                        app.$data.initialized = true;
+                    })
+                    .catch(error => {
+                        app.$data.initialized = true;
+                        console.error('Error fetching JSON:', error);
+                        setTimeout(() => {
+                            app.getData();
+                        }, data.result.transitionTime);
+                    });
+            },
+            setStyle: function() {
+                const data = this.$data;
+                if (data.result.logoDataUri) {
+                    document.getElementById('site-logo').style = "display:inline;";
+                    document.getElementById('site-logo').src = data.result.logoDataUri;
+                } else {
+                    document.getElementById('site-logo').style = "display:none;";
+                }
+
+                if (data.result.topBannerDataUri) {
+                    document.getElementById('top-banner-container').style = "display:block;";
+                    document.getElementById('top-banner').src = data.result.topBannerDataUri;
+                } else {
+                    document.getElementById('top-banner-container').style = "display:none;";
+                }
+
+                document.documentElement.style.setProperty('--theme-color', data.result.themeColor);
+                document.documentElement.style.setProperty('--theme-font-color', data.result.themeFontColor);
+                if (data.result.isDark){
+                    document.documentElement.style.setProperty('--background-color', '#3e3e3e');
+                    document.documentElement.style.setProperty('--font-color', '255, 255, 255');
+                    document.documentElement.style.setProperty('--row-background-color', '#222');
+                    document.documentElement.style.setProperty('--shadow-color', '100, 100, 100');
+                    document.documentElement.style.setProperty('--schedule-background-color', '#2d2d2d');
+                } else {
+                    document.documentElement.style.setProperty('--background-color', '#eee');
+                    document.documentElement.style.setProperty('--font-color', '0, 0, 0, 0.87');
+                    document.documentElement.style.setProperty('--row-background-color', '#fff');
+                    document.documentElement.style.setProperty('--shadow-color', '0, 0, 0');
+                    document.documentElement.style.setProperty('--schedule-background-color', '#eee');
+                }
+            },
+            // 言語切替と初期表示制御
+            switchLanguage: function() {
+                const app = this;
+                const data = app.$data;
+                data.languageIndex += 1;
+                if (data.languageIndex >= data.result.languages.length) {
+                    // 全言語表示後は再取得
+                    app.getData();
+                    return;
+                }
+
+                data.currentLanguage = data.result.languages[data.languageIndex];
+
+                // タイトル・ヘッダー表示
+                const title = data.result.titles[data.currentLanguage]
+                    ?? data.result.title;
+                document.getElementById('site-title').innerText = title;
+                if (data.result.logoDataUri || title) {
+                    document.getElementById('site-header').style = "display: flex;"
+                } else {
+                    document.getElementById('site-header').style = "display: none;"
+                }
+
+                // カテゴリ・説明文等の初期化
+                data.timeTicketIndex = 0;
+                data.displayColumnTimeTickets = [];
+                data.displayDescription = null;
+                data.descriptionVisible = false;
+                data.isOverflow = false;
+
+                // データがあればカテゴリ表示、なければ次言語へ
+                if (!data.result.dataNotFound && data.result.categories.length > 0) {
+                    app.showCategory();
+                } else {
+                    setTimeout(() => {
+                        app.switchLanguage();
+                    }, data.result.transitionTime);
+                }
+            },
+            // 時間券を1つずつ表示
+            showCategory: function () {
+                const app = this;
+                const data = app.$data;
+                if (data.isOverflow) {
+                    return;
+                }
+
+                const category = data.result.columnTimeTickets[data.timeTicketIndex];
+                category.displayTimeTickets = [];
+                category.timeTicketIndex = 0;
+                data.displayColumnTimeTickets.push(category);
+
+                app.showTimeTicket(category);
+            },
+            // カテゴリ内のタイムチケットを1つずつ表示
+            showTimeTicket: function (category) {
+                const app = this;
+                const data = app.$data;
+                if (data.isOverflow) {
+                    return;
+                }
+
+                const timeTicket = category.timeTickets[category.timeTicketIndex];
+                timeTicket.displaySchedules = [];
+                timeTicket.scheduleIndex = 0;
+                category.displayTimeTickets.push(timeTicket);
+                app.showSchedule(category, timeTicket);
+            },
+            // タイムチケット内のスケジュールを1つずつ表示
+            showSchedule: function(category, timeTicket){
+                const app = this;
+                const data = app.$data;
+                const schedule = timeTicket.schedules[timeTicket.scheduleIndex];
+                if (schedule) {
+                    timeTicket.displaySchedules.push(schedule);
+                }
+
+                // 画面に収まるかどうかの判定後に呼ばれるコールバック
+                // 収まる場合はこちらが呼ばれる
+                const containCallback = function() {
+                    data.overflowCount = 0;
+
+                    if (category.timeTicketIndex === 0) {
+                        category.visible = true;
+                    }
+
+                    if (timeTicket.scheduleIndex === 0) {
+                        timeTicket.visible = true;
+                    }
+
+                    if (schedule) {
+                        schedule.visible = true;
+                    }
+
+                    timeTicket.scheduleIndex += 1;
+
+                    // まだスケジュールが残っていれば再帰的に自身を呼ぶ
+                    if (timeTicket.scheduleIndex < timeTicket.schedules.length) {
+                        app.showSchedule(category, timeTicket);
+                        return;
+                    }
+
+                    // timeTicket のループが終わったら次の timeTicket へ
+                    category.timeTicketIndex += 1;
+                    if (category.timeTicketIndex < category.timeTickets.length) {
+                        app.showTimeTicket(category);
+                        return;
+                    }
+
+                    // カテゴリのループが終わったら次のカテゴリへ
+                    data.timeTicketIndex += 1;
+                    if (data.timeTicketIndex < data.result.categories.length) {
+                        app.showCategory();
+                        return;
+                    }
+
+                    // 全カテゴリ・全スケジュール表示後、説明文があれば表示
+                    const description = data.result.descriptions[data.currentLanguage]
+                        ?? data.result.description;
+
+                    if (description && !data.displayDescription) {
+                        app.showDescription();
+                        return;
+                    }
+
+                    // 全て終わったら言語切り替え
+                    setTimeout(() => {
+                        app.switchLanguage();
+                    }, data.result.transitionTime);
+                };
+
+                // 画面に収まらない場合のコールバック
+                const overCallback = function() {
+                    data.isOverflow = true;
+                    data.overflowCount += 1;
+                    // 直前のスケジュールを削除しインデックスを戻す
+                    timeTicket.displaySchedules.pop();
+                    timeTicket.scheduleIndex -= 1;
+                    // タイムチケット内に何もなくなったらタイムチケット自体も削除
+                    if (timeTicket.displaySchedules.length <= 0) {
+                        category.displayTimeTickets.pop();
+                        category.timeTicketIndex -= 1;
+                        // カテゴリ内にも何もなくなったらカテゴリ自体も削除
+                        if (category.displayTimeTickets.length <= 0) {
+                            data.displayColumnTimeTickets.pop();
+                            data.timeTicketIndex -= 1;
+                        }
+                    }
+
+                    // オーバーフローが2回以上なら強制的にcontainCallback
+                    if (data.overflowCount > 1){
+                        containCallback();
+                    } else {
+                        setTimeout(() => {
+                            data.isOverflow = false;
+                            app.showContine();
+                        }, data.result.transitionTime);
+                    }
+                };
+
+                // DOM更新後に画面サイズ判定
+                app.judgeContainDisplay(containCallback, overCallback);
+            },
+            // 説明文の表示処理
+            showDescription: function() {
+                const app = this;
+                const data = app.$data;
+                if (data.isOverflow) {
+                    return;
+                }
+
+                data.displayDescription = data.result.descriptions[data.currentLanguage]
+                    ?? data.result.description;
+
+                // 画面に収まるか判定
+                const containCallback = function() {
+                    data.overflowCount = 0;
+                    data.descriptionVisible = true;
+                    setTimeout(() => {
+                        app.switchLanguage();
+                    }, data.result.transitionTime);
+                };
+
+                const overCallback = function() {
+                    data.overflowCount += 1;
+                    if (data.overflowCount > 1){
+                        containCallback();
+                    } else{
+                        data.displayDescription = null;
+                        setTimeout(() => {
+                            app.displayColumnTimeTickets = [];
+                            app.showDescription();
+                        }, data.result.transitionTime);
+                    }
+                };
+                app.judgeContainDisplay(containCallback, overCallback);
+            },
+            // DOM更新後に画面が収まるか判定
+            judgeContainDisplay: function(containCallback, overCallback) {
+                app.$nextTick(() => {
+                    const body = document.body;
+                    if (body.scrollHeight <= body.clientHeight) {
+                        containCallback();
+                    } else {
+                        overCallback();
+                    }
+                });
+            },
+            // 画面切り替え時の一括非表示・次画面表示処理
+            showContine: function(){
+                const app = this;
+                const data = app.$data;
+                const category = data.result.categories[data.timeTicketIndex];
+                const timeTicket = category.timeTickets[category.timeTicketIndex];
+
+                if (timeTicket && timeTicket.scheduleIndex < timeTicket.schedules.length - 1) {
+                    timeTicket.displaySchedules = [];
+                    timeTicket.scheduleIndex += 1;
+                    category.displayTimeTickets = [timeTicket];
+                    data.displayColumnTimeTickets = [category];
+                    app.showSchedule(category, timeTicket);
+                    return;
+                }
+
+                if (category && category.timeTicketIndex < category.timeTickets.length - 1) {
+                    category.displayTimeTickets = [];
+                    category.timeTicketIndex += 1;
+                    data.displayColumnTimeTickets = [category];
+                    app.showTimeTicket(category);
+                    return;
+                }
+
+                if (data.timeTicketIndex < data.result.categories.length -1) {
+                    data.displayColumnTimeTickets = [];
+                    data.timeTicketIndex += 1;
+                    app.showCategory(category);
+                    return;
+                }
+
+                if (data.result.description && !data.displayDescription) {
+                    data.displayColumnTimeTickets = [];
+                    app.showDescription();
+                    return;
+                }
+            },
+            getTimeTicketName: function(timeTicket) {
+                const data = this.$data;
+                return timeTicket.names[data.currentLanguage] ?? timeTicket.name;
+            },
+            isLowStockDisplay: function(category) {
+                return category.stockDisplayType === Number('@((int)StockDisplayType.LowStock)');
+            },
+            getScheduleStatusInfo: function(schedule) {
+                const app = this;
+                const data = app.$data;
+
+                const info = {
+                    name: null,
+                    class: null,
+                    icon: null,
+                };
+
+                switch(schedule.status) {
+                    case @((int)ScheduleStatus.Available):
+                        info.name = null;
+                        info.class = 'available';
+                        info.icon = 'bi-circle';
+                        break
+
+                    case @((int)ScheduleStatus.Stopped):
+                        info.name = '販売停止';
+                        info.class = 'stopped';
+                        info.icon = null;
+                        break;
+
+                    case @((int)ScheduleStatus.SoldOut):
+                        info.name = '売り切れ';
+                        info.class = 'sold-out';
+                        info.icon = 'bi-x-lg';
+                        break
+
+                    case @((int)ScheduleStatus.LowStock):
+                        info.name = null;
+                        info.class = 'low-stock';
+                        info.icon = 'bi-triangle';
+                        break;
+
+                    case @((int)ScheduleStatus.Remaining):
+                        info.name = '残り{0}枚';
+                        info.class = 'remaining';
+                        info.icon = null;
+                        break;
+
+                    case @((int)ScheduleStatus.SalesBefore):
+                        info.name = '販売開始前';
+                        info.class = 'sales-before';
+                        info.icon = null;
+                        break;
+
+                    case @((int)ScheduleStatus.SalesEnd):
+                        info.name = '販売終了';
+                        info.class = 'sales-end';
+                        info.icon = null;
+                        break;
+
+                    default:
+                        info.name = 'エラー';
+                        break;
+                }
+
+                const lang = data.result.languages[data.languageIndex];
+                info.name = app.translate(info.name, lang);
+
+                if (info.class === 'remaining') {
+                    info.name = formatString(info.name, schedule.stocks)
+                }
+
+                return info;
+            },
+            getScheduleNotFoundMessage : function() {
+                const app = this;
+                const data = app.$data;
+                const text = '現在、表示可能なスケジュールがありません。';
+                const lang = data.result.languages[data.languageIndex];
+                return app.translate(text, lang);
+            },
+            getSalesEndMessage : function() {
+                const app = this;
+                const data = app.$data;
+                const text = '販売は終了しました。';
+                const lang = data.result.languages[data.languageIndex];
+                return app.translate(text, lang);
+            },
+            getDataNotFoundMessage : function() {
+                const app = this;
+                const data = app.$data;
+
+                const text = '本日のスケジュールはありません。';
+                const lang = data.result.languages[data.languageIndex];
+                return app.translate(text, lang);
+            },
+            translate: function(text, lang) {
+                return dictionaries[text]
+                    ? dictionaries[text][lang] ?? text
+                    : text;
+            },
+        },
+        computed: { },
+    }).mount('#container');
+
+    function formatString(str, ...values) {
+        let text = str;
+        if (text.match(/{(\d+)}/g)) {
+            return str.replace(/{(\d+)}/g, (match, number) => values[number].toLocaleString())
+        }
+
+        return str;
+    }
+
+    function updateVwUnit() {
+        const vw = window.innerWidth / 760;
+        document.documentElement.style.setProperty('--vw', `${vw}px`);
+    }
+
+    window.addEventListener('resize', updateVwUnit);
+    updateVwUnit();
+
+    var dictionaries = {
+        '売り切れ': {
+            'en': 'Sold Out',
+            'ko': '매진',
+            'zh-cmn-hans': '售罄',
+            'zh-cmn-hant': '售罄',
+        },
+        '販売停止': {
+            'en': 'No sale',
+            'ko': '판매 중지',
+            'zh-cmn-hans': '停售',
+            'zh-cmn-hant': '停售',
+        },
+        '販売開始前': {
+            'en': 'Pre-sale',
+            'ko': '판매 전',
+            'zh-cmn-hans': '开售前',
+            'zh-cmn-hant': '開售前',
+        },
+        '販売終了': {
+            'en': 'Ended',
+            'ko': '종료',
+            'zh-cmn-hans': '结束',
+            'zh-cmn-hant': '結束',
+        },
+        '残り{0}枚': {
+            'en': '{0} left',
+            'ko': '{0} 남음',
+            'zh-cmn-hans': '剩{0}',
+            'zh-cmn-hant': '剩{0}',
+        },
+        '現在、表示可能なスケジュールがありません。': {
+            'en': 'Currently, there are no schedules available to display.',
+            'ko': '현재 표시 가능한 일정이 없습니다.',
+            'zh-cmn-hans': '目前沒有可顯示的行程。',
+            'zh-cmn-hant': '目前没有可显示的行程。',
+        },
+        '販売は終了しました。': {
+            'en': 'Sales have ended.',
+            'ko': '판매가 종료되었습니다.',
+            'zh-cmn-hans': '販售已結束。',
+            'zh-cmn-hant': '销售已结束。',
+        },
+        '本日のスケジュールはありません。': {
+            'en': 'There are no schedules for today.',
+            'ko': '오늘 일정은 없습니다.',
+            'zh-cmn-hans': '今天沒有行程安排。',
+            'zh-cmn-hant': '今天没有行程安排。',
+        },
+    };
+</script>
+}
+
+@section style {
+<partial name="_Theme" for="Theme" />
+}
