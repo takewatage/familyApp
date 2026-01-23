@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
-import { Category, Task } from '@/Types/task'
 import { useTab } from '@/Composables/Dok/useTab'
+import { TaskCategoryData, TaskData } from "../../../../types/dto.generated";
 
 const props = defineProps<{
-    categories: Category[]
-    tasks: Task[]
+    categories: TaskCategoryData[]
+    tasks: TaskData[]
 }>()
 
 const selectedCategory = ref('')

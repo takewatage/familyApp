@@ -21,7 +21,6 @@ class TaskController extends Controller
     {
     }
 
-
     public function index(): Response
     {
         $familyId = $this->currentFamilyService->getCurrentFamilyId();
