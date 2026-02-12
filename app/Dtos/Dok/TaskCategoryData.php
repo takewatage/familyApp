@@ -12,6 +12,7 @@ class TaskCategoryData extends Data
         public string $id,
         public string $name,
         public string $color,
+        public ?int   $sort,
     )
     {
     }

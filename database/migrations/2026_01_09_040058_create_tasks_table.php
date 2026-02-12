@@ -16,6 +16,7 @@ return new class extends Migration {
             $table->string('content');
             $table->foreignUuid('category_id')->constrained('task_categories');
             $table->boolean('is_completed')->default(false);
+            $table->integer('sort')->default(0)->comment('並び順');
             $table->timestamps();
         });
     }

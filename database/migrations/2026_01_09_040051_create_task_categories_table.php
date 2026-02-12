@@ -15,6 +15,7 @@ return new class extends Migration {
             $table->foreignUuid('family_id')->constrained('families');
             $table->string('name');
             $table->string('color');
+            $table->integer('sort')->default(0)->comment('並び順');
             $table->timestamps();
         });
     }

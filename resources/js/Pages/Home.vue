@@ -1,35 +1,64 @@
 <script setup lang="ts">
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
 import { router } from '@inertiajs/vue3'
-import { useConfirmDialog } from '@/Composables/Common/useConfirmDialogService'
+import { useNavigation } from '@/Composables/Common/useNavigation'
 
 defineOptions({ layout: AuthenticatedLayout })
-// const dialog = useDialogService()
-// const overlay = useOverlayService()
-const { confirm } = useConfirmDialog()
+
+const { navigateToDok, navigateTo } = useNavigation()
 
 const logout = () => {
     router.post(route('logout'))
 }
 
-const handle = async () => {
-    const confirmed = await confirm({
-        title: 'Delete Item',
-        message: 'This action cannot be undone. Are you sure?',
-        confirmText: 'Delete',
-        confirmColor: 'error',
-    })
-
-    if (confirmed) {
-        console.log('Item deleted')
-    }
-}
+const pages = [
+    {
+        title: 'どっちがお得カネ?',
+        description: '価格比較ツール',
+        icon: 'mdi-calculator',
+        color: 'primary',
+        action: navigateToDok,
+    },
+    {
+        title: 'TODO',
+        description: 'タスク管理',
+        icon: 'mdi-checkbox-marked-circle',
+        color: 'success',
+        action: () => navigateTo('tasks'),
+    },
+]
 </script>
 
 <template>
-    <p class="text-h1">You're logged in!</p>
+    <v-container>
+        <v-row class="mb-4">
+            <v-col cols="12" class="d-flex justify-space-between align-center">
+                <h1 class="text-h3">ホーム</h1>
+                <v-btn color="error" variant="outlined" @click="logout">
+                    ログアウト
+                </v-btn>
+            </v-col>
+        </v-row>
 
-    <v-btn @click="logout">logout</v-btn>
-
-    <v-btn @click="handle">confirm dialog</v-btn>
+        <v-row>
+            <v-col v-for="page in pages" :key="page.title" cols="12" sm="6">
+                <v-card
+                    class="pa-4"
+                    hover
+                    @click="page.action"
+                    style="cursor: pointer"
+                >
+                    <v-card-title class="d-flex align-center">
+                        <v-icon :color="page.color" size="large" class="mr-2">
+                            {{ page.icon }}
+                        </v-icon>
+                        {{ page.title }}
+                    </v-card-title>
+                    <v-card-text>
+                        {{ page.description }}
+                    </v-card-text>
+                </v-card>
+            </v-col>
+        </v-row>
+    </v-container>
 </template>

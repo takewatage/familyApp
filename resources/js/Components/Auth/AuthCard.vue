@@ -14,7 +14,7 @@ const props = defineProps<{
         </h1>
 
         <v-card
-            class="auth-card mx-auto pa-12 pb-8"
+            class="auth-card mx-auto py-12 px-8"
             elevation="8"
             rounded="lg">
             <h1
@@ -22,7 +22,7 @@ const props = defineProps<{
                 class="mb-6">
                 {{ props.cardTitle }}
             </h1>
-            <slot />
+            <slot/>
         </v-card>
     </div>
 </template>

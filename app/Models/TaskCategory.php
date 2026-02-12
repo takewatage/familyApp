@@ -33,7 +33,7 @@ class TaskCategory extends Model
 {
     use HasFactory, HasUuids;
 
-    protected $fillable = ['id', 'family_id', 'name', 'color'];
+    protected $fillable = ['id', 'family_id', 'name', 'color', 'sort'];
 
     public function family(): BelongsTo
     {

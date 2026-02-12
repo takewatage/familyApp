@@ -4,9 +4,6 @@ import { computed } from 'vue'
 import { useLayout } from 'vuetify'
 import { useTab } from '@/Composables/Dok/useTab'
 import Dok from '@/Pages/Dok/dok.vue'
-import FamilyTask from "@/Components/Dok/FamilyTask/FamilyTask.vue";
-import { usePageProps } from '@/Composables/Common/usePageProps';
-import { DokResultData } from "../../../types/dto.generated";
 
 defineOptions({ layout: DokLayout })
 
@@ -16,11 +13,6 @@ const tabHeight = computed((): number => {
     return window.innerHeight - appBarSize
 })
 const { tab } = useTab()
-
-
-const props = usePageProps<DokResultData>();
-
-console.log(props)
 
 </script>
 
@@ -34,7 +26,6 @@ console.log(props)
                 <Dok/>
             </v-tabs-window-item>
             <v-tabs-window-item value="todo">
-                <!--                <FamilyTask :categories="categories" :tasks="tasks"/>-->
             </v-tabs-window-item>
         </v-tabs-window>
     </div>
