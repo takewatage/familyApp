@@ -1,6 +1,6 @@
 import './bootstrap'
-
-import { createApp, h, DefineComponent } from 'vue'
+import axios from 'axios'
+import { createApp, DefineComponent, h } from 'vue'
 import { createInertiaApp, router } from '@inertiajs/vue3'
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers'
 import { ZiggyVue } from '../../vendor/tightenco/ziggy'
@@ -9,7 +9,7 @@ import 'vuetify/styles'
 import '../sass/app.scss'
 import { vuetify } from '@/Plugins/vuetifly'
 import GuestLayout from '@/Layouts/GuestLayout.vue'
-import { keysToSnake, keysToCamel } from '@/Utils/caseConverter'
+import { keysToCamel, keysToSnake } from '@/Utils/caseConverter'
 import { setupDialogPlugin } from '@/Composables/Common/useDialogService'
 import { setupOverlayPlugin } from '@/Composables/Common/useOverlayService'
 
@@ -43,36 +43,29 @@ createInertiaApp({
     },
 })
 
-// Inertiaイベントリスナー: リクエスト送信前に camelCase → snake_case に変換
-router.on('before', (event) => {
-    const visit = event.detail.visit
-
-    // POSTなどのデータ送信時
-    if (visit.data && typeof visit.data === 'object') {
-        visit.data = keysToSnake(visit.data)
+// リクエスト: camelCase → snake_case
+axios.interceptors.request.use((config) => {
+    if (config.data && typeof config.data === 'object') {
+        config.data = keysToSnake(config.data)
     }
-
-    // GETのクエリパラメータ
-    if (visit.params && typeof visit.params === 'object') {
-        visit.params = keysToSnake(visit.params)
+    if (config.params && typeof config.params === 'object') {
+        config.params = keysToSnake(config.params)
     }
+    return config
 })
 
-// Inertiaイベントリスナー: レスポンス受信後に snake_case → camelCase に変換
-router.on('success', (event) => {
-    const page = event.detail.page
-    if (page.props && typeof page.props === 'object') {
-        page.props = keysToCamel(page.props)
-    }
-})
-
-// Inertiaイベントリスナー: エラーレスポンスのエラーメッセージも snake_case → camelCase に変換
-router.on('error', (event) => {
-    const errors = event.detail.errors
-    if (errors && typeof errors === 'object') {
-        // エラーオブジェクトのキーをcamelCaseに変換
-        const camelErrors = keysToCamel(errors)
-        // 元のerrorsオブジェクトを置き換え
-        event.detail.errors = camelErrors
-    }
-})
+// レスポンス: snake_case → camelCase
+axios.interceptors.response.use(
+    (response) => {
+        if (response.data && typeof response.data === 'object') {
+            response.data = keysToCamel(response.data)
+        }
+        return response
+    },
+    (error) => {
+        if (error.response?.data && typeof error.response.data === 'object') {
+            error.response.data = keysToCamel(error.response.data)
+        }
+        return Promise.reject(error)
+    },
+)
