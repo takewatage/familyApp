@@ -12,11 +12,12 @@ use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 class TaskData extends Data
 {
     public function __construct(
-        public string $id,
-        public string $content,
-        public string $categoryId,
-        public bool   $isCompleted,
-        public ?int   $sort,
+        public string  $id,
+        public string  $content,
+        public string  $categoryId,
+        public ?string $memo,
+        public bool    $isCompleted,
+        public ?int    $sort,
     )
     {
     }

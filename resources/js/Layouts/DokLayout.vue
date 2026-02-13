@@ -1,10 +1,13 @@
 <script setup lang="ts">
-import { Head } from '@inertiajs/vue3'
+import { Head, router } from '@inertiajs/vue3'
 import { ref } from 'vue'
-import { useTab } from '@/Composables/Dok/useTab'
+import { mainAppMenuItems } from '@/Const/mainAppMenu'
 
 const drawer = ref(false)
-const { tab } = useTab()
+const handleMenuClick = (route: string) => {
+    router.visit(route)
+    drawer.value = false
+}
 </script>
 
 <template>
@@ -12,7 +15,7 @@ const { tab } = useTab()
         <Head title="どっちがお得カネ">
             <meta
                 name="description"
-                content="どっちがお得カネ" />
+                content="どっちがお得カネ"/>
         </Head>
 
         <v-app-bar
@@ -21,7 +24,7 @@ const { tab } = useTab()
             <template #prepend>
                 <v-app-bar-nav-icon
                     variant="text"
-                    @click.stop="drawer = !drawer" />
+                    @click.stop="drawer = !drawer"/>
             </template>
             <!--            <v-tabs-->
             <!--                v-model="tab"-->
@@ -36,14 +39,21 @@ const { tab } = useTab()
             <!--                </v-tab>-->
             <!--            </v-tabs>-->
             <template #append>
-                <v-btn icon="mdi-dots-vertical" />
+                <v-btn icon="mdi-dots-vertical"/>
             </template>
         </v-app-bar>
 
         <v-navigation-drawer
             v-model="drawer"
             temporary>
-            <v-list :items="['test']"></v-list>
+            <v-list>
+                <v-list-item
+                    v-for="item in mainAppMenuItems"
+                    :key="item.route"
+                    :prepend-icon="item.icon"
+                    :title="item.title"
+                    @click="handleMenuClick(item.route)"/>
+            </v-list>
         </v-navigation-drawer>
 
         <v-main>
@@ -52,7 +62,7 @@ const { tab } = useTab()
                 mode="out-in"
                 appear>
                 <div :key="$page.url">
-                    <slot />
+                    <slot/>
                 </div>
             </Transition>
         </v-main>

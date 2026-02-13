@@ -1,11 +1,10 @@
 <script setup lang="ts">
 import GuestLayout from '@/Layouts/GuestLayout.vue'
 import InputError from '@/Components/InputError.vue'
-import { Head, useForm, usePage } from '@inertiajs/vue3'
+import { Head, usePage } from '@inertiajs/vue3'
 import { ref } from 'vue'
 import AuthCard from '@/Components/Auth/AuthCard.vue'
-import { keysToCamel } from '@/Utils/caseConverter'
-import { useInertiaForm } from "@/Composables/Common/useInertiaForm";
+import { useInertiaForm } from '@/Composables/Common/useInertiaForm'
 
 defineProps<{
     canResetPassword?: boolean
@@ -30,9 +29,6 @@ const submit = () => {
             form.reset('password')
         },
         onError: (errors) => {
-            // エラーのキーをcamelCaseに変換
-            const camelErrors = keysToCamel(errors)
-            // 既存のエラーをクリアして、変換後のエラーを設定
             form.clearErrors()
             form.setError(errors)
         },
@@ -79,8 +75,8 @@ const submit = () => {
                         :message="form.errors.email || form.errors.password || form.errors.familyCode"/>
 
                     <v-text-field
-                        color="primary"
                         v-model="form.email"
+                        color="primary"
                         label="アカウント"
                         :error="form.errors.hasOwnProperty('email')"
                         density="comfortable"
@@ -89,18 +85,18 @@ const submit = () => {
                         variant="outlined"></v-text-field>
 
                     <v-text-field
-                        color="primary"
                         v-model="form.familyCode"
+                        color="primary"
                         density="comfortable"
                         prepend-inner-icon="mdi-home-outline"
                         variant="outlined"
                         label="家族コード"
                         :error="form.errors.hasOwnProperty('familyCode')"
                         @click:append-inner="visible = !visible"></v-text-field>
-                    
+
                     <v-text-field
-                        color="primary"
                         v-model="form.password"
+                        color="primary"
                         :append-inner-icon="visible ? 'mdi-eye-off' : 'mdi-eye'"
                         :type="visible ? 'text' : 'password'"
                         density="comfortable"

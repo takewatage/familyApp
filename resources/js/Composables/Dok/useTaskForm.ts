@@ -5,26 +5,28 @@ import type { TaskData } from '@/Types/dto.generated'
 type TaskForm = {
     content: string
     categoryId: string
+    memo: string
 }
 
 export const useTaskForm = () => {
-    const isOpen = ref(false)
+    const addTaskOpen = ref(false)
     const isSubmitting = ref(false)
 
     const form = reactive<TaskForm>({
         content: '',
         categoryId: '',
+        memo: '',
     })
 
-    const openSheet = (categoryId?: string) => {
+    const openAddTaskSheet = (categoryId?: string) => {
         if (categoryId) {
             form.categoryId = categoryId
         }
-        isOpen.value = true
+        addTaskOpen.value = true
     }
 
     const closeSheet = () => {
-        isOpen.value = false
+        addTaskOpen.value = false
         resetForm()
     }
 
@@ -56,10 +58,10 @@ export const useTaskForm = () => {
     }
 
     return {
-        isOpen,
+        addTaskOpen,
         isSubmitting,
-        form,
-        openSheet,
+        taskForm: form,
+        openAddTaskSheet,
         closeSheet,
         resetForm,
         submitTask,

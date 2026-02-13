@@ -8,6 +8,7 @@ export type TaskData = {
     id: string
     content: string
     categoryId: string
+    memo: string | null
     isCompleted: boolean
     sort: number | null
 }
@@ -15,5 +16,4 @@ export type TaskPageData = {
     categories: Array<TaskCategoryData>
     tasks: Array<TaskData>
     familyId: string
-    categoryId: string
 }

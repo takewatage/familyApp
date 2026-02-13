@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useTab } from '@/Composables/Dok/useTab'
-import { useTaskForm } from '@/Composables/Dok/useTaskForm'
-import { TaskCategoryData, TaskData, TaskPageData } from "@/Types/dto.generated";
+import { TaskCategoryData, TaskData, TaskPageData } from '@/Types/dto.generated'
 import axios from 'axios'
-import { router } from "@inertiajs/vue3";
+import SaveTaskForm from './SaveTaskForm.vue'
+import { useDialogService } from '@/Composables/Common/useDialogService'
 
 const props = defineProps<{
     data: TaskPageData
@@ -13,10 +13,12 @@ const props = defineProps<{
 const selectedCategory = ref(props.data.categoryId || '')
 const localTasks = ref<TaskData[]>(props.data.tasks || [])
 const categories = ref<TaskCategoryData[]>(props.data.categories || [])
-const isLoading = ref(false)
+const settingsSelection = ref([])
+const showCompletedTasks = ref(false)
+const addTaskOpen = ref(false)
 
 const { tab } = useTab()
-const { isOpen, isSubmitting, form, openSheet, closeSheet, submitTask } = useTaskForm()
+const dialogService = useDialogService()
 
 const unCompleteTasks = computed(() => {
     return localTasks.value.filter((x) => x.categoryId === selectedCategory.value && !x.isCompleted)
@@ -29,8 +31,6 @@ const completeTasks = computed(() => {
 const init = () => {
     selectedCategory.value = props.data.categories.length ? props.data.categories[0].id : ''
 }
-
-const settingsSelection = ref([])
 
 const toggleTodo = async (task: TaskData) => {
     // 楽観的更新
@@ -50,44 +50,47 @@ const toggleTodo = async (task: TaskData) => {
     }
 }
 
-const handleSubmitTask = async () => {
-    const newTask = await submitTask()
-    if (newTask) {
-        console.log(newTask)
-        console.log(localTasks)
-        // 重複チェックして追加
-        if (!localTasks.value.find(t => t.id === newTask.id)) {
-            localTasks.value.push(newTask)
-        }
+const handleTaskCreated = (newTask: TaskData) => {
+    // 重複チェックして追加
+    if (!localTasks.value.find((t) => t.id === newTask.id)) {
+        localTasks.value.push(newTask)
+    }
+    addTaskOpen.value = false
+}
+
+const handleTaskUpdated = (updatedTask: TaskData) => {
+    const index = localTasks.value.findIndex((t) => t.id === updatedTask.id)
+    if (index !== -1) {
+        localTasks.value[index] = { ...updatedTask }
     }
 }
 
 const setupEchoListeners = () => {
     if (!props.data.familyId) return
 
-    window.Echo.private(`family.${props.data.familyId}`)
-        .listen('.task.updated', (e: { task: TaskData; action: string }) => {
-            const { task, action } = e
+    window.Echo.private(`family.${props.data.familyId}`).listen('.task.updated', (e: { task: TaskData; action: string }) => {
+        const { task, action } = e
+        let index
 
-            switch (action) {
-                case 'created':
-                    if (!localTasks.value.find(t => t.id === task.id)) {
-                        localTasks.value.push(task)
-                    }
-                    break
+        switch (action) {
+            case 'created':
+                if (!localTasks.value.find((t) => t.id === task.id)) {
+                    localTasks.value.push(task)
+                }
+                break
 
-                case 'updated':
-                    const index = localTasks.value.findIndex(t => t.id === task.id)
-                    if (index !== -1) {
-                        localTasks.value[index] = { ...task }  // リアクティブ更新のためスプレッド
-                    }
-                    break
+            case 'updated':
+                index = localTasks.value.findIndex((t) => t.id === task.id)
+                if (index !== -1) {
+                    localTasks.value[index] = { ...task } // リアクティブ更新のためスプレッド
+                }
+                break
 
-                case 'deleted':
-                    localTasks.value = localTasks.value.filter(t => t.id !== task.id)
-                    break
-            }
-        })
+            case 'deleted':
+                localTasks.value = localTasks.value.filter((t) => t.id !== task.id)
+                break
+        }
+    })
 }
 
 const cleanupEchoListeners = () => {
@@ -96,9 +99,23 @@ const cleanupEchoListeners = () => {
     }
 }
 
-const onEdit = (task: TaskData) => {
-    console.log(task)
+const onEdit = async (task: TaskData) => {
+    const dialog = dialogService.open<TaskData>({
+        component: SaveTaskForm,
+        props: {
+            categories: categories.value,
+            selectedCategory: task.categoryId,
+            editMode: true,
+            task: task,
+        },
+        fullscreen: true,
+        transition: 'dialog-bottom-transition',
+    })
 
+    const result = await dialog.afterClosed()
+    if (result) {
+        handleTaskUpdated(result)
+    }
 }
 
 onMounted(() => {
@@ -121,7 +138,7 @@ watch(
 </script>
 
 <template>
-    <div class="todo-list pa-3">
+    <div class="todo-list">
         <v-chip-group
             v-model="selectedCategory"
             mandatory
@@ -131,20 +148,23 @@ watch(
                 v-for="category in categories"
                 :key="category.id"
                 :value="category.id"
-                :color="category.color">
+                :color="category.color"
+                size="large">
                 {{ category.name }}
             </v-chip>
+            <div class="category-edit-btn">
+                <v-icon
+                    size="20"
+                    color="grey">
+                    mdi-cog
+                </v-icon>
+            </div>
         </v-chip-group>
     </div>
 
-    <!-- ローディング表示 -->
-    <v-progress-linear
-        v-if="isLoading"
-        indeterminate
-        color="primary"
-    />
-
-    <Transition name="category-change" mode="out-in">
+    <Transition
+        name="category-change"
+        mode="out-in">
         <v-list
             :key="selectedCategory"
             v-model:selected="settingsSelection"
@@ -153,56 +173,73 @@ watch(
             class="px-3 task-content"
             bg-color="transparent">
             <v-list-subheader>未完了タスク</v-list-subheader>
+
+            <div
+                v-if="unCompleteTasks.length === 0"
+                class="empty-state">
+                <v-icon icon="mdi-coffee-to-go-outline" />
+                <h3 class="text-h6 mb-2">タスクがありません</h3>
+                <p class="text-body-2">右下の＋ボタンから追加しましょう</p>
+            </div>
+
             <TransitionGroup name="task-list">
                 <v-list-item
                     v-for="item in unCompleteTasks"
                     :key="item.id"
+                    v-ripple="{ class: `text-primary` }"
                     :title="item.content"
                     min-height="auto"
                     class="todo-list-item bg-surface rounded-lg pa-3 mb-3"
                     :class="{ 'line-through': item.isCompleted }"
+                    elevation="4"
                     @click="toggleTodo(item)">
                     <template #prepend>
                         <v-list-item-action start>
                             <v-checkbox-btn
                                 color="secondary"
-                                :model-value="item.isCompleted"/>
+                                :model-value="item.isCompleted" />
                         </v-list-item-action>
                     </template>
                     <template #append>
                         <v-btn
-                            @click.stop="onEdit(item)"
                             density="comfortable"
-                            icon="mdi-pencil"></v-btn>
+                            icon="mdi-pencil"
+                            @click.stop="onEdit(item)"></v-btn>
                     </template>
                 </v-list-item>
             </TransitionGroup>
-            <!--            <v-expansion-panels>-->
-            <!--                <v-expansion-panel-->
-            <!--                    title="Title"-->
-            <!--                    text="Lorem ipsum dolor sit amet consectetur adipisicing elit. Commodi, ratione debitis quis est labore voluptatibus! Eaque cupiditate minima"-->
-            <!--                >-->
-            <!--                </v-expansion-panel>-->
-            <!--            </v-expansion-panels>-->
-            <v-list-subheader>完了タスク</v-list-subheader>
-            <TransitionGroup name="task-list">
-                <v-list-item
-                    v-for="task in completeTasks"
-                    :key="task.id"
-                    :title="task.content"
-                    min-height="auto"
-                    class="todo-list-item bg-surface rounded-lg pa-3 mb-3"
-                    :class="{ 'line-through': task.isCompleted }"
-                    @click="toggleTodo(task)">
-                    <template #prepend>
-                        <v-list-item-action start>
-                            <v-checkbox-btn
-                                color="secondary"
-                                :model-value="task.isCompleted"/>
-                        </v-list-item-action>
-                    </template>
-                </v-list-item>
-            </TransitionGroup>
+            <v-list-subheader
+                class="d-flex align-center cursor-pointer"
+                @click="showCompletedTasks = !showCompletedTasks">
+                <span>完了タスク ({{ completeTasks.length }})</span>
+                <v-icon class="ml-1">
+                    {{ showCompletedTasks ? 'mdi-chevron-up' : 'mdi-chevron-down' }}
+                </v-icon>
+            </v-list-subheader>
+
+            <v-expand-transition>
+                <div v-show="showCompletedTasks">
+                    <TransitionGroup name="task-list">
+                        <v-list-item
+                            v-for="task in completeTasks"
+                            :key="task.id"
+                            v-ripple="{ class: `text-primary` }"
+                            :title="task.content"
+                            min-height="auto"
+                            class="todo-list-item bg-surface rounded-lg pa-3 mb-3"
+                            :class="{ 'line-through': task.isCompleted }"
+                            @click="toggleTodo(task)">
+                            <template #prepend>
+                                <v-list-item-action start>
+                                    <v-checkbox-btn
+                                        color="secondary"
+                                        :model-value="task.isCompleted" />
+                                </v-list-item-action>
+                            </template>
+                        </v-list-item>
+                    </TransitionGroup>
+                </div>
+            </v-expand-transition>
         </v-list>
     </Transition>
 
@@ -212,57 +249,19 @@ watch(
         color="primary"
         icon="mdi-plus"
         size="large"
-        @click="openSheet(selectedCategory)">
-    </v-btn>
+        @click="addTaskOpen = true"></v-btn>
 
-    <!-- タスク追加用 Bottom Sheet -->
-    <v-bottom-sheet v-model="isOpen">
-        <v-card class="pa-4">
-            <v-card-title class="text-h6">
-                タスクを追加
-            </v-card-title>
-            <v-card-text class="px-0">
-                <v-text-field
-                    v-model="form.content"
-                    label="タスク内容"
-                    placeholder="やることを入力..."
-                    variant="outlined"
-                    autofocus
-                    @keyup.enter="handleSubmitTask">
-                </v-text-field>
-                <v-select
-                    v-model="form.categoryId"
-                    :items="categories"
-                    item-title="name"
-                    item-value="id"
-                    label="カテゴリー"
-                    variant="outlined">
-                </v-select>
-            </v-card-text>
-            <v-card-actions class="justify-end">
-                <v-btn
-                    variant="text"
-                    @click="closeSheet">
-                    キャンセル
-                </v-btn>
-                <v-btn
-                    color="primary"
-                    variant="flat"
-                    :loading="isSubmitting"
-                    :disabled="!form.content.trim() || !form.categoryId"
-                    @click="handleSubmitTask">
-                    追加
-                </v-btn>
-            </v-card-actions>
-        </v-card>
+    <!-- タスク追加フォーム -->
+    <v-bottom-sheet v-model="addTaskOpen">
+        <SaveTaskForm
+            :categories="categories"
+            :selected-category="selectedCategory"
+            :on-close="() => (addTaskOpen = false)"
+            @task-created="handleTaskCreated" />
     </v-bottom-sheet>
 </template>
 
 <style lang="scss" scoped>
-.todo-list {
-    overflow-x: hidden;
-}
-
 .add-task-fab {
     position: fixed;
     bottom: 80px;
@@ -282,7 +281,12 @@ watch(
     }
 }
 
+:deep(.v-slide-group__container) {
+    padding: 10px;
+}
+
 .task-content {
+    position: relative;
     overflow-x: hidden;
 }
 
@@ -297,33 +301,87 @@ watch(
     opacity: 0;
 }
 
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #888;
+
+    .v-icon {
+        font-size: 64px;
+        margin-bottom: 16px;
+    }
+}
+
 // タスク個別のトランジションのスタイル
+//.task-list-move,
+//.task-list-enter-active,
+//.task-list-leave-active {
+//    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+//}
+//
+//.task-list-enter-from {
+//    opacity: 0;
+//    transform: translateX(-30px);
+//}
+//
+//.task-list-leave-to {
+//    opacity: 0;
+//    transform: translateX(30px);
+////}
+//
+//// ポイント：leave-active で position: absolute にして高さを確保
+//.task-list-leave-active {
+//    position: absolute;
+//    left: 0;
+//    right: 0;
+//}
+
+.task-list-container {
+    position: relative;
+    overflow: hidden; // はみ出し防止
+}
+
+// 移動アニメーション（残りのアイテムが滑らかに詰まる）
 .task-list-move {
-    transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: transform 0.4s ease;
 }
 
+// 入場アニメーション
 .task-list-enter-active {
-    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.3s ease;
 }
 
+// 退場アニメーション
 .task-list-leave-active {
-    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-    overflow: hidden;
+    transition: all 0.3s ease;
+    position: absolute;
+    left: 12px;
+    right: 12px;
 }
 
+// 入場開始状態
 .task-list-enter-from {
     opacity: 0;
-    transform: translateX(30px) scale(0.95);
-    max-height: 0;
+    transform: scale(0.9) translateX(-20px);
 }
 
+// 退場終了状態
 .task-list-leave-to {
     opacity: 0;
-    transform: translateX(-30px) scale(0.95);
-    max-height: 0;
-    margin-bottom: 0 !important;
-    padding-top: 0 !important;
-    padding-bottom: 0 !important;
+    transform: scale(0.9) translateX(20px);
+}
+
+.category-edit-btn {
+    margin: 4px 8px 4px 0;
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 2px dashed #ccc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
 }
 </style>
-

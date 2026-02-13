@@ -1,8 +1,8 @@
 import { useForm } from '@inertiajs/vue3'
 import { keysToCamel } from '@/Utils/caseConverter'
-import { FormDataType } from "@inertiajs/core";
+import { FormDataType } from '@inertiajs/core'
 
-
+/* eslint-disable */
 export function useInertiaForm<T extends FormDataType<any>>(data: T) {
     const form = useForm(data)
 
