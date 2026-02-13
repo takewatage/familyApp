@@ -13,7 +13,6 @@ const tabHeight = computed((): number => {
     return window.innerHeight - appBarSize
 })
 const { tab } = useTab()
-
 </script>
 
 <template>
@@ -23,10 +22,9 @@ const { tab } = useTab()
                 class="main-content"
                 value="dok"
                 :style="{ height: tabHeight + 'px' }">
-                <Dok/>
+                <Dok />
             </v-tabs-window-item>
-            <v-tabs-window-item value="todo">
-            </v-tabs-window-item>
+            <v-tabs-window-item value="todo"></v-tabs-window-item>
         </v-tabs-window>
     </div>
 </template>

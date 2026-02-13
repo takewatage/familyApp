@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-
 use App\Dtos\Dok\TaskPageData;
 use App\Dtos\Dok\TaskCategoryData;
 use App\Dtos\Dok\TaskData;
@@ -16,14 +15,9 @@ use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
-
 class TaskController extends Controller
 {
-    public function __construct(
-        private readonly CurrentFamilyService $currentFamilyService
-    )
-    {
-    }
+    public function __construct(private readonly CurrentFamilyService $currentFamilyService) {}
 
     public function index(Request $request): Response
     {
@@ -32,12 +26,14 @@ class TaskController extends Controller
         $tasks = [];
 
         if ($familyId) {
-            $categories = TaskCategory::where('family_id', $familyId)
-                ->orderBy('sort')
-                ->get()
-                ->toArray();
+            $categories = TaskCategory::where('family_id', $familyId)->orderBy('sort')->get()->toArray();
             $tasks = Task::where('family_id', $familyId)
-                ->orderBy('sort')
+                ->where(function ($query) {
+                    $query->where('is_completed', false)->orWhere(function ($q) {
+                        $q->where('is_completed', true)->where('completed_at', '>=', now()->subDays(7));
+                    });
+                })
+                ->orderBy('created_at', 'desc')
                 ->get()
                 ->toArray();
         }
@@ -63,8 +59,11 @@ class TaskController extends Controller
             abort(403);
         }
 
+        $isCompleted = !$task->is_completed;
+
         $task->update([
-            'is_completed' => !$task->is_completed,
+            'is_completed' => !$isCompleted,
+            'completed_at' => !$isCompleted ? now() : null,
         ]);
 
         // リアルタイム通知
@@ -74,7 +73,6 @@ class TaskController extends Controller
             'success' => true,
         ]);
     }
-
 
     /**
      * @param Request $request
@@ -89,9 +87,7 @@ class TaskController extends Controller
 
         $familyId = $this->currentFamilyService->getCurrentFamilyId();
 
-        $maxSort = Task::where('family_id', $familyId)
-            ->where('category_id', $validated['category_id'])
-            ->max('sort');
+        $maxSort = Task::where('family_id', $familyId)->where('category_id', $validated['category_id'])->max('sort');
 
         $task = Task::create([
             'family_id' => $familyId,
@@ -123,10 +119,7 @@ class TaskController extends Controller
         $taskData = $task->toArray();
         $task->delete();
 
-        broadcast(new TaskUpdated(
-            new Task($taskData),
-            'deleted'
-        ))->toOthers();
+        broadcast(new TaskUpdated(new Task($taskData), 'deleted'))->toOthers();
 
         return response()->json([
             'success' => true,

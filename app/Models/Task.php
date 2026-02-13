@@ -33,7 +33,7 @@ class Task extends Model
 {
     use HasFactory, HasUuids;
 
-    protected $fillable = ['id', 'family_id', 'content', 'category_id', 'is_completed', 'sort'];
+    protected $fillable = ['id', 'family_id', 'content', 'category_id', 'is_completed', 'completed_at', 'sort'];
 
     protected $casts = [
         'is_completed' => 'boolean',

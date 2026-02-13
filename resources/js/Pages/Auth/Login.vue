@@ -5,6 +5,7 @@ import { Head, useForm, usePage } from '@inertiajs/vue3'
 import { ref } from 'vue'
 import AuthCard from '@/Components/Auth/AuthCard.vue'
 import { keysToCamel } from '@/Utils/caseConverter'
+import { useInertiaForm } from "@/Composables/Common/useInertiaForm";
 
 defineProps<{
     canResetPassword?: boolean
@@ -17,7 +18,7 @@ const visible = ref(false)
 const page = usePage()
 
 const appName: string = page.props.appName
-const form = useForm({
+const form = useInertiaForm({
     email: '',
     password: '',
     familyCode: '',
@@ -33,7 +34,7 @@ const submit = () => {
             const camelErrors = keysToCamel(errors)
             // 既存のエラーをクリアして、変換後のエラーを設定
             form.clearErrors()
-            form.setError(camelErrors)
+            form.setError(errors)
         },
     })
 }
@@ -41,7 +42,6 @@ const submit = () => {
 
 <template>
     <Head title="Login"/>
-
 
     <div class="login-page">
         <!-- 浮遊するデコレーション -->
@@ -97,16 +97,7 @@ const submit = () => {
                         label="家族コード"
                         :error="form.errors.hasOwnProperty('familyCode')"
                         @click:append-inner="visible = !visible"></v-text-field>
-
-                    <!--            <div class="text-subtitle-1 text-medium-emphasis d-flex align-center justify-space-between">-->
-                    <!--                <Link-->
-                    <!--                    v-if="canResetPassword"-->
-                    <!--                    class="text-caption text-primary ml-auto"-->
-                    <!--                    :href="route('password.request')">-->
-                    <!--                    パスワードを忘れた場合はこちら-->
-                    <!--                </Link>-->
-                    <!--            </div>-->
-
+                    
                     <v-text-field
                         color="primary"
                         v-model="form.password"
@@ -126,8 +117,7 @@ const submit = () => {
                         block
                         class="login-btn"
                         :disabled="form.processing"
-                        :loading="form.processing"
-                    >
+                        :loading="form.processing">
                         <v-icon start>mdi-login</v-icon>
                         ログイン
                     </v-btn>
@@ -142,112 +132,15 @@ const submit = () => {
                     <!--            </v-card-text>-->
                 </form>
             </AuthCard>
-            <!-- ログインカード -->
-            <!--            <v-card class="login-card">-->
-            <!--                <v-card-text class="login-card-content">-->
-            <!--                    &lt;!&ndash; ウェルカムテキスト &ndash;&gt;-->
-            <!--                    <div class="welcome-text">-->
-            <!--                        <p class="welcome-subtitle">ログインして家族とつながろう</p>-->
-            <!--                    </div>-->
-
-            <!--                    &lt;!&ndash; ログインフォーム &ndash;&gt;-->
-            <!--                    <form>-->
-            <!--                        &lt;!&ndash; メールアドレス &ndash;&gt;-->
-            <!--                        <div class="form-field">-->
-            <!--                            <label class="field-label">-->
-            <!--                                メールアドレス-->
-            <!--                            </label>-->
-            <!--                            <v-text-field-->
-            <!--                                v-model="form.email"-->
-            <!--                                type="email"-->
-            <!--                                placeholder="example@mail.com"-->
-            <!--                                variant="outlined"-->
-            <!--                                density="comfortable"-->
-            <!--                                hide-details-->
-            <!--                                class="custom-input"-->
-            <!--                                prepend-inner-icon="mdi-email-outline"-->
-            <!--                            ></v-text-field>-->
-            <!--                        </div>-->
-
-            <!--                        &lt;!&ndash; 家族コード &ndash;&gt;-->
-            <!--                        <div class="form-field">-->
-            <!--                            <label class="field-label">-->
-            <!--                                家族コード-->
-            <!--                            </label>-->
-            <!--                            <v-text-field-->
-            <!--                                v-model="form.familyCode"-->
-            <!--                                placeholder="例: TANAKA-1234"-->
-            <!--                                variant="outlined"-->
-            <!--                                density="comfortable"-->
-            <!--                                hide-details-->
-            <!--                                class="custom-input"-->
-            <!--                                prepend-inner-icon="mdi-account-group-outline"-->
-            <!--                                :style="{ textTransform: 'uppercase' }"-->
-            <!--                            ></v-text-field>-->
-            <!--                            <div class="family-code-hint">-->
-            <!--                                <span class="hint-icon">💡</span>-->
-            <!--                                <span class="hint-text">家族コードは、家族グループ作成時に発行されます。<br>わからない場合は家族の管理者に確認してください。</span>-->
-            <!--                            </div>-->
-            <!--                        </div>-->
-
-            <!--                        &lt;!&ndash; パスワード &ndash;&gt;-->
-            <!--                        <div class="form-field">-->
-            <!--                            <label class="field-label">-->
-            <!--                                パスワード-->
-            <!--                            </label>-->
-            <!--                            <v-text-field-->
-            <!--                                v-model="form.password"-->
-            <!--                                :type="visible ? 'text' : 'password'"-->
-            <!--                                placeholder="パスワードを入力"-->
-            <!--                                variant="outlined"-->
-            <!--                                density="comfortable"-->
-            <!--                                hide-details-->
-            <!--                                class="custom-input"-->
-            <!--                                prepend-inner-icon="mdi-lock-outline"-->
-            <!--                            >-->
-            <!--                                <template v-slot:append-inner>-->
-            <!--                                    <v-icon-->
-            <!--                                        class="password-toggle"-->
-            <!--                                        @click="visible = !visible"-->
-            <!--                                    >-->
-            <!--                                        {{ visible ? 'mdi-eye-off' : 'mdi-eye' }}-->
-            <!--                                    </v-icon>-->
-            <!--                                </template>-->
-            <!--                            </v-text-field>-->
-            <!--                        </div>-->
-
-            <!--                        &lt;!&ndash; パスワードを忘れた &ndash;&gt;-->
-            <!--                        &lt;!&ndash;                        <div class="text-right mb-4">&ndash;&gt;-->
-            <!--                        &lt;!&ndash;                            <a href="#" class="text-primary text-decoration-none"&ndash;&gt;-->
-            <!--                        &lt;!&ndash;                               style="font-size: 13px; font-weight: 600;">&ndash;&gt;-->
-            <!--                        &lt;!&ndash;                                パスワードを忘れた？ 🤔&ndash;&gt;-->
-            <!--                        &lt;!&ndash;                            </a>&ndash;&gt;-->
-            <!--                        &lt;!&ndash;                        </div>&ndash;&gt;-->
-
-            <!--                        &lt;!&ndash; ログインボタン &ndash;&gt;-->
-            <!--                        <v-btn-->
-            <!--                            type="submit"-->
-            <!--                            color="primary"-->
-            <!--                            size="x-large"-->
-            <!--                            block-->
-            <!--                            class="login-btn"-->
-            <!--                            :style="{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }"-->
-            <!--                        >-->
-            <!--                            <v-icon start>mdi-login</v-icon>-->
-            <!--                            ログイン-->
-            <!--                        </v-btn>-->
-            <!--                    </form>-->
-            <!--                </v-card-text>-->
-            <!--            </v-card>-->
 
             <!-- フッター -->
             <div class="footer-text">
                 <p>
-                    <a href="#">利用規約</a> ・ <a href="#">プライバシーポリシー</a>
+                    <a href="#">利用規約</a>
+                    ・
+                    <a href="#">プライバシーポリシー</a>
                 </p>
-                <p style="margin-top: 8px; opacity: 0.7;">
-                    © 2025 家族アプリ 👨‍👩‍👧‍👦
-                </p>
+                <p style="margin-top: 8px; opacity: 0.7">© 2026 家族アプリ 👨‍👩‍👧‍👦</p>
             </div>
         </div>
     </div>
@@ -334,7 +227,8 @@ const submit = () => {
 }
 
 @keyframes float {
-    0%, 100% {
+    0%,
+    100% {
         transform: translateY(0) rotate(0deg);
     }
     50% {
@@ -401,7 +295,8 @@ const submit = () => {
 }
 
 @keyframes bounce {
-    0%, 100% {
+    0%,
+    100% {
         transform: translateY(0);
     }
     50% {
@@ -480,15 +375,14 @@ const submit = () => {
     font-size: 18px;
 }
 
-
 .family-code-hint {
     display: flex;
     align-items: center;
-    background: linear-gradient(135deg, #FFF9E6 0%, #FFF3CD 100%);
+    background: linear-gradient(135deg, #fff9e6 0%, #fff3cd 100%);
     border-radius: 12px;
     padding: 12px;
     margin-top: 8px;
-    border: 1px solid #FFE082;
+    border: 1px solid #ffe082;
 }
 
 .hint-icon {
@@ -517,43 +411,8 @@ const submit = () => {
     box-shadow: 0 12px 28px rgba(102, 126, 234, 0.5) !important;
 }
 
-.divider-text {
-    display: flex;
-    align-items: center;
-    margin: 20px 0;
-    color: #aaa;
-    font-size: 13px;
-}
-
-.divider-text::before,
-.divider-text::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: #e0e0e0;
-}
-
 .divider-text span {
     padding: 0 12px;
-}
-
-.social-buttons {
-    display: flex;
-    gap: 12px;
-    justify-content: center;
-}
-
-.social-btn {
-    width: 56px;
-    height: 56px;
-    border-radius: 16px !important;
-    border: 2px solid #eee !important;
-    transition: all 0.2s ease !important;
-}
-
-.social-btn:hover {
-    border-color: #667eea !important;
-    background: #f8f9ff !important;
 }
 
 .bottom-links {
@@ -620,4 +479,3 @@ const submit = () => {
     }
 }
 </style>
-

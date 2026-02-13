@@ -38,7 +38,7 @@ return [
     |
     */
 
-    'debug' => (bool)env('APP_DEBUG', false),
+    'debug' => (bool) env('APP_DEBUG', false),
 
     /*
     |--------------------------------------------------------------------------
@@ -98,7 +98,7 @@ return [
 
     'key' => env('APP_KEY'),
 
-    'previous_keys' => [...array_filter(explode(',', (string)env('APP_PREVIOUS_KEYS', '')))],
+    'previous_keys' => [...array_filter(explode(',', (string) env('APP_PREVIOUS_KEYS', '')))],
 
     /*
     |--------------------------------------------------------------------------

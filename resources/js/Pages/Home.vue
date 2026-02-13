@@ -32,24 +32,35 @@ const pages = [
 <template>
     <v-container>
         <v-row class="mb-4">
-            <v-col cols="12" class="d-flex justify-space-between align-center">
+            <v-col
+                cols="12"
+                class="d-flex justify-space-between align-center">
                 <h1 class="text-h3">ホーム</h1>
-                <v-btn color="error" variant="outlined" @click="logout">
+                <v-btn
+                    color="error"
+                    variant="outlined"
+                    @click="logout">
                     ログアウト
                 </v-btn>
             </v-col>
         </v-row>
 
         <v-row>
-            <v-col v-for="page in pages" :key="page.title" cols="12" sm="6">
+            <v-col
+                v-for="page in pages"
+                :key="page.title"
+                cols="12"
+                sm="6">
                 <v-card
                     class="pa-4"
                     hover
                     @click="page.action"
-                    style="cursor: pointer"
-                >
+                    style="cursor: pointer">
                     <v-card-title class="d-flex align-center">
-                        <v-icon :color="page.color" size="large" class="mr-2">
+                        <v-icon
+                            :color="page.color"
+                            size="large"
+                            class="mr-2">
                             {{ page.icon }}
                         </v-icon>
                         {{ page.title }}

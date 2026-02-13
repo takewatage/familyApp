@@ -20,7 +20,7 @@
 </template>
 
 <script setup lang="ts">
-import { DialogComponentProps } from '@/composables/common/useDialogService'
+import { DialogComponentProps } from '@/Composables/Common/useDialogService'
 
 interface Props extends DialogComponentProps<boolean> {
     title?: string

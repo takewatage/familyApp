@@ -13,9 +13,10 @@ return new class extends Migration {
         Schema::create('tasks', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->foreignUuid('family_id')->constrained('families');
-            $table->string('content');
+            $table->string('content')->comment('内容');
             $table->foreignUuid('category_id')->constrained('task_categories');
-            $table->boolean('is_completed')->default(false);
+            $table->boolean('is_completed')->default(false)->comment('完了');
+            $table->timestamp('completed_at')->nullable()->comment('完了日');
             $table->integer('sort')->default(0)->comment('並び順');
             $table->timestamps();
         });

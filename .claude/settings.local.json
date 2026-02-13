@@ -1,7 +1,5 @@
 {
-  "permissions": {
-    "allow": [
-      "Bash(php artisan make:migration:*)"
-    ]
-  }
+    "permissions": {
+        "allow": ["Bash(php artisan make:migration:*)"]
+    }
 }

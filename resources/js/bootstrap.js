@@ -4,9 +4,9 @@ import Pusher from 'pusher-js'
 
 window.axios = axios
 
-Pusher.logToConsole = true;
+Pusher.logToConsole = true
 
-window.Pusher = Pusher;
+window.Pusher = Pusher
 
 window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest'
 
@@ -15,12 +15,12 @@ window.Echo = new Echo({
     key: import.meta.env.VITE_PUSHER_APP_KEY,
     cluster: import.meta.env.VITE_PUSHER_APP_CLUSTER,
     forceTLS: true,
-});
+})
 
 axios.interceptors.request.use((config) => {
-    const socketId = window.Echo?.socketId();
+    const socketId = window.Echo?.socketId()
     if (socketId) {
-        config.headers['X-Socket-ID'] = socketId;
+        config.headers['X-Socket-ID'] = socketId
     }
-    return config;
-});
+    return config
+})

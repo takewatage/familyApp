@@ -6,11 +6,12 @@ html {
 a {
     text-decoration: none;
     color: unset;
+
     &:hover {
         text-decoration: underline;
     }
 }
 
 .h-fit {
-    height: fit-content!important;
+    height: fit-content !important;
 }

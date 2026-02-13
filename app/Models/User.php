@@ -69,8 +69,6 @@ class User extends Authenticatable
      */
     public function families()
     {
-        return $this->belongsToMany(Family::class, 'family_user')
-            ->withPivot('role')
-            ->withTimestamps();
+        return $this->belongsToMany(Family::class, 'family_user')->withPivot('role')->withTimestamps();
     }
 }

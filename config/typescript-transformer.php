@@ -6,9 +6,7 @@ return [
      * to transform, this will be the `app` path by default.
      */
 
-    'auto_discover_types' => [
-        app_path('Dtos'),
-    ],
+    'auto_discover_types' => [app_path('Dtos')],
 
     /*
      * Collectors will search for classes in the `auto_discover_types` paths and choose the correct
@@ -18,7 +16,7 @@ return [
 
     'collectors' => [
         Spatie\TypeScriptTransformer\Collectors\DefaultCollector::class,
-//        Spatie\TypeScriptTransformer\Collectors\EnumCollector::class,
+        //        Spatie\TypeScriptTransformer\Collectors\EnumCollector::class,
     ],
 
     /*
@@ -28,8 +26,8 @@ return [
 
     'transformers' => [
         Spatie\LaravelTypeScriptTransformer\Transformers\SpatieStateTransformer::class,
-//        Spatie\TypeScriptTransformer\Transformers\EnumTransformer::class,
-//        Spatie\TypeScriptTransformer\Transformers\SpatieEnumTransformer::class,
+        //        Spatie\TypeScriptTransformer\Transformers\EnumTransformer::class,
+        //        Spatie\TypeScriptTransformer\Transformers\SpatieEnumTransformer::class,
         Spatie\LaravelTypeScriptTransformer\Transformers\DtoTransformer::class,
         Spatie\LaravelData\Support\TypeScriptTransformer\DataTypeScriptTransformer::class,
     ],

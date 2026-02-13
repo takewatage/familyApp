@@ -22,7 +22,7 @@ const props = defineProps<{
                 class="mb-6">
                 {{ props.cardTitle }}
             </h1>
-            <slot/>
+            <slot />
         </v-card>
     </div>
 </template>

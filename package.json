@@ -7,7 +7,7 @@
         "dev": "vite",
         "lint": "eslint --ext .ts,vue --ignore-path .gitignore .",
         "fix": "yarn format && yarn lint",
-        "fix:prettier": "prettier --config .prettierrc.yml --ignore-path .prettierignore --cache --cache-location node_modules/.cache/prettier-cache/ --cache-strategy content  --write '**/*.{js,json,html,vue,ts,php}'"
+        "fix:prettier": "prettier --config .prettierrc.yml --ignore-path .prettierignore --cache --cache-location node_modules/.cache/prettier-cache/ --cache-strategy content  --write '**/*.{js,json,html,vue,ts}'"
     },
     "devDependencies": {
         "@inertiajs/vue3": "^2.0.0",

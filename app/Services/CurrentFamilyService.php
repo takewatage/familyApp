@@ -52,9 +52,6 @@ class CurrentFamilyService
      */
     public function userBelongsToFamily(string $userId, string $familyId): bool
     {
-        return \DB::table('family_user')
-            ->where('user_id', $userId)
-            ->where('family_id', $familyId)
-            ->exists();
+        return \DB::table('family_user')->where('user_id', $userId)->where('family_id', $familyId)->exists();
     }
 }

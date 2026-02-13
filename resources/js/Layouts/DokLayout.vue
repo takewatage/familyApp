@@ -12,7 +12,7 @@ const { tab } = useTab()
         <Head title="どっちがお得カネ">
             <meta
                 name="description"
-                content="どっちがお得カネ"/>
+                content="どっちがお得カネ" />
         </Head>
 
         <v-app-bar
@@ -21,7 +21,7 @@ const { tab } = useTab()
             <template #prepend>
                 <v-app-bar-nav-icon
                     variant="text"
-                    @click.stop="drawer = !drawer"/>
+                    @click.stop="drawer = !drawer" />
             </template>
             <!--            <v-tabs-->
             <!--                v-model="tab"-->
@@ -36,7 +36,7 @@ const { tab } = useTab()
             <!--                </v-tab>-->
             <!--            </v-tabs>-->
             <template #append>
-                <v-btn icon="mdi-dots-vertical"/>
+                <v-btn icon="mdi-dots-vertical" />
             </template>
         </v-app-bar>
 
@@ -52,7 +52,7 @@ const { tab } = useTab()
                 mode="out-in"
                 appear>
                 <div :key="$page.url">
-                    <slot/>
+                    <slot />
                 </div>
             </Transition>
         </v-main>

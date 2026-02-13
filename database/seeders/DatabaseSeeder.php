@@ -21,7 +21,7 @@ class DatabaseSeeder extends Seeder
         // 家族A: オーナー1名 + メンバー2名
         $ownerA = User::factory()->create([
             'name' => '山田太郎',
-            'email' => 'yamada@example.com',
+            'email' => 'test@test.com',
             'password' => Hash::make('testtest'),
         ]);
 
@@ -118,9 +118,6 @@ class DatabaseSeeder extends Seeder
             'password' => Hash::make('testtest'),
         ]);
 
-        $this->call([
-            CategorySeeder::class,
-            TaskSeeder::class,
-        ]);
+        $this->call([CategorySeeder::class, TaskSeeder::class]);
     }
 }
