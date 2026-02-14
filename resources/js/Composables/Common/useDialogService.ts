@@ -1,6 +1,15 @@
-import { Component, createApp, h, ref, App as VueApp } from 'vue'
+import { Component, createApp, h, ref, App as VueApp, VNode } from 'vue'
 import { createVuetify } from 'vuetify'
 import { VDialog } from 'vuetify/components/VDialog'
+import { VBtn } from 'vuetify/components/VBtn'
+import { VCard, VCardText, VToolbar, VToolbarItems, VToolbarTitle } from "vuetify/components";
+
+export type ToolbarAction = {
+    text: string
+    variant?: 'text' | 'flat' | 'elevated' | 'tonal' | 'outlined' | 'plain'
+    color?: string
+    onClick?: <T>(close: (result?: T) => void) => void
+}
 
 export interface DialogOptions<T = any> {
     component: Component
@@ -10,6 +19,16 @@ export interface DialogOptions<T = any> {
     persistent?: boolean
     fullscreen?: boolean
     transition?: string
+    toolbar?: DialogToolbarOptions | boolean
+}
+
+export type DialogToolbarOptions = {
+    title?: string
+    showClose?: boolean
+    closeIcon?: string
+    color?: string
+    density?: 'default' | 'comfortable' | 'compact'
+    actions?: ToolbarAction[]
 }
 
 export interface DialogInstance<T = any> {
@@ -47,6 +66,14 @@ export function useDialogService() {
             }, 300)
         }
 
+        const resolveToolbar = (): DialogToolbarOptions | null => {
+            if (!options.toolbar) return null
+            if (options.toolbar === true) {
+                return { title: '', showClose: true }
+            }
+            return { showClose: true, ...options.toolbar }
+        }
+
         // Create dialog wrapper component
         const DialogWrapper = {
             name: 'DialogWrapper',
@@ -55,6 +82,55 @@ export function useDialogService() {
                     if (!val && !options.disableClose) {
                         close()
                     }
+                }
+
+                const renderToolbar = (): VNode | null => {
+                    const toolbar = resolveToolbar()
+                    if (!toolbar) return null
+
+                    const children: VNode[] = []
+
+                    // Close button
+                    if (toolbar.showClose) {
+                        children.push(
+                            h(VBtn, {
+                                icon: toolbar.closeIcon || 'mdi-close',
+                                onClick: () => close(),
+                            }),
+                        )
+                    }
+
+                    // Title
+                    if (toolbar.title) {
+                        children.push(h(VToolbarTitle, null, { default: () => toolbar.title }))
+                    }
+
+                    // Actions
+                    if (toolbar.actions?.length) {
+                        children.push(
+                            h(VToolbarItems, null, {
+                                default: () =>
+                                    toolbar.actions!.map((action, i) =>
+                                        h(VBtn, {
+                                            key: i,
+                                            text: action.text,
+                                            variant: action.variant || 'text',
+                                            color: action.color,
+                                            onClick: () => action.onClick?.(close),
+                                        }),
+                                    ),
+                            }),
+                        )
+                    }
+
+                    return h(
+                        VToolbar,
+                        {
+                            color: toolbar.color,
+                            density: toolbar.density || 'default',
+                        },
+                        { default: () => children },
+                    )
                 }
 
                 return () =>
@@ -70,9 +146,17 @@ export function useDialogService() {
                         },
                         {
                             default: () =>
-                                h(options.component, {
-                                    ...options.props,
-                                    onClose: close,
+                                h(VCard, null, {
+                                    default: () => [
+                                        renderToolbar(),
+                                        h(VCardText, null, {
+                                            default: () =>
+                                                h(options.component, {
+                                                    ...options.props,
+                                                    onClose: close,
+                                                }),
+                                        }),
+                                    ],
                                 }),
                         },
                     )
@@ -115,8 +199,14 @@ export interface DialogComponentProps<T = any> {
     onClose: (result?: T) => void
 }
 
-export function setupDialogPlugin(app: VueApp, vuetify: any) {
-    ;(window as any).__currentVuetifyInstance = vuetify
+declare global {
+    interface Window {
+        __currentVuetifyInstance?: ReturnType<typeof createVuetify>
+    }
+}
+
+export function setupDialogPlugin(app: VueApp, vuetify: ReturnType<typeof createVuetify>) {
+    window.__currentVuetifyInstance = vuetify
 
     // Clean up on app unmount
     app.onUnmount(() => {
