@@ -5,12 +5,13 @@ import { TaskCategoryData, TaskData, TaskPageData } from '@/Types/dto.generated'
 import axios from 'axios'
 import SaveTaskForm from './SaveTaskForm.vue'
 import { useDialogService } from '@/Composables/Common/useDialogService'
+import { useConfirmDialog } from '@/Composables/Common/useConfirmDialogService'
 
 const props = defineProps<{
     data: TaskPageData
 }>()
 
-const selectedCategory = ref(props.data.categoryId || '')
+const selectedCategory = ref('')
 const localTasks = ref<TaskData[]>(props.data.tasks || [])
 const categories = ref<TaskCategoryData[]>(props.data.categories || [])
 const settingsSelection = ref([])
@@ -110,11 +111,55 @@ const onEdit = async (task: TaskData) => {
         },
         fullscreen: true,
         transition: 'dialog-bottom-transition',
+        toolbar: {
+            title: 'タスク編集',
+            actions: [
+                {
+                    text: '削除',
+                    onClick: async () => {
+                        const deleted = await onDelete(task)
+                        if (deleted) {
+                            dialog.close()
+                        }
+                    },
+                },
+            ],
+        },
     })
 
     const result = await dialog.afterClosed()
     if (result) {
         handleTaskUpdated(result)
+    }
+}
+
+const onDelete = async (task: TaskData): Promise<boolean> => {
+    const { confirm } = useConfirmDialog()
+    const result = await confirm({
+        title: 'タスクの削除',
+        message: `「${task.content}」を削除しますか？`,
+        confirmText: '削除',
+        confirmColor: 'error',
+        persistent: true,
+    })
+
+    if (!result) {
+        return false
+    }
+
+    // 楽観的更新
+    const backup = [...localTasks.value]
+    localTasks.value = localTasks.value.filter((t) => t.id !== task.id)
+
+    try {
+        await axios.delete(`/tasks/${task.id}`)
+        return true
+    } catch (error) {
+        // エラー時はロールバック
+        localTasks.value = backup
+        console.error('Failed to delete task:', error)
+        alert('タスクの削除に失敗しました')
+        return false
     }
 }
 
@@ -201,10 +246,17 @@ watch(
                         </v-list-item-action>
                     </template>
                     <template #append>
-                        <v-btn
-                            density="comfortable"
-                            icon="mdi-pencil"
-                            @click.stop="onEdit(item)"></v-btn>
+                        <div class="d-flex gap-1">
+                            <v-btn
+                                density="comfortable"
+                                icon="mdi-pencil"
+                                @click.stop="onEdit(item)"></v-btn>
+                            <!--                            <v-btn-->
+                            <!--                                density="comfortable"-->
+                            <!--                                icon="mdi-delete"-->
+                            <!--                                color="error"-->
+                            <!--                                @click.stop="onDelete(item)"></v-btn>-->
+                        </div>
                     </template>
                 </v-list-item>
             </TransitionGroup>
@@ -236,6 +288,13 @@ watch(
                                         :model-value="task.isCompleted" />
                                 </v-list-item-action>
                             </template>
+                            <!--                            <template #append>-->
+                            <!--                                <v-btn-->
+                            <!--                                    density="comfortable"-->
+                            <!--                                    icon="mdi-delete"-->
+                            <!--                                    color="error"-->
+                            <!--                                    @click.stop="onDelete(task)"></v-btn>-->
+                            <!--                            </template>-->
                         </v-list-item>
                     </TransitionGroup>
                 </div>

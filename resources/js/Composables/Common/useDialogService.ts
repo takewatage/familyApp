@@ -1,8 +1,9 @@
+/* eslint-disable */
 import { Component, createApp, h, ref, App as VueApp, VNode } from 'vue'
 import { createVuetify } from 'vuetify'
 import { VDialog } from 'vuetify/components/VDialog'
 import { VBtn } from 'vuetify/components/VBtn'
-import { VCard, VCardText, VToolbar, VToolbarItems, VToolbarTitle } from "vuetify/components";
+import { VCard, VCardText, VToolbar, VToolbarItems, VToolbarTitle } from 'vuetify/components'
 
 export type ToolbarAction = {
     text: string
@@ -149,13 +150,12 @@ export function useDialogService() {
                                 h(VCard, null, {
                                     default: () => [
                                         renderToolbar(),
-                                        h(VCardText, null, {
-                                            default: () =>
-                                                h(options.component, {
-                                                    ...options.props,
-                                                    onClose: close,
-                                                }),
-                                        }),
+                                        h('div', null, [
+                                            h(options.component, {
+                                                ...options.props,
+                                                onClose: close,
+                                            }),
+                                        ]),
                                     ],
                                 }),
                         },

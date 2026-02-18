@@ -37,7 +37,7 @@ const submit = () => {
 </script>
 
 <template>
-    <Head title="Login"/>
+    <Head title="Login" />
 
     <div class="login-page">
         <!-- 浮遊するデコレーション -->
@@ -72,7 +72,7 @@ const submit = () => {
                 <form @submit.prevent="submit">
                     <InputError
                         class="mt-2 mb-4"
-                        :message="form.errors.email || form.errors.password || form.errors.familyCode"/>
+                        :message="form.errors.email || form.errors.password || form.errors.familyCode" />
 
                     <v-text-field
                         v-model="form.email"

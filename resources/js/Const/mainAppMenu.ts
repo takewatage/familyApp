@@ -13,6 +13,6 @@ export const mainAppMenuItems: MainAppMenuItem[] = [
     {
         title: 'TODOリスト',
         icon: 'mdi-format-list-checks',
-        route: '/todo',
+        route: '/tasks',
     },
 ]

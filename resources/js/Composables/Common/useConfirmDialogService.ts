@@ -10,6 +10,7 @@ export function useConfirmDialog() {
         confirmText?: string
         cancelText?: string
         confirmColor?: string
+        persistent?: boolean
     }): Promise<boolean> => {
         console.log('dialog')
         const { afterClosed } = dialog.open<boolean>({

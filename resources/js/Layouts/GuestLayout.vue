@@ -1,10 +1,13 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3'
+import LoadingOverlay from '@/Components/App/LoadingOverlay.vue'
 </script>
 
 <template>
     <v-app id="guestLayout">
         <Head title="KoDo" />
+
+        <LoadingOverlay />
 
         <Transition
             name="page"

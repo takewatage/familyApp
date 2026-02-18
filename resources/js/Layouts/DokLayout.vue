@@ -2,6 +2,7 @@
 import { Head, router } from '@inertiajs/vue3'
 import { ref } from 'vue'
 import { mainAppMenuItems } from '@/Const/mainAppMenu'
+import LoadingOverlay from '@/Components/App/LoadingOverlay.vue'
 
 const drawer = ref(false)
 const handleMenuClick = (route: string) => {
@@ -15,8 +16,10 @@ const handleMenuClick = (route: string) => {
         <Head title="どっちがお得カネ">
             <meta
                 name="description"
-                content="どっちがお得カネ"/>
+                content="どっちがお得カネ" />
         </Head>
+
+        <LoadingOverlay />
 
         <v-app-bar
             name="app-bar"
@@ -24,7 +27,7 @@ const handleMenuClick = (route: string) => {
             <template #prepend>
                 <v-app-bar-nav-icon
                     variant="text"
-                    @click.stop="drawer = !drawer"/>
+                    @click.stop="drawer = !drawer" />
             </template>
             <!--            <v-tabs-->
             <!--                v-model="tab"-->
@@ -39,7 +42,7 @@ const handleMenuClick = (route: string) => {
             <!--                </v-tab>-->
             <!--            </v-tabs>-->
             <template #append>
-                <v-btn icon="mdi-dots-vertical"/>
+                <v-btn icon="mdi-dots-vertical" />
             </template>
         </v-app-bar>
 
@@ -52,7 +55,7 @@ const handleMenuClick = (route: string) => {
                     :key="item.route"
                     :prepend-icon="item.icon"
                     :title="item.title"
-                    @click="handleMenuClick(item.route)"/>
+                    @click="handleMenuClick(item.route)" />
             </v-list>
         </v-navigation-drawer>
 
@@ -62,7 +65,7 @@ const handleMenuClick = (route: string) => {
                 mode="out-in"
                 appear>
                 <div :key="$page.url">
-                    <slot/>
+                    <slot />
                 </div>
             </Transition>
         </v-main>

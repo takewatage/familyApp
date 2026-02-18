@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import AppHeader from '@/Components/Layout/AppHeader.vue'
+import LoadingOverlay from '@/Components/App/LoadingOverlay.vue'
 import { Head } from '@inertiajs/vue3'
 </script>
 
@@ -12,6 +13,8 @@ import { Head } from '@inertiajs/vue3'
         </Head>
 
         <AppHeader />
+
+        <LoadingOverlay />
 
         <v-main>
             <Transition

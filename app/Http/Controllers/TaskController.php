@@ -17,7 +17,9 @@ use Inertia\Response;
 
 class TaskController extends Controller
 {
-    public function __construct(private readonly CurrentFamilyService $currentFamilyService) {}
+    public function __construct(private readonly CurrentFamilyService $currentFamilyService)
+    {
+    }
 
     public function index(Request $request): Response
     {
@@ -62,9 +64,12 @@ class TaskController extends Controller
         $isCompleted = !$task->is_completed;
 
         $task->update([
-            'is_completed' => !$isCompleted,
-            'completed_at' => !$isCompleted ? now() : null,
+            'is_completed' => $isCompleted,
+            'completed_at' => $isCompleted ? now() : null,
         ]);
+
+        // タスクを再読み込みして最新の状態を取得
+        $task->refresh();
 
         // リアルタイム通知
         broadcast(new TaskUpdated($task, 'updated'))->toOthers();
@@ -83,6 +88,7 @@ class TaskController extends Controller
         $validated = $request->validate([
             'content' => 'required|string|max:255',
             'category_id' => 'required|exists:task_categories,id',
+            'memo' => 'nullable|string|max:1000',
         ]);
 
         $familyId = $this->currentFamilyService->getCurrentFamilyId();
@@ -93,11 +99,45 @@ class TaskController extends Controller
             'family_id' => $familyId,
             'category_id' => $validated['category_id'],
             'content' => $validated['content'],
+            'memo' => $validated['memo'] ?? null,
             'is_completed' => false,
             'sort' => ($maxSort ?? 0) + 1,
         ]);
 
         broadcast(new TaskUpdated($task, 'created'))->toOthers();
+
+        return response()->json([
+            'success' => true,
+            'task' => TaskData::from($task->toArray()),
+        ]);
+    }
+
+    /**
+     * タスク更新
+     */
+    public function update(Request $request, Task $task): JsonResponse
+    {
+        $validated = $request->validate([
+            'content' => 'required|string|max:255',
+            'category_id' => 'required|exists:task_categories,id',
+            'memo' => 'nullable|string|max:1000',
+        ]);
+
+        $familyId = $this->currentFamilyService->getCurrentFamilyId();
+
+        // 権限チェック
+        if ($task->family_id !== $familyId) {
+            abort(403);
+        }
+
+        $task->update([
+            'content' => $validated['content'],
+            'category_id' => $validated['category_id'],
+            'memo' => $validated['memo'] ?? null,
+        ]);
+
+        // リアルタイム通知
+        broadcast(new TaskUpdated($task, 'updated'))->toOthers();
 
         return response()->json([
             'success' => true,

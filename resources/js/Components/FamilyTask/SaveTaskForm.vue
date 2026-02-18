@@ -92,9 +92,13 @@ const categoryName = computed(() => {
 </script>
 
 <template>
-    <v-card class="pa-4">
-        <v-card-title class="text-h6">
-            {{ editMode ? 'タスクを編集' : 'タスクを追加' }}
+    <v-card
+        class="pa-4"
+        :elevation="editMode ? 0 : 3">
+        <v-card-title
+            v-if="!editMode"
+            class="text-h6">
+            タスクを追加
         </v-card-title>
         <v-chip
             class="chip"
@@ -111,8 +115,7 @@ const categoryName = computed(() => {
                 autofocus
                 clearable
                 auto-grow
-                color="primary"
-                @keyup.enter="handleSubmitTask"></v-textarea>
+                color="primary"></v-textarea>
             <div class="field-toggle-btns">
                 <div
                     class="field-toggle-btn"
