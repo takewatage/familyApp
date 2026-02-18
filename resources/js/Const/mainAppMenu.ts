@@ -15,4 +15,9 @@ export const mainAppMenuItems: MainAppMenuItem[] = [
         icon: 'mdi-format-list-checks',
         route: '/todo',
     },
+    {
+        title: 'マイページ',
+        icon: 'mdi-account-circle',
+        route: '/mypage',
+    },
 ]

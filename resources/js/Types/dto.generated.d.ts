@@ -1,3 +1,9 @@
+export type MyPageData = {
+    name: string
+    email: string
+    avatarUrl: string | null
+    createdAt: string
+}
 export type TaskCategoryData = {
     id: string
     name: string
