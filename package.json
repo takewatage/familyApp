@@ -8,7 +8,8 @@
         "lint": "git diff --name-only --diff-filter=ACMR HEAD | grep -E '\\.(ts|vue)$' | xargs eslint",
         "lint:files": "eslint",
         "fix": "yarn format && yarn lint",
-        "fix:prettier": "prettier --config .prettierrc.yml --ignore-path .prettierignore --cache --cache-location node_modules/.cache/prettier-cache/ --cache-strategy content  --write '**/*.{js,json,html,vue,ts}'"
+        "format": "git diff --name-only --diff-filter=ACMR HEAD | grep -E '\\.(ts|vue)$' | xargs prettier --write",
+        "format:all": "prettier --config .prettierrc.yml --ignore-path .prettierignore --cache --cache-location node_modules/.cache/prettier-cache/ --cache-strategy content  --write '**/*.{js,json,html,vue,ts}'"
     },
     "devDependencies": {
         "@inertiajs/vue3": "^2.0.0",
