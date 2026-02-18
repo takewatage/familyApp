@@ -69,7 +69,10 @@ const handleTaskUpdated = (updatedTask: TaskData) => {
 const setupEchoListeners = () => {
     if (!props.data.familyId) return
 
-    window.Echo.private(`family.${props.data.familyId}`).listen('.task.updated', (e: { task: TaskData; action: string }) => {
+    window.Echo.private(`family.${props.data.familyId}`).listen('.task.updated', (e: {
+        task: TaskData;
+        action: string
+    }) => {
         const { task, action } = e
         let index
 
@@ -152,7 +155,7 @@ const onDelete = async (task: TaskData): Promise<boolean> => {
     localTasks.value = localTasks.value.filter((t) => t.id !== task.id)
 
     try {
-        await axios.delete(`/tasks/${task.id}`)
+        await axios.delete(`/tasks/${task.id}`, { showLoading: true })
         return true
     } catch (error) {
         // エラー時はロールバック
@@ -222,7 +225,7 @@ watch(
             <div
                 v-if="unCompleteTasks.length === 0"
                 class="empty-state">
-                <v-icon icon="mdi-coffee-to-go-outline" />
+                <v-icon icon="mdi-coffee-to-go-outline"/>
                 <h3 class="text-h6 mb-2">タスクがありません</h3>
                 <p class="text-body-2">右下の＋ボタンから追加しましょう</p>
             </div>
@@ -242,7 +245,7 @@ watch(
                         <v-list-item-action start>
                             <v-checkbox-btn
                                 color="secondary"
-                                :model-value="item.isCompleted" />
+                                :model-value="item.isCompleted"/>
                         </v-list-item-action>
                     </template>
                     <template #append>
@@ -285,7 +288,7 @@ watch(
                                 <v-list-item-action start>
                                     <v-checkbox-btn
                                         color="secondary"
-                                        :model-value="task.isCompleted" />
+                                        :model-value="task.isCompleted"/>
                                 </v-list-item-action>
                             </template>
                             <!--                            <template #append>-->
@@ -316,7 +319,7 @@ watch(
             :categories="categories"
             :selected-category="selectedCategory"
             :on-close="() => (addTaskOpen = false)"
-            @task-created="handleTaskCreated" />
+            @task-created="handleTaskCreated"/>
     </v-bottom-sheet>
 </template>
 

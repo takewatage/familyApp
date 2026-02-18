@@ -1,4 +1,4 @@
-<?php
+git add<?php
 
 use App\Http\Controllers\DokController;
 use App\Http\Controllers\HomeController;
@@ -13,6 +13,7 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/tasks', [TaskController::class, 'index'])->name('tasks');
     Route::post('/tasks', [TaskController::class, 'store'])->name('tasks.store');
+    Route::patch('/tasks/{task}', [TaskController::class, 'update'])->name('tasks.update');
     Route::patch('/tasks/{task}/toggle', [TaskController::class, 'toggle'])->name('tasks.toggle');
     Route::delete('/tasks/{task}', [TaskController::class, 'destroy'])->name('tasks.destroy');
 });

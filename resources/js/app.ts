@@ -17,7 +17,7 @@ import { useLoading } from '@/Composables/Common/useLoading'
 // AxiosRequestConfig にカスタムプロパティを追加
 declare module 'axios' {
     interface AxiosRequestConfig {
-        /** true(デフォルト): ローディング表示 / false: 非表示 */
+        /** true: ローディング表示 / false(デフォルト): 非表示 */
         showLoading?: boolean
     }
 }
@@ -56,10 +56,9 @@ const { start: loadingStart, end: loadingEnd } = useLoading()
 
 // リクエスト: camelCase → snake_case + ローディング制御
 axios.interceptors.request.use((config) => {
-    // showLoading が false でなければローディング表示（デフォルト: true）
-    if (config.showLoading !== false) {
+    // showLoading が true の時のみローディング表示（デフォルト: false）
+    if (config.showLoading === true) {
         loadingStart()
-        config.showLoading = true
     }
 
     if (config.data && typeof config.data === 'object') {
@@ -74,7 +73,7 @@ axios.interceptors.request.use((config) => {
 // レスポンス: snake_case → camelCase + ローディング制御
 axios.interceptors.response.use(
     (response) => {
-        if (response.config.showLoading !== false) loadingEnd()
+        if (response.config.showLoading === true) loadingEnd()
 
         if (response.data && typeof response.data === 'object') {
             response.data = keysToCamel(response.data)
@@ -82,7 +81,7 @@ axios.interceptors.response.use(
         return response
     },
     (error) => {
-        if (error.config?.showLoading !== false) loadingEnd()
+        if (error.config?.showLoading === true) loadingEnd()
 
         if (error.response?.data && typeof error.response.data === 'object') {
             error.response.data = keysToCamel(error.response.data)
