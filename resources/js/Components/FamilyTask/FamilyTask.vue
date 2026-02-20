@@ -4,6 +4,7 @@ import { useTab } from '@/Composables/Dok/useTab'
 import { TaskCategoryData, TaskData, TaskPageData } from '@/Types/dto.generated'
 import axios from 'axios'
 import SaveTaskForm from './SaveTaskForm.vue'
+import CategoryManageDialog from './CategoryManageDialog.vue'
 import { useDialogService } from '@/Composables/Common/useDialogService'
 import { useConfirmDialog } from '@/Composables/Common/useConfirmDialogService'
 
@@ -27,6 +28,10 @@ const unCompleteTasks = computed(() => {
 
 const completeTasks = computed(() => {
     return localTasks.value.filter((x) => x.categoryId === selectedCategory.value && x.isCompleted)
+})
+
+const nonCategories = computed(() => {
+    return categories.value.length === 0
 })
 
 const init = () => {
@@ -136,6 +141,26 @@ const onEdit = async (task: TaskData) => {
     }
 }
 
+const onCategoryEdit = () => {
+    dialogService.open({
+        component: CategoryManageDialog,
+        props: {
+            categories: categories.value,
+            onCategoriesChange: (updated: TaskCategoryData[]) => {
+                categories.value = updated
+                if (!updated.find((c) => c.id === selectedCategory.value)) {
+                    selectedCategory.value = updated.length ? updated[0].id : ''
+                }
+            },
+        },
+        fullscreen: true,
+        transition: 'dialog-bottom-transition',
+        toolbar: {
+            title: 'カテゴリー管理',
+        },
+    })
+}
+
 const onDelete = async (task: TaskData): Promise<boolean> => {
     const { confirm } = useConfirmDialog()
     const result = await confirm({
@@ -200,7 +225,10 @@ watch(
                 size="large">
                 {{ category.name }}
             </v-chip>
-            <div class="category-edit-btn">
+            <div
+                v-ripple="{ class: `text-primary` }"
+                class="category-edit-btn"
+                @click="onCategoryEdit">
                 <v-icon
                     size="20"
                     color="grey">
@@ -210,7 +238,18 @@ watch(
         </v-chip-group>
     </div>
 
+    <div
+        v-if="nonCategories"
+        class="empty-state">
+        <v-icon
+            icon="mdi-shape-plus-outline"
+            color="primary"/>
+        <h3 class="text-h6 mb-2">カテゴリーがありません</h3>
+        <p class="text-body-2">上の追加ボタンから追加しましょう</p>
+    </div>
+
     <Transition
+        v-if="!nonCategories"
         name="category-change"
         mode="out-in">
         <v-list
@@ -225,7 +264,9 @@ watch(
             <div
                 v-if="unCompleteTasks.length === 0"
                 class="empty-state">
-                <v-icon icon="mdi-coffee-to-go-outline"/>
+                <v-icon
+                    icon="mdi-coffee-to-go-outline"
+                    color="primary"/>
                 <h3 class="text-h6 mb-2">タスクがありません</h3>
                 <p class="text-body-2">右下の＋ボタンから追加しましょう</p>
             </div>
@@ -244,7 +285,7 @@ watch(
                     <template #prepend>
                         <v-list-item-action start>
                             <v-checkbox-btn
-                                color="secondary"
+                                color="primary"
                                 :model-value="item.isCompleted"/>
                         </v-list-item-action>
                     </template>
@@ -287,7 +328,7 @@ watch(
                             <template #prepend>
                                 <v-list-item-action start>
                                     <v-checkbox-btn
-                                        color="secondary"
+                                        color="primary"
                                         :model-value="task.isCompleted"/>
                                 </v-list-item-action>
                             </template>
@@ -307,6 +348,7 @@ watch(
 
     <!-- タスク追加FABボタン -->
     <v-btn
+        v-if="!nonCategories"
         class="add-task-fab"
         color="primary"
         icon="mdi-plus"

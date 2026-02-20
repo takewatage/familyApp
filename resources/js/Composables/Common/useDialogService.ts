@@ -127,7 +127,7 @@ export function useDialogService() {
                     return h(
                         VToolbar,
                         {
-                            color: toolbar.color,
+                            color: toolbar.color ?? 'surface',
                             density: toolbar.density || 'default',
                         },
                         { default: () => children },
@@ -147,17 +147,29 @@ export function useDialogService() {
                         },
                         {
                             default: () =>
-                                h(VCard, null, {
-                                    default: () => [
-                                        renderToolbar(),
-                                        h('div', null, [
-                                            h(options.component, {
-                                                ...options.props,
-                                                onClose: close,
-                                            }),
-                                        ]),
-                                    ],
-                                }),
+                                h(
+                                    VCard,
+                                    {
+                                        style: 'background-color: rgb(var(--v-theme-background)); display: flex; flex-direction: column; height: 100%',
+                                    },
+                                    {
+                                        default: () => [
+                                            renderToolbar(),
+                                            h(
+                                                'div',
+                                                {
+                                                    style: 'flex: 1; overflow: hidden; display: flex; flex-direction: column; min-height: 0;',
+                                                },
+                                                [
+                                                    h(options.component, {
+                                                        ...options.props,
+                                                        onClose: close,
+                                                    }),
+                                                ],
+                                            ),
+                                        ],
+                                    },
+                                ),
                         },
                     )
             },

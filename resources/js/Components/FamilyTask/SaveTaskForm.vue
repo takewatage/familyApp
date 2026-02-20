@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue'
 import { TaskCategoryData, TaskData } from '@/Types/dto.generated'
 import axios from 'axios'
+import { VFileUpload } from 'vuetify/labs/VFileUpload'
 
 type Props = {
     categories: TaskCategoryData[]
@@ -116,66 +117,102 @@ const categoryName = computed(() => {
                 clearable
                 auto-grow
                 color="primary"></v-textarea>
-            <div class="field-toggle-btns">
-                <div
-                    class="field-toggle-btn"
-                    :class="{ active: showPhotoField }"
-                    @click="showPhotoField = !showPhotoField">
-                    <v-icon size="small">mdi-camera</v-icon>
-                    写真
-                </div>
-                <div
-                    class="field-toggle-btn"
-                    :class="{ active: showMemoField }"
-                    @click="showMemoField = !showMemoField">
-                    <v-icon size="small">mdi-note-text</v-icon>
-                    メモ
-                </div>
-            </div>
 
-            <!-- 写真フィールド -->
-            <div
-                v-if="showPhotoField"
-                class="optional-field">
-                <v-label>写真</v-label>
-                <div
-                    v-if="true"
-                    class="photo-upload-area">
-                    <v-icon
-                        size="48"
-                        color="grey-lighten-1">
-                        mdi-camera-plus
-                    </v-icon>
-                    <p class="text-body-2 text-grey mt-2 mb-0">タップして写真を追加</p>
+            <template v-if="!editMode">
+                <div class="field-toggle-btns">
+                    <div
+                        class="field-toggle-btn"
+                        :class="{ active: showPhotoField }"
+                        @click="showPhotoField = !showPhotoField">
+                        <v-icon size="small">mdi-camera</v-icon>
+                        写真
+                    </div>
+                    <div
+                        class="field-toggle-btn"
+                        :class="{ active: showMemoField }"
+                        @click="showMemoField = !showMemoField">
+                        <v-icon size="small">mdi-note-text</v-icon>
+                        メモ
+                    </div>
                 </div>
+                <!-- 写真フィールド -->
                 <div
-                    v-else
-                    class="photo-preview">
-                    <!--                    <img :src="taskForm.photo">-->
-                    <v-btn
-                        icon
-                        size="small"
-                        class="photo-remove"
-                        color="error">
-                        <v-icon size="small">mdi-close</v-icon>
-                    </v-btn>
+                    v-if="showPhotoField"
+                    class="optional-field">
+                    <v-label>写真</v-label>
+                    <div
+                        v-if="true"
+                        class="photo-upload-area">
+                        <v-icon
+                            size="48"
+                            color="grey-lighten-1">
+                            mdi-camera-plus
+                        </v-icon>
+                        <p class="text-body-2 text-grey mt-2 mb-0">タップして写真を追加</p>
+                    </div>
+                    <div
+                        v-else
+                        class="photo-preview">
+                        <!--                    <img :src="taskForm.photo">-->
+                        <v-btn
+                            icon
+                            size="small"
+                            class="photo-remove"
+                            color="error">
+                            <v-icon size="small">mdi-close</v-icon>
+                        </v-btn>
+                    </div>
                 </div>
-            </div>
 
-            <!-- メモフィールド -->
-            <div
-                v-if="showMemoField"
-                class="optional-field">
-                <v-textarea
-                    v-model="taskForm.memo"
-                    label="メモ"
-                    variant="outlined"
-                    density="comfortable"
-                    rows="3"
-                    auto-grow
-                    placeholder="詳細やメモを入力..."
-                    color="primary"></v-textarea>
-            </div>
+                <!-- メモフィールド -->
+                <div
+                    v-if="showMemoField"
+                    class="optional-field">
+                    <v-textarea
+                        v-model="taskForm.memo"
+                        label="メモ"
+                        variant="outlined"
+                        density="comfortable"
+                        rows="3"
+                        auto-grow
+                        placeholder="詳細やメモを入力..."
+                        color="primary"></v-textarea>
+                </div>
+            </template>
+            <template v-else>
+                <v-divider></v-divider>
+                <v-list-item class="pa-0">
+                    <template #prepend>
+                        <v-avatar>
+                            <v-icon color="primary">mdi-camera-plus</v-icon>
+                        </v-avatar>
+                    </template>
+                    <v-file-upload
+                        clearable
+                        density="comfortable"
+                        title="sss"
+                        variant="comfortable"></v-file-upload>
+                </v-list-item>
+                <v-divider></v-divider>
+                <v-list-item class="pa-0">
+                    <template #prepend>
+                        <v-avatar>
+                            <v-icon color="primary">mdi-note-text</v-icon>
+                        </v-avatar>
+                    </template>
+                    <v-textarea
+                        v-model="taskForm.memo"
+                        class="py-5"
+                        label="メモ"
+                        variant="outlined"
+                        density="comfortable"
+                        rows="4"
+                        auto-grow
+                        hide-details
+                        placeholder="詳細やメモを入力..."
+                        color="primary"></v-textarea>
+                </v-list-item>
+            </template>
         </v-card-text>
         <v-card-actions class="justify-end">
             <v-btn
@@ -188,6 +225,7 @@ const categoryName = computed(() => {
                 variant="flat"
                 :loading="isSubmitting"
                 :disabled="!taskForm.content.trim() || !taskForm.categoryId"
+                :prepend-icon="!editMode ? 'mdi-arrow-up' : undefined"
                 @click="handleSubmitTask">
                 {{ editMode ? '更新' : '追加' }}
             </v-btn>

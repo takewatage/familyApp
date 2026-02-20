@@ -487,6 +487,11 @@
   resolved "https://registry.yarnpkg.com/@types/lodash/-/lodash-4.17.20.tgz#1ca77361d7363432d29f5e55950d9ec1e1c6ea93"
   integrity sha512-H3MHACvFUEiujabxhaI/ImO6gUrd8oOurg7LQtS7mbwIXA/cUqWrvBsaeJ23aZEPk1TAYkurjfMbSELfoCXlGA==
 
+"@types/sortablejs@^1.15.8":
+  version "1.15.9"
+  resolved "https://registry.yarnpkg.com/@types/sortablejs/-/sortablejs-1.15.9.tgz#82d2337f54d4db827914d80dee5cf65539ae3c8b"
+  integrity sha512-7HP+rZGE2p886PKV9c9OJzLBI6BBJu1O7lJGYnPyG3fS4/duUCcngkNCjsLwIMV+WMqANe3tt4irrXHSIe68OQ==
+
 "@types/web-bluetooth@^0.0.21":
   version "0.0.21"
   resolved "https://registry.yarnpkg.com/@types/web-bluetooth/-/web-bluetooth-0.0.21.tgz#525433c784aed9b457aaa0ee3d92aeb71f346b63"
@@ -2100,6 +2105,13 @@ vite@^6.0:
     tinyglobby "^0.2.13"
   optionalDependencies:
     fsevents "~2.3.3"
+
+vue-draggable-plus@^0.6.1:
+  version "0.6.1"
+  resolved "https://registry.yarnpkg.com/vue-draggable-plus/-/vue-draggable-plus-0.6.1.tgz#d4ed54cbfd3e2a72c046074c39da1631e0c36a78"
+  integrity sha512-FbtQ/fuoixiOfTZzG3yoPl4JAo9HJXRHmBQZFB9x2NYCh6pq0TomHf7g5MUmpaDYv+LU2n6BPq2YN9sBO+FbIg==
+  dependencies:
+    "@types/sortablejs" "^1.15.8"
 
 vue-eslint-parser@^9.3.1, vue-eslint-parser@^9.4.3:
   version "9.4.3"

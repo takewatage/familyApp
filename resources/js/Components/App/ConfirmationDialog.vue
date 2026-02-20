@@ -1,7 +1,7 @@
 <template>
     <v-card>
         <v-card-title>{{ title }}</v-card-title>
-        <v-card-text>{{ message }}</v-card-text>
+        <v-card-text style="white-space: pre-line">{{ message }}</v-card-text>
         <v-card-actions>
             <v-spacer />
             <v-btn
