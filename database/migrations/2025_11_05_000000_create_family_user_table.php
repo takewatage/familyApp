@@ -11,6 +11,7 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::create('family_user', function (Blueprint $table) {
+            $table->comment('家族ユーザー|家族とユーザーの関連を管理する中間テーブル');
             $table->uuid('id')->primary();
             $table->foreignUuid('family_id')->comment('家族ID')->constrained('families')->onDelete('cascade');
             $table->foreignUuid('user_id')->comment('ユーザーID')->constrained('users')->onDelete('cascade');

@@ -11,10 +11,11 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::create('task_categories', function (Blueprint $table) {
+            $table->comment('タスクカテゴリー|タスクのカテゴリー情報を管理するテーブル');
             $table->uuid('id')->primary();
-            $table->foreignUuid('family_id')->constrained('families');
-            $table->string('name');
-            $table->string('color');
+            $table->foreignUuid('family_id')->comment('家族ID')->constrained('families');
+            $table->string('name')->comment('カテゴリー名');
+            $table->string('color')->comment('色');
             $table->integer('sort')->default(0)->comment('並び順');
             $table->timestamps();
         });

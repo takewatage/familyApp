@@ -11,6 +11,7 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::create('families', function (Blueprint $table) {
+            $table->comment('家族|家族情報を管理するテーブル');
             $table->uuid('id')->primary();
             $table->string('name')->comment('家族名');
             $table->string('code', 10)->unique()->comment('家族コード（招待用）');
