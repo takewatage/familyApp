@@ -7,6 +7,7 @@ use App\Models\TaskCategory;
 use App\Services\CurrentFamilyService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class TaskCategoryController extends Controller
 {
@@ -18,7 +19,6 @@ class TaskCategoryController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'color' => 'required|string|max:50',
         ]);
 
         $familyId = $this->currentFamilyService->getCurrentFamilyId();
@@ -27,7 +27,6 @@ class TaskCategoryController extends Controller
         $category = TaskCategory::create([
             'family_id' => $familyId,
             'name' => $validated['name'],
-            'color' => $validated['color'],
             'sort' => ($maxSort ?? 0) + 1,
         ]);
 
@@ -37,22 +36,20 @@ class TaskCategoryController extends Controller
         ]);
     }
 
-    public function update(Request $request, TaskCategory $taskCategory): JsonResponse
+    public function update(Request $request, string $id): JsonResponse
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'color' => 'required|string|max:50',
         ]);
 
         $familyId = $this->currentFamilyService->getCurrentFamilyId();
 
-        if ($taskCategory->family_id !== $familyId) {
-            abort(403);
-        }
+        $taskCategory = TaskCategory::where('id', $id)
+            ->where('family_id', $familyId)
+            ->firstOrFail();
 
         $taskCategory->update([
             'name' => $validated['name'],
-            'color' => $validated['color'],
         ]);
 
         return response()->json([
@@ -61,13 +58,13 @@ class TaskCategoryController extends Controller
         ]);
     }
 
-    public function destroy(TaskCategory $taskCategory): JsonResponse
+    public function destroy(string $id): JsonResponse
     {
         $familyId = $this->currentFamilyService->getCurrentFamilyId();
 
-        if ($taskCategory->family_id !== $familyId) {
-            abort(403);
-        }
+        $taskCategory = TaskCategory::where('id', $id)
+            ->where('family_id', $familyId)
+            ->firstOrFail();
 
         $taskCategory->tasks()->delete();
         $taskCategory->delete();
@@ -77,13 +74,13 @@ class TaskCategoryController extends Controller
 
     public function reorder(Request $request): JsonResponse
     {
+        $familyId = $this->currentFamilyService->getCurrentFamilyId();
+
         $validated = $request->validate([
             'orders' => 'required|array',
-            'orders.*.id' => 'required|string|exists:task_categories,id',
+            'orders.*.id' => ['required', 'string', Rule::exists('task_categories', 'id')->where('family_id', $familyId)],
             'orders.*.sort' => 'required|integer',
         ]);
-
-        $familyId = $this->currentFamilyService->getCurrentFamilyId();
 
         foreach ($validated['orders'] as $order) {
             TaskCategory::where('id', $order['id'])

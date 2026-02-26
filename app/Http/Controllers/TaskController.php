@@ -88,6 +88,7 @@ class TaskController extends Controller
         $validated = $request->validate([
             'content' => 'required|string|max:255',
             'category_id' => 'required|exists:task_categories,id',
+            'color' => 'required|string|max:50',
             'memo' => 'nullable|string|max:1000',
         ]);
 
@@ -99,6 +100,7 @@ class TaskController extends Controller
             'family_id' => $familyId,
             'category_id' => $validated['category_id'],
             'content' => $validated['content'],
+            'color' => $validated['color'],
             'memo' => $validated['memo'] ?? null,
             'is_completed' => false,
             'sort' => ($maxSort ?? 0) + 1,
@@ -120,6 +122,7 @@ class TaskController extends Controller
         $validated = $request->validate([
             'content' => 'required|string|max:255',
             'category_id' => 'required|exists:task_categories,id',
+            'color' => 'required|string|max:50',
             'memo' => 'nullable|string|max:1000',
         ]);
 
@@ -133,6 +136,7 @@ class TaskController extends Controller
         $task->update([
             'content' => $validated['content'],
             'category_id' => $validated['category_id'],
+            'color' => $validated['color'],
             'memo' => $validated['memo'] ?? null,
         ]);
 

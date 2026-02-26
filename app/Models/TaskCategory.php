@@ -12,7 +12,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string $id
  * @property string $family_id
  * @property string $name
- * @property string $color
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Family $family
@@ -21,7 +20,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|TaskCategory newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|TaskCategory newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|TaskCategory query()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|TaskCategory whereColor($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|TaskCategory whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|TaskCategory whereFamilyId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|TaskCategory whereId($value)
@@ -33,7 +31,7 @@ class TaskCategory extends Model
 {
     use HasFactory, HasUuids;
 
-    protected $fillable = ['id', 'family_id', 'name', 'color', 'sort'];
+    protected $fillable = ['id', 'family_id', 'name', 'sort'];
 
     public function family(): BelongsTo
     {

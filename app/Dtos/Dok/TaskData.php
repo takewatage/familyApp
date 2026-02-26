@@ -15,6 +15,7 @@ class TaskData extends Data
         public string  $id,
         public string  $content,
         public string  $categoryId,
+        public ?string $color,
         public ?string $memo,
         public bool    $isCompleted,
         public ?int    $sort,

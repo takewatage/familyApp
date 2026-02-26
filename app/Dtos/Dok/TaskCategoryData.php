@@ -11,7 +11,6 @@ class TaskCategoryData extends Data
     public function __construct(
         public string $id,
         public string $name,
-        public string $color,
         public ?int   $sort,
     )
     {

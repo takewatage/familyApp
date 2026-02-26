@@ -11,8 +11,7 @@ const props = usePageProps<TaskPageData>()
 
 <template>
     <FamilyTask
-        :data="props"
-        :key="props.categoryId" />
+        :data="props"/>
 </template>
 
 <style lang="scss" scoped>

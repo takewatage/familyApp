@@ -34,8 +34,10 @@ class TaskSeeder extends Seeder
                         'family_id' => $category->family_id,
                         'category_id' => $category->id,
                         'content' => $templates[$i],
-                        'is_completed' => (bool) rand(0, 1),
+                        'memo' => '',
+                        'is_completed' => (bool)rand(0, 1),
                         'completed_at' => null,
+                        'color' => null,
                     ]);
                 }
             }

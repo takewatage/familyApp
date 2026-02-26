@@ -15,27 +15,10 @@ const props = defineProps<Props>()
 
 const localCategories = ref<TaskCategoryData[]>([...props.categories])
 const editingId = ref<string | null>(null)
-const editForm = ref({ name: '', color: '' })
+const editForm = ref({ name: '' })
 const isAdding = ref(false)
-const addForm = ref({ name: '', color: 'primary' })
+const addForm = ref({ name: '' })
 const isSubmitting = ref(false)
-
-const colorOptions = [
-    'primary',
-    'secondary',
-    'red',
-    'pink',
-    'purple',
-    'indigo',
-    'blue',
-    'cyan',
-    'teal',
-    'green',
-    'lime',
-    'amber',
-    'orange',
-    'brown',
-]
 
 const notifyChange = () => {
     props.onCategoriesChange([...localCategories.value])
@@ -60,7 +43,7 @@ const onDragEnd = async () => {
 
 const startEdit = (category: TaskCategoryData) => {
     editingId.value = category.id
-    editForm.value = { name: category.name, color: category.color }
+    editForm.value = { name: category.name }
     isAdding.value = false
 }
 
@@ -74,7 +57,6 @@ const saveEdit = async (category: TaskCategoryData) => {
     try {
         const response = await axios.patch(`/task-categories/${category.id}`, {
             name: editForm.value.name,
-            color: editForm.value.color,
         })
         const index = localCategories.value.findIndex((c) => c.id === category.id)
         if (index !== -1) {
@@ -115,7 +97,7 @@ const deleteCategory = async (category: TaskCategoryData) => {
 const startAdd = () => {
     isAdding.value = true
     editingId.value = null
-    addForm.value = { name: '', color: 'primary' }
+    addForm.value = { name: '' }
 }
 
 const cancelAdd = () => {
@@ -128,7 +110,6 @@ const saveAdd = async () => {
     try {
         const response = await axios.post('/task-categories', {
             name: addForm.value.name,
-            color: addForm.value.color,
         })
         localCategories.value.push(response.data.category)
         isAdding.value = false
@@ -167,22 +148,6 @@ const saveAdd = async () => {
                             autofocus
                             hide-details
                             class="mb-3" />
-                        <div class="color-chips mb-3">
-                            <v-chip
-                                v-for="color in colorOptions"
-                                :key="color"
-                                :color="color"
-                                size="small"
-                                class="mr-1 mb-1"
-                                :variant="editForm.color === color ? 'flat' : 'tonal'"
-                                @click="editForm.color = color">
-                                <v-icon
-                                    v-if="editForm.color === color"
-                                    size="x-small">
-                                    mdi-check
-                                </v-icon>
-                            </v-chip>
-                        </div>
                         <div class="d-flex gap-2 justify-end">
                             <v-btn
                                 size="small"
@@ -246,22 +211,6 @@ const saveAdd = async () => {
                     autofocus
                     hide-details
                     class="mb-3" />
-                <div class="color-chips mb-3">
-                    <v-chip
-                        v-for="color in colorOptions"
-                        :key="color"
-                        :color="color"
-                        size="small"
-                        class="mr-1 mb-1"
-                        :variant="addForm.color === color ? 'flat' : 'tonal'"
-                        @click="addForm.color = color">
-                        <v-icon
-                            v-if="addForm.color === color"
-                            size="x-small">
-                            mdi-check
-                        </v-icon>
-                    </v-chip>
-                </div>
                 <div class="d-flex gap-2 justify-end">
                     <v-btn
                         size="small"
@@ -325,10 +274,5 @@ const saveAdd = async () => {
     &:active {
         cursor: grabbing;
     }
-}
-
-.color-chips {
-    display: flex;
-    flex-wrap: wrap;
 }
 </style>

@@ -14,8 +14,10 @@ return new class extends Migration {
             $table->comment('タスク|タスク情報を管理するテーブル');
             $table->uuid('id')->primary();
             $table->foreignUuid('family_id')->comment('家族ID')->constrained('families');
-            $table->string('content')->comment('内容');
             $table->foreignUuid('category_id')->comment('カテゴリーID')->constrained('task_categories');
+            $table->string('content')->comment('内容');
+            $table->string('color')->nullable()->comment('色');
+            $table->text('memo')->nullable()->comment('メモ');
             $table->boolean('is_completed')->default(false)->comment('完了');
             $table->timestamp('completed_at')->nullable()->comment('完了日');
             $table->integer('sort')->default(0)->comment('並び順');

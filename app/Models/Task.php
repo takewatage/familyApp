@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string $family_id
  * @property string $content
  * @property string $category_id
+ * @property string $color
  * @property bool $is_completed
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
@@ -33,7 +34,7 @@ class Task extends Model
 {
     use HasFactory, HasUuids;
 
-    protected $fillable = ['id', 'family_id', 'content', 'category_id', 'is_completed', 'completed_at', 'sort'];
+    protected $fillable = ['id', 'family_id', 'content', 'memo', 'category_id', 'color', 'is_completed', 'completed_at', 'sort'];
 
     protected $casts = [
         'is_completed' => 'boolean',
