@@ -3,6 +3,7 @@
 use App\Http\Controllers\DokController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\TaskCategoryController;
+use App\Http\Controllers\MyPageController;
 use App\Http\Controllers\TaskController;
 use Illuminate\Support\Facades\Route;
 
@@ -10,6 +11,7 @@ Route::redirect('/', '/home');
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/home', [HomeController::class, 'index'])->name('home');
+    Route::get('/mypage', [MyPageController::class, 'index'])->name('mypage');
     Route::get('/dok', [DokController::class, 'index'])->name('dok');
 
     Route::post('/task-categories/reorder', [TaskCategoryController::class, 'reorder'])->name('task-categories.reorder');
