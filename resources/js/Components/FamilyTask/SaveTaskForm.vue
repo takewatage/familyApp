@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { TaskCategoryData, TaskData } from '@/Types/dto.generated'
-import axios from 'axios'
-import { VFileUpload } from 'vuetify/labs/VFileUpload'
+import { familyTaskApi } from '@/Api/familyTaskApi'
+import ImageUploadField from '@/Components/Common/ImageUploadField.vue'
+import ColorChipSelect from '@/Components/Common/ColorChipSelect.vue'
 
 type Props = {
     categories: TaskCategoryData[]
@@ -28,9 +29,11 @@ const emit = defineEmits<Emits>()
 const isSubmitting = ref(false)
 const showPhotoField = ref(false)
 const showMemoField = ref(false)
+const photoFile = ref<File | null>(null)
 const taskForm = ref({
     content: '',
     categoryId: props.selectedCategory,
+    color: 'white',
     memo: '',
 })
 
@@ -39,6 +42,7 @@ if (props.editMode && props.task) {
     taskForm.value = {
         content: props.task.content,
         categoryId: props.task.categoryId,
+        color: props.task.color,
         memo: props.task.memo || '',
     }
 }
@@ -59,24 +63,26 @@ const handleSubmitTask = async () => {
     try {
         if (props.editMode && props.task) {
             // 編集モード: 更新API
-            const response = await axios.patch(`/tasks/${props.task.id}`, {
+            const response = await familyTaskApi.update(props.task.id, {
                 content: taskForm.value.content,
                 category_id: taskForm.value.categoryId,
+                color: taskForm.value.color,
                 memo: taskForm.value.memo,
             })
-            const updatedTask = response.data.task as TaskData
+            const updatedTask = response.data.task
             emit('task-updated', updatedTask)
             if (props.onClose) {
                 props.onClose(updatedTask)
             }
         } else {
             // 新規作成モード
-            const response = await axios.post('/tasks', {
+            const response = await familyTaskApi.store({
                 content: taskForm.value.content,
                 category_id: taskForm.value.categoryId,
+                color: taskForm.value.color,
                 memo: taskForm.value.memo,
             })
-            const newTask = response.data.task as TaskData
+            const newTask = response.data.task
             emit('task-created', newTask)
             closeSheet()
         }
@@ -118,6 +124,10 @@ const categoryName = computed(() => {
                 auto-grow
                 color="primary"></v-textarea>
 
+            <ColorChipSelect
+                v-model="taskForm.color"
+                class="mb-2" />
+
             <template v-if="!editMode">
                 <div class="field-toggle-btns">
                     <div
@@ -139,29 +149,7 @@ const categoryName = computed(() => {
                 <div
                     v-if="showPhotoField"
                     class="optional-field">
-                    <v-label>写真</v-label>
-                    <div
-                        v-if="true"
-                        class="photo-upload-area">
-                        <v-icon
-                            size="48"
-                            color="grey-lighten-1">
-                            mdi-camera-plus
-                        </v-icon>
-                        <p class="text-body-2 text-grey mt-2 mb-0">タップして写真を追加</p>
-                    </div>
-                    <div
-                        v-else
-                        class="photo-preview">
-                        <!--                    <img :src="taskForm.photo">-->
-                        <v-btn
-                            icon
-                            size="small"
-                            class="photo-remove"
-                            color="error">
-                            <v-icon size="small">mdi-close</v-icon>
-                        </v-btn>
-                    </div>
+                    <ImageUploadField v-model="photoFile" />
                 </div>
 
                 <!-- メモフィールド -->
@@ -181,17 +169,13 @@ const categoryName = computed(() => {
             </template>
             <template v-else>
                 <v-divider></v-divider>
-                <v-list-item class="pa-0">
+                <v-list-item class="pa-0 py-3">
                     <template #prepend>
                         <v-avatar>
                             <v-icon color="primary">mdi-camera-plus</v-icon>
                         </v-avatar>
                     </template>
-                    <v-file-upload
-                        clearable
-                        density="comfortable"
-                        title="sss"
-                        variant="comfortable"></v-file-upload>
+                    <ImageUploadField v-model="photoFile" />
                 </v-list-item>
                 <v-divider></v-divider>
                 <v-list-item class="pa-0">
@@ -216,6 +200,7 @@ const categoryName = computed(() => {
         </v-card-text>
         <v-card-actions class="justify-end">
             <v-btn
+                v-if="!editMode"
                 variant="text"
                 @click="closeSheet">
                 キャンセル
@@ -223,9 +208,10 @@ const categoryName = computed(() => {
             <v-btn
                 color="primary"
                 variant="flat"
+                :width="editMode ? '100%' : 'auto'"
                 :loading="isSubmitting"
                 :disabled="!taskForm.content.trim() || !taskForm.categoryId"
-                :prepend-icon="!editMode ? 'mdi-arrow-up' : undefined"
+                size="large"
                 @click="handleSubmitTask">
                 {{ editMode ? '更新' : '追加' }}
             </v-btn>
@@ -236,37 +222,6 @@ const categoryName = computed(() => {
 <style scoped lang="scss">
 .chip {
     width: fit-content;
-}
-
-/* フォトアップロード */
-.photo-upload-area {
-    border: 2px dashed #ddd;
-    border-radius: 16px;
-    padding: 32px;
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.photo-upload-area:hover {
-    border-color: rgb(var(--v-theme-primary));
-}
-
-.photo-preview {
-    position: relative;
-    display: inline-block;
-}
-
-.photo-preview img {
-    max-width: 100%;
-    max-height: 200px;
-    border-radius: 12px;
-}
-
-.photo-remove {
-    position: absolute;
-    top: -8px;
-    right: -8px;
 }
 
 /* 追加入力フィールド */

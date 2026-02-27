@@ -10,8 +10,7 @@ const props = usePageProps<TaskPageData>()
 </script>
 
 <template>
-    <FamilyTask
-        :data="props"/>
+    <FamilyTask :data="props" />
 </template>
 
 <style lang="scss" scoped>

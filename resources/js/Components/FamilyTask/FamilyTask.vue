@@ -2,18 +2,28 @@
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useTab } from '@/Composables/Dok/useTab'
 import { TaskCategoryData, TaskData, TaskPageData } from '@/Types/dto.generated'
-import axios from 'axios'
 import SaveTaskForm from './SaveTaskForm.vue'
 import CategoryManageDialog from './CategoryManageDialog.vue'
+import TaskListItem from './TaskListItem.vue'
 import { useDialogService } from '@/Composables/Common/useDialogService'
 import { useConfirmDialog } from '@/Composables/Common/useConfirmDialogService'
+import { useTask } from '@/Composables/Task/useTask'
 
 const props = defineProps<{
     data: TaskPageData
 }>()
 
+const {
+    tasks,
+    toggleTask,
+    addTask,
+    updateTask,
+    deleteTask,
+    removeTask
+} = useTask(props.data.tasks || [])
+const { confirm } = useConfirmDialog()
+
 const selectedCategory = ref('')
-const localTasks = ref<TaskData[]>(props.data.tasks || [])
 const categories = ref<TaskCategoryData[]>(props.data.categories || [])
 const settingsSelection = ref([])
 const showCompletedTasks = ref(false)
@@ -23,83 +33,53 @@ const { tab } = useTab()
 const dialogService = useDialogService()
 
 const unCompleteTasks = computed(() => {
-    return localTasks.value.filter((x) => x.categoryId === selectedCategory.value && !x.isCompleted)
+    return tasks.value.filter(x =>
+        x.categoryId === selectedCategory.value &&
+        !x.isCompleted)
 })
 
 const completeTasks = computed(() => {
-    return localTasks.value.filter((x) => x.categoryId === selectedCategory.value && x.isCompleted)
+    return tasks.value.filter((x) =>
+        x.categoryId === selectedCategory.value &&
+        x.isCompleted)
 })
 
 const nonCategories = computed(() => {
     return categories.value.length === 0
 })
 
+const nonTasks = computed(() => {
+    return unCompleteTasks.value.length === 0
+})
+
 const init = () => {
-    selectedCategory.value = props.data.categories.length ? props.data.categories[0].id : ''
-}
-
-const toggleTodo = async (task: TaskData) => {
-    // 楽観的更新
-    const index = localTasks.value.findIndex((t) => t.id === task.id)
-    if (index !== -1) {
-        localTasks.value[index].isCompleted = !localTasks.value[index].isCompleted
-    }
-
-    try {
-        await axios.patch(`/tasks/${task.id}/toggle`)
-    } catch (error) {
-        // エラー時はロールバック
-        if (index !== -1) {
-            localTasks.value[index].isCompleted = !localTasks.value[index].isCompleted
-        }
-        console.error('Failed to toggle task:', error)
-    }
-}
-
-const handleTaskCreated = (newTask: TaskData) => {
-    // 重複チェックして追加
-    if (!localTasks.value.find((t) => t.id === newTask.id)) {
-        localTasks.value.push(newTask)
-    }
-    addTaskOpen.value = false
-}
-
-const handleTaskUpdated = (updatedTask: TaskData) => {
-    const index = localTasks.value.findIndex((t) => t.id === updatedTask.id)
-    if (index !== -1) {
-        localTasks.value[index] = { ...updatedTask }
-    }
+    selectedCategory.value = props.data.categories.length
+        ? props.data.categories[0].id
+        : ''
 }
 
 const setupEchoListeners = () => {
     if (!props.data.familyId) return
 
-    window.Echo.private(`family.${props.data.familyId}`).listen('.task.updated', (e: {
-        task: TaskData;
-        action: string
-    }) => {
-        const { task, action } = e
-        let index
+    window.Echo.private(`family.${props.data.familyId}`)
+        .listen('.task.updated', (e: {
+            task: TaskData;
+            action: string
+        }) => {
+            const { task, action } = e
 
-        switch (action) {
-            case 'created':
-                if (!localTasks.value.find((t) => t.id === task.id)) {
-                    localTasks.value.push(task)
-                }
-                break
-
-            case 'updated':
-                index = localTasks.value.findIndex((t) => t.id === task.id)
-                if (index !== -1) {
-                    localTasks.value[index] = { ...task } // リアクティブ更新のためスプレッド
-                }
-                break
-
-            case 'deleted':
-                localTasks.value = localTasks.value.filter((t) => t.id !== task.id)
-                break
-        }
-    })
+            switch (action) {
+                case 'created':
+                    addTask(task)
+                    break
+                case 'updated':
+                    updateTask(task)
+                    break
+                case 'deleted':
+                    removeTask(task.id)
+                    break
+            }
+        })
 }
 
 const cleanupEchoListeners = () => {
@@ -108,7 +88,7 @@ const cleanupEchoListeners = () => {
     }
 }
 
-const onEdit = async (task: TaskData) => {
+const onEditTask = async (task: TaskData) => {
     const dialog = dialogService.open<TaskData>({
         component: SaveTaskForm,
         props: {
@@ -137,7 +117,7 @@ const onEdit = async (task: TaskData) => {
 
     const result = await dialog.afterClosed()
     if (result) {
-        handleTaskUpdated(result)
+        updateTask(result)
     }
 }
 
@@ -162,7 +142,6 @@ const onCategoryEdit = () => {
 }
 
 const onDelete = async (task: TaskData): Promise<boolean> => {
-    const { confirm } = useConfirmDialog()
     const result = await confirm({
         title: 'タスクの削除',
         message: `「${task.content}」を削除しますか？`,
@@ -175,20 +154,7 @@ const onDelete = async (task: TaskData): Promise<boolean> => {
         return false
     }
 
-    // 楽観的更新
-    const backup = [...localTasks.value]
-    localTasks.value = localTasks.value.filter((t) => t.id !== task.id)
-
-    try {
-        await axios.delete(`/tasks/${task.id}`, { showLoading: true })
-        return true
-    } catch (error) {
-        // エラー時はロールバック
-        localTasks.value = backup
-        console.error('Failed to delete task:', error)
-        alert('タスクの削除に失敗しました')
-        return false
-    }
+    return deleteTask(task)
 }
 
 onMounted(() => {
@@ -221,7 +187,6 @@ watch(
                 v-for="category in categories"
                 :key="category.id"
                 :value="category.id"
-                :color="category.color"
                 size="large">
                 {{ category.name }}
             </v-chip>
@@ -259,51 +224,31 @@ watch(
             select-strategy="leaf"
             class="px-3 task-content"
             bg-color="transparent">
-            <v-list-subheader>未完了タスク</v-list-subheader>
+            <v-list-subheader v-if="!nonTasks">未完了タスク</v-list-subheader>
 
-            <div
-                v-if="unCompleteTasks.length === 0"
-                class="empty-state">
-                <v-icon
-                    icon="mdi-coffee-to-go-outline"
-                    color="primary"/>
-                <h3 class="text-h6 mb-2">タスクがありません</h3>
-                <p class="text-body-2">右下の＋ボタンから追加しましょう</p>
+            <Transition name="empty-state">
+                <div
+                    v-if="nonTasks"
+                    class="empty-state">
+                    <v-icon
+                        icon="mdi-coffee-to-go-outline"
+                        color="primary"/>
+                    <h3 class="text-h6 mb-2">タスクがありません</h3>
+                    <p class="text-body-2">右下の＋ボタンから追加しましょう</p>
+                </div>
+            </Transition>
+
+            <div class="task-list-container">
+                <TransitionGroup name="task-list">
+                    <TaskListItem
+                        v-for="item in unCompleteTasks"
+                        :key="item.id"
+                        :task="item"
+                        show-edit
+                        @toggle="toggleTask(item)"
+                        @edit="onEditTask(item)"/>
+                </TransitionGroup>
             </div>
-
-            <TransitionGroup name="task-list">
-                <v-list-item
-                    v-for="item in unCompleteTasks"
-                    :key="item.id"
-                    v-ripple="{ class: `text-primary` }"
-                    :title="item.content"
-                    min-height="auto"
-                    class="todo-list-item bg-surface rounded-lg pa-3 mb-3"
-                    :class="{ 'line-through': item.isCompleted }"
-                    elevation="4"
-                    @click="toggleTodo(item)">
-                    <template #prepend>
-                        <v-list-item-action start>
-                            <v-checkbox-btn
-                                color="primary"
-                                :model-value="item.isCompleted"/>
-                        </v-list-item-action>
-                    </template>
-                    <template #append>
-                        <div class="d-flex gap-1">
-                            <v-btn
-                                density="comfortable"
-                                icon="mdi-pencil"
-                                @click.stop="onEdit(item)"></v-btn>
-                            <!--                            <v-btn-->
-                            <!--                                density="comfortable"-->
-                            <!--                                icon="mdi-delete"-->
-                            <!--                                color="error"-->
-                            <!--                                @click.stop="onDelete(item)"></v-btn>-->
-                        </div>
-                    </template>
-                </v-list-item>
-            </TransitionGroup>
             <v-list-subheader
                 class="d-flex align-center cursor-pointer"
                 @click="showCompletedTasks = !showCompletedTasks">
@@ -316,30 +261,11 @@ watch(
             <v-expand-transition>
                 <div v-show="showCompletedTasks">
                     <TransitionGroup name="task-list">
-                        <v-list-item
+                        <TaskListItem
                             v-for="task in completeTasks"
                             :key="task.id"
-                            v-ripple="{ class: `text-primary` }"
-                            :title="task.content"
-                            min-height="auto"
-                            class="todo-list-item bg-surface rounded-lg pa-3 mb-3"
-                            :class="{ 'line-through': task.isCompleted }"
-                            @click="toggleTodo(task)">
-                            <template #prepend>
-                                <v-list-item-action start>
-                                    <v-checkbox-btn
-                                        color="primary"
-                                        :model-value="task.isCompleted"/>
-                                </v-list-item-action>
-                            </template>
-                            <!--                            <template #append>-->
-                            <!--                                <v-btn-->
-                            <!--                                    density="comfortable"-->
-                            <!--                                    icon="mdi-delete"-->
-                            <!--                                    color="error"-->
-                            <!--                                    @click.stop="onDelete(task)"></v-btn>-->
-                            <!--                            </template>-->
-                        </v-list-item>
+                            :task="task"
+                            @toggle="toggleTask(task)"/>
                     </TransitionGroup>
                 </div>
             </v-expand-transition>
@@ -361,7 +287,7 @@ watch(
             :categories="categories"
             :selected-category="selectedCategory"
             :on-close="() => (addTaskOpen = false)"
-            @task-created="handleTaskCreated"/>
+            @task-created="addTask"/>
     </v-bottom-sheet>
 </template>
 
@@ -371,18 +297,6 @@ watch(
     bottom: 80px;
     right: 16px;
     z-index: 100;
-}
-
-.todo-list-item {
-    :deep(.v-list-item__prepend) {
-        padding-top: 0 !important;
-    }
-
-    &.line-through {
-        :deep(.v-list-item__content) {
-            text-decoration: line-through;
-        }
-    }
 }
 
 :deep(.v-slide-group__container) {
@@ -405,6 +319,19 @@ watch(
     opacity: 0;
 }
 
+.empty-state-enter-active {
+    transition: opacity 0.3s ease 0.35s;
+}
+
+.empty-state-leave-active {
+    transition: opacity 0.2s ease;
+}
+
+.empty-state-enter-from,
+.empty-state-leave-to {
+    opacity: 0;
+}
+
 .empty-state {
     text-align: center;
     padding: 60px 20px;
@@ -417,62 +344,32 @@ watch(
 }
 
 // タスク個別のトランジションのスタイル
-//.task-list-move,
-//.task-list-enter-active,
-//.task-list-leave-active {
-//    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-//}
-//
-//.task-list-enter-from {
-//    opacity: 0;
-//    transform: translateX(-30px);
-//}
-//
-//.task-list-leave-to {
-//    opacity: 0;
-//    transform: translateX(30px);
-////}
-//
-//// ポイント：leave-active で position: absolute にして高さを確保
-//.task-list-leave-active {
-//    position: absolute;
-//    left: 0;
-//    right: 0;
-//}
+.task-list-move,
+.task-list-enter-active,
+.task-list-leave-active {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.task-list-enter-from {
+    opacity: 0;
+    transform: translateX(-30px);
+}
+
+.task-list-leave-to {
+    opacity: 0;
+    transform: translateX(30px);
+}
+
+// ポイント：leave-active で position: absolute にして高さを確保
+.task-list-leave-active {
+    position: absolute;
+    left: 0;
+    right: 0;
+}
 
 .task-list-container {
     position: relative;
     overflow: hidden; // はみ出し防止
-}
-
-// 移動アニメーション（残りのアイテムが滑らかに詰まる）
-.task-list-move {
-    transition: transform 0.4s ease;
-}
-
-// 入場アニメーション
-.task-list-enter-active {
-    transition: all 0.3s ease;
-}
-
-// 退場アニメーション
-.task-list-leave-active {
-    transition: all 0.3s ease;
-    position: absolute;
-    left: 12px;
-    right: 12px;
-}
-
-// 入場開始状態
-.task-list-enter-from {
-    opacity: 0;
-    transform: scale(0.9) translateX(-20px);
-}
-
-// 退場終了状態
-.task-list-leave-to {
-    opacity: 0;
-    transform: scale(0.9) translateX(20px);
 }
 
 .category-edit-btn {
