@@ -7,15 +7,20 @@ export const useTask = (initialTasks: TaskData[] = []) => {
 
     const toggleTask = async (task: TaskData) => {
         const index = tasks.value.findIndex((t) => t.id === task.id)
+        const backup = index !== -1 ? { ...tasks.value[index] } : null
         if (index !== -1) {
             tasks.value[index].isCompleted = !tasks.value[index].isCompleted
+            tasks.value[index].completedAt = tasks.value[index].isCompleted ? new Date().toISOString() : null
         }
         try {
-            await familyTaskApi.toggle(task.id)
+            const res = await familyTaskApi.toggle(task.id)
+            if (index !== -1) {
+                tasks.value[index] = { ...tasks.value[index], ...res.data.task }
+            }
         } catch (error) {
             // エラー時はロールバック
-            if (index !== -1) {
-                tasks.value[index].isCompleted = !tasks.value[index].isCompleted
+            if (index !== -1 && backup) {
+                tasks.value[index] = backup
             }
             console.error('Failed to toggle task:', error)
         }

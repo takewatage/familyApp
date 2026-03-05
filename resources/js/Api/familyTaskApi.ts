@@ -1,17 +1,17 @@
 import client from './client'
-import { TaskData } from '@/Types/dto.generated'
+import { SaveTaskData, TaskData } from '@/Types/dto.generated'
 
 export const familyTaskApi = {
-    store(data: { content: string; category_id: string; color: string; memo: string }) {
-        return client.post<{ task: TaskData }>('/tasks', data)
+    store(data: SaveTaskData) {
+        return client.post<{ task: TaskData }>('/task', data)
     },
-    update(taskId: string, data: { content: string; category_id: string; color: string; memo: string }) {
-        return client.patch<{ task: TaskData }>(`/tasks/${taskId}`, data)
+    update(taskId: string, data: SaveTaskData) {
+        return client.patch<{ task: TaskData }>(`/task/${taskId}`, data)
     },
     toggle(taskId: string) {
-        return client.patch<TaskData>(`/tasks/${taskId}/toggle`)
+        return client.patch<{ task: TaskData }>(`/task/${taskId}/toggle`)
     },
     destroy(taskId: string) {
-        return client.delete(`/tasks/${taskId}`)
+        return client.delete(`/task/${taskId}`)
     },
 }

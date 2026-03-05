@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { TaskCategoryData, TaskData } from '@/Types/dto.generated'
+import { SaveTaskRequestData, TaskCategoryData, TaskData } from '@/Types/dto.generated'
 import { familyTaskApi } from '@/Api/familyTaskApi'
 import ImageUploadField from '@/Components/Common/ImageUploadField.vue'
 import ColorChipSelect from '@/Components/Common/ColorChipSelect.vue'
 
 type Props = {
+    familyId: string
     categories: TaskCategoryData[]
     selectedCategory: string
     editMode?: boolean
@@ -42,7 +43,7 @@ if (props.editMode && props.task) {
     taskForm.value = {
         content: props.task.content,
         categoryId: props.task.categoryId,
-        color: props.task.color,
+        color: props.task.color ?? 'white',
         memo: props.task.memo || '',
     }
 }
@@ -59,16 +60,19 @@ const handleSubmitTask = async () => {
     }
 
     isSubmitting.value = true
+    const data: SaveTaskRequestData = {
+        familyId: props.familyId,
+        content: taskForm.value.content,
+        categoryId: taskForm.value.categoryId,
+        color: taskForm.value.color,
+        memo: taskForm.value.memo,
+    }
 
     try {
         if (props.editMode && props.task) {
             // 編集モード: 更新API
-            const response = await familyTaskApi.update(props.task.id, {
-                content: taskForm.value.content,
-                category_id: taskForm.value.categoryId,
-                color: taskForm.value.color,
-                memo: taskForm.value.memo,
-            })
+            data.id = props.task.id
+            const response = await familyTaskApi.update(props.task.id, data)
             const updatedTask = response.data.task
             emit('task-updated', updatedTask)
             if (props.onClose) {
@@ -76,12 +80,7 @@ const handleSubmitTask = async () => {
             }
         } else {
             // 新規作成モード
-            const response = await familyTaskApi.store({
-                content: taskForm.value.content,
-                category_id: taskForm.value.categoryId,
-                color: taskForm.value.color,
-                memo: taskForm.value.memo,
-            })
+            const response = await familyTaskApi.store(data)
             const newTask = response.data.task
             emit('task-created', newTask)
             closeSheet()

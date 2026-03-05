@@ -39,6 +39,7 @@
 [![Inertia.js](https://raw.githubusercontent.com/inertiajs/inertia/master/.github/LOGO.png)](https://inertiajs.com/)
 
 ### コミットルール
+
 * feat: 新しい機能
 * fix: バグの修正
 * docs: ドキュメントのみの変更
@@ -47,3 +48,11 @@
 * perf: パフォーマンス向上関連
 * test: テスト関連
 * chore: ビルド、補助ツール、ライブラリ関連
+
+### よく使うコマンド
+
+```shell
+sail artisan ide-helper:meta
+
+sail artisan typescript:transform
+```

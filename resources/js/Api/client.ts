@@ -164,7 +164,7 @@ function getErrorMessage(status: number): string {
 // =============================================================================
 
 const client = axios.create({
-    baseURL: '/api',
+    baseURL: '/',
     timeout: 30_000,
     headers: {
         'X-Requested-With': 'XMLHttpRequest',

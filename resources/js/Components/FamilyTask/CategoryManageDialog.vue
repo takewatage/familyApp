@@ -4,7 +4,7 @@ import { VueDraggable } from 'vue-draggable-plus'
 import { TaskCategoryData } from '@/Types/dto.generated'
 import { DialogComponentProps } from '@/Composables/Common/useDialogService'
 import { useConfirmDialog } from '@/Composables/Common/useConfirmDialogService'
-import axios from 'axios'
+import { taskCategoryApi } from '@/Api/taskCategoryApi'
 
 type Props = {
     categories: TaskCategoryData[]
@@ -35,7 +35,7 @@ const onDragEnd = async () => {
     }))
     notifyChange()
     try {
-        await axios.post('/task-categories/reorder', { orders })
+        await taskCategoryApi.reorder({ orders })
     } catch (error) {
         console.error('Failed to reorder:', error)
     }
@@ -55,9 +55,7 @@ const saveEdit = async (category: TaskCategoryData) => {
     if (!editForm.value.name.trim()) return
     isSubmitting.value = true
     try {
-        const response = await axios.patch(`/task-categories/${category.id}`, {
-            name: editForm.value.name,
-        })
+        const response = await taskCategoryApi.update(category.id, { name: editForm.value.name })
         const index = localCategories.value.findIndex((c) => c.id === category.id)
         if (index !== -1) {
             localCategories.value[index] = response.data.category
@@ -86,7 +84,7 @@ const deleteCategory = async (category: TaskCategoryData) => {
     notifyChange()
 
     try {
-        await axios.delete(`/task-categories/${category.id}`)
+        await taskCategoryApi.destroy(category.id)
     } catch (error) {
         localCategories.value = backup
         notifyChange()
@@ -108,9 +106,7 @@ const saveAdd = async () => {
     if (!addForm.value.name.trim()) return
     isSubmitting.value = true
     try {
-        const response = await axios.post('/task-categories', {
-            name: addForm.value.name,
-        })
+        const response = await taskCategoryApi.store({ name: addForm.value.name })
         localCategories.value.push(response.data.category)
         isAdding.value = false
         notifyChange()

@@ -175,5 +175,9 @@ return [
         'email' => 'メールアドレス',
         'family_code' => '家族コード',
         'password' => 'パスワード',
+        'content' => 'タスク内容',
+        'color' => 'カラー',
+        'memo' => 'メモ',
+        'photo' => '写真',
     ],
 ];

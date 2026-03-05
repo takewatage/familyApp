@@ -8,7 +8,20 @@ const emit = defineEmits<{
     (e: 'update:modelValue', value: string): void
 }>()
 
-const defaultColors = ['white', 'red', 'pink', 'purple', 'indigo', 'blue', 'cyan', 'teal', 'green', 'lime', 'amber', 'orange']
+const defaultColors = [
+    'white',
+    'red-accent-1',
+    'pink-accent-1',
+    'purple-accent-1',
+    'indigo-accent-1',
+    'blue-accent-1',
+    'cyan-accent-1',
+    'teal-accent-1',
+    'green-accent-1',
+    'lime-accent-1',
+    'amber-accent-1',
+    'orange-accent-1',
+]
 
 const colorList = props.colors ?? defaultColors
 </script>
@@ -22,7 +35,7 @@ const colorList = props.colors ?? defaultColors
             size="small"
             class="color-chip"
             :class="{ selected: modelValue === color, 'white-chip': color === 'white' }"
-            :variant="modelValue === color ? 'flat' : 'tonal'"
+            variant="flat"
             @click="emit('update:modelValue', color)">
             <v-icon
                 v-if="modelValue === color"

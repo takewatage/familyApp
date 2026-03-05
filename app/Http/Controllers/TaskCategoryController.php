@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Dtos\Dok\StoreTaskCategoryRequest;
 use App\Dtos\Dok\TaskCategoryData;
+use App\Dtos\Dok\TaskCategoryResult;
+use App\Dtos\Dok\UpdateTaskCategoryRequest;
+use App\Dtos\Task\ReorderTaskCategoryRequest;
 use App\Models\TaskCategory;
 use App\Services\CurrentFamilyService;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 
 class TaskCategoryController extends Controller
 {
@@ -15,33 +17,25 @@ class TaskCategoryController extends Controller
     {
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(StoreTaskCategoryRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-        ]);
-
         $familyId = $this->currentFamilyService->getCurrentFamilyId();
         $maxSort = TaskCategory::where('family_id', $familyId)->max('sort');
 
         $category = TaskCategory::create([
             'family_id' => $familyId,
-            'name' => $validated['name'],
+            'name' => $request->name,
             'sort' => ($maxSort ?? 0) + 1,
         ]);
 
-        return response()->json([
-            'success' => true,
-            'category' => TaskCategoryData::from($category->toArray()),
-        ]);
+        return response()->json(new TaskCategoryResult(
+            success: true,
+            category: TaskCategoryData::from($category->toArray()),
+        ));
     }
 
-    public function update(Request $request, string $id): JsonResponse
+    public function update(UpdateTaskCategoryRequest $request, string $id): JsonResponse
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-        ]);
-
         $familyId = $this->currentFamilyService->getCurrentFamilyId();
 
         $taskCategory = TaskCategory::where('id', $id)
@@ -49,13 +43,13 @@ class TaskCategoryController extends Controller
             ->firstOrFail();
 
         $taskCategory->update([
-            'name' => $validated['name'],
+            'name' => $request->name,
         ]);
 
-        return response()->json([
-            'success' => true,
-            'category' => TaskCategoryData::from($taskCategory->toArray()),
-        ]);
+        return response()->json(new TaskCategoryResult(
+            success: true,
+            category: TaskCategoryData::from($taskCategory->toArray()),
+        ));
     }
 
     public function destroy(string $id): JsonResponse
@@ -72,17 +66,11 @@ class TaskCategoryController extends Controller
         return response()->json(['success' => true]);
     }
 
-    public function reorder(Request $request): JsonResponse
+    public function reorder(ReorderTaskCategoryRequest $request): JsonResponse
     {
         $familyId = $this->currentFamilyService->getCurrentFamilyId();
 
-        $validated = $request->validate([
-            'orders' => 'required|array',
-            'orders.*.id' => ['required', 'string', Rule::exists('task_categories', 'id')->where('family_id', $familyId)],
-            'orders.*.sort' => 'required|integer',
-        ]);
-
-        foreach ($validated['orders'] as $order) {
+        foreach ($request->orders as $order) {
             TaskCategory::where('id', $order['id'])
                 ->where('family_id', $familyId)
                 ->update(['sort' => $order['sort']]);

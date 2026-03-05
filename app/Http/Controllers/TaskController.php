@@ -3,14 +3,16 @@
 namespace App\Http\Controllers;
 
 use App\Dtos\Dok\TaskPageData;
-use App\Dtos\Dok\TaskCategoryData;
-use App\Dtos\Dok\TaskData;
+use App\Dtos\Task\SaveTaskRequestData;
+use App\Dtos\Task\TaskData;
 use App\Events\TaskUpdated;
 use App\Models\Task;
 use App\Models\TaskCategory;
 use App\Services\CurrentFamilyService;
+use Hamcrest\Core\AllOf;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -21,15 +23,15 @@ class TaskController extends Controller
     {
     }
 
-    public function index(Request $request): Response
+    public function index(): Response
     {
-        $familyId = $this->currentFamilyService->getCurrentFamilyId();
+        $family_id = $this->currentFamilyService->getCurrentFamilyId();
         $categories = [];
         $tasks = [];
 
-        if ($familyId) {
-            $categories = TaskCategory::where('family_id', $familyId)->orderBy('sort')->get()->toArray();
-            $tasks = Task::where('family_id', $familyId)
+        if ($family_id) {
+            $categories = TaskCategory::where('family_id', $family_id)->orderBy('sort')->get()->toArray();
+            $tasks = Task::where('family_id', $family_id)
                 ->where(function ($query) {
                     $query->where('is_completed', false)->orWhere(function ($q) {
                         $q->where('is_completed', true)->where('completed_at', '>=', now()->subDays(7));
@@ -43,7 +45,7 @@ class TaskController extends Controller
         $dto = TaskPageData::from([
             'categories' => $categories,
             'tasks' => $tasks,
-            'familyId' => $familyId,
+            'family_id' => $family_id,
         ]);
 
         return Inertia::render('Task/index', $dto->toArray());
@@ -52,9 +54,15 @@ class TaskController extends Controller
     /**
      * タスクの完了状態をトグル
      */
-    public function toggle(Task $task): JsonResponse
+    public function toggle(string $task_id): JsonResponse
     {
         $familyId = $this->currentFamilyService->getCurrentFamilyId();
+
+        $task = Task::find($task_id);
+
+        if (!$task) {
+            ValidationException::withMessages(['task' => 'タスクが見つかりません。']);
+        }
 
         // 権限チェック
         if ($task->family_id !== $familyId) {
@@ -76,32 +84,28 @@ class TaskController extends Controller
 
         return response()->json([
             'success' => true,
+            'task' => TaskData::from($task->toArray()),
         ]);
     }
 
     /**
-     * @param Request $request
+     * @param SaveTaskRequestData $request
      * @return JsonResponse
      */
-    public function store(Request $request): JsonResponse
+    public function store(SaveTaskRequestData $request): JsonResponse
     {
-        $validated = $request->validate([
-            'content' => 'required|string|max:255',
-            'category_id' => 'required|exists:task_categories,id',
-            'color' => 'required|string|max:50',
-            'memo' => 'nullable|string|max:1000',
-        ]);
-
         $familyId = $this->currentFamilyService->getCurrentFamilyId();
 
-        $maxSort = Task::where('family_id', $familyId)->where('category_id', $validated['category_id'])->max('sort');
+        $maxSort = Task::where('family_id', $familyId)
+            ->where('category_id', $request->category_id)
+            ->max('sort');
 
         $task = Task::create([
             'family_id' => $familyId,
-            'category_id' => $validated['category_id'],
-            'content' => $validated['content'],
-            'color' => $validated['color'],
-            'memo' => $validated['memo'] ?? null,
+            'category_id' => $request->category_id,
+            'content' => $request->content,
+            'color' => $request->color,
+            'memo' => $request->memo,
             'is_completed' => false,
             'sort' => ($maxSort ?? 0) + 1,
         ]);
@@ -116,28 +120,29 @@ class TaskController extends Controller
 
     /**
      * タスク更新
+     * @throws ValidationException
      */
-    public function update(Request $request, Task $task): JsonResponse
+    public function update(Request $request, SaveTaskRequestData $data): JsonResponse
     {
-        $validated = $request->validate([
-            'content' => 'required|string|max:255',
-            'category_id' => 'required|exists:task_categories,id',
-            'color' => 'required|string|max:50',
-            'memo' => 'nullable|string|max:1000',
-        ]);
+        if (!$data->id) {
+            throw ValidationException::withMessages([
+                'task' => 'タスクが存在しません。'
+            ]);
+        }
 
         $familyId = $this->currentFamilyService->getCurrentFamilyId();
 
         // 権限チェック
-        if ($task->family_id !== $familyId) {
+        if ($data->family_id !== $familyId) {
             abort(403);
         }
 
+        $task = Task::find($data->id);
+
         $task->update([
-            'content' => $validated['content'],
-            'category_id' => $validated['category_id'],
-            'color' => $validated['color'],
-            'memo' => $validated['memo'] ?? null,
+            'content' => $data->content,
+            'color' => $data->color,
+            'memo' => $data->memo ?? null,
         ]);
 
         // リアルタイム通知

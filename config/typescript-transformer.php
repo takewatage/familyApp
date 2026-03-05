@@ -1,5 +1,7 @@
 <?php
 
+use App\TypeScript\CamelCaseDataTransformer;
+
 return [
     /*
      * The paths where typescript-transformer will look for PHP classes
@@ -25,6 +27,7 @@ return [
      */
 
     'transformers' => [
+        CamelCaseDataTransformer::class,
         Spatie\LaravelTypeScriptTransformer\Transformers\SpatieStateTransformer::class,
         //        Spatie\TypeScriptTransformer\Transformers\EnumTransformer::class,
         //        Spatie\TypeScriptTransformer\Transformers\SpatieEnumTransformer::class,

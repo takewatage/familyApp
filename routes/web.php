@@ -20,10 +20,10 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('/task-categories/{taskCategory}', [TaskCategoryController::class, 'destroy'])->name('task-categories.destroy');
 
     Route::get('/tasks', [TaskController::class, 'index'])->name('tasks');
-    Route::post('/tasks', [TaskController::class, 'store'])->name('tasks.store');
-    Route::patch('/tasks/{task}', [TaskController::class, 'update'])->name('tasks.update');
-    Route::patch('/tasks/{task}/toggle', [TaskController::class, 'toggle'])->name('tasks.toggle');
-    Route::delete('/tasks/{task}', [TaskController::class, 'destroy'])->name('tasks.destroy');
+    Route::post('/task', [TaskController::class, 'store'])->name('tasks.store');
+    Route::patch('/task/{task}', [TaskController::class, 'update'])->name('tasks.update');
+    Route::patch('/task/{task_id}/toggle', [TaskController::class, 'toggle'])->name('tasks.toggle');
+    Route::delete('/task/{task}', [TaskController::class, 'destroy'])->name('tasks.destroy');
 });
 
 require __DIR__ . '/auth.php';
