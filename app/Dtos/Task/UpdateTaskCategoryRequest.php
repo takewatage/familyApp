@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Dtos\Dok;
+namespace App\Dtos\Task;
 
 use Spatie\LaravelData\Attributes\MapInputName;
 use Spatie\LaravelData\Data;
@@ -13,7 +13,8 @@ class UpdateTaskCategoryRequest extends Data
 {
     public function __construct(
         public string $name,
-    ) {
+    )
+    {
     }
 
     public static function rules(): array

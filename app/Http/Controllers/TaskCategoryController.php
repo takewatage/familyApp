@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Dtos\Dok\StoreTaskCategoryRequest;
-use App\Dtos\Dok\TaskCategoryData;
-use App\Dtos\Dok\TaskCategoryResult;
-use App\Dtos\Dok\UpdateTaskCategoryRequest;
-use App\Dtos\Task\ReorderTaskCategoryRequest;
+use App\Dtos\Task\SortTaskCategoryRequest;
+use App\Dtos\Task\StoreTaskCategoryRequest;
+use App\Dtos\Task\TaskCategoryData;
+use App\Dtos\Task\TaskCategoryResult;
+use App\Dtos\Task\UpdateTaskCategoryRequest;
 use App\Models\TaskCategory;
 use App\Services\CurrentFamilyService;
 use Illuminate\Http\JsonResponse;
@@ -66,14 +66,14 @@ class TaskCategoryController extends Controller
         return response()->json(['success' => true]);
     }
 
-    public function reorder(ReorderTaskCategoryRequest $request): JsonResponse
+    public function reorder(SortTaskCategoryRequest $request): JsonResponse
     {
         $familyId = $this->currentFamilyService->getCurrentFamilyId();
 
-        foreach ($request->orders as $order) {
-            TaskCategory::where('id', $order['id'])
+        foreach ($request->categories as $item) {
+            TaskCategory::where('id', $item->id)
                 ->where('family_id', $familyId)
-                ->update(['sort' => $order['sort']]);
+                ->update(['sort' => $item->sort]);
         }
 
         return response()->json(['success' => true]);

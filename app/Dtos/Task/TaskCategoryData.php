@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Dtos\Dok;
+namespace App\Dtos\Task;
 
 use Spatie\LaravelData\Attributes\MapInputName;
 use Spatie\LaravelData\Data;

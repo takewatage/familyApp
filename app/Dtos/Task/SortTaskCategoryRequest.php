@@ -10,7 +10,7 @@ use Spatie\LaravelData\Mappers\CamelCaseMapper;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
 #[TypeScript]
-class ReorderTaskCategoryRequest extends Data
+class SortTaskCategoryRequest extends Data
 {
     public function __construct(
         /**

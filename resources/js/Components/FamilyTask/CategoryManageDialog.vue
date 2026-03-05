@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { VueDraggable } from 'vue-draggable-plus'
-import { TaskCategoryData } from '@/Types/dto.generated'
+import { SortTaskCategoryRequest, TaskCategoryData } from '@/Types/dto.generated'
 import { DialogComponentProps } from '@/Composables/Common/useDialogService'
 import { useConfirmDialog } from '@/Composables/Common/useConfirmDialogService'
 import { taskCategoryApi } from '@/Api/taskCategoryApi'
@@ -29,13 +29,15 @@ const onDragEnd = async () => {
     const hasChanged = localCategories.value.some((cat, index) => cat.sort !== index + 1)
     if (!hasChanged) return
 
-    const orders = localCategories.value.map((cat, index) => ({
-        id: cat.id,
-        sort: index + 1,
-    }))
+    const params: SortTaskCategoryRequest = {
+        categories: localCategories.value.map((cat, index) => ({
+            id: cat.id,
+            sort: index + 1,
+        })),
+    }
     notifyChange()
     try {
-        await taskCategoryApi.reorder({ orders })
+        await taskCategoryApi.reorder(params)
     } catch (error) {
         console.error('Failed to reorder:', error)
     }

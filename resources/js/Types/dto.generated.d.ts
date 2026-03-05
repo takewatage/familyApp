@@ -4,9 +4,6 @@ export type MyPageData = {
     avatarUrl: string | null
     createdAt: string
 }
-export type ReorderTaskCategoryRequest = {
-    categories: Array<SortCategoryRequestData>
-}
 export type SaveTaskRequestData = {
     id?: string | null
     familyId: string
@@ -18,6 +15,9 @@ export type SaveTaskRequestData = {
 export type SortCategoryRequestData = {
     id: string
     sort: number
+}
+export type SortTaskCategoryRequest = {
+    categories: Array<SortCategoryRequestData>
 }
 export type StoreTaskCategoryRequest = {
     name: string

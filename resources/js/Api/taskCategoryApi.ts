@@ -1,6 +1,6 @@
 import axios from 'axios'
 import type {
-    ReorderTaskCategoryRequest,
+    SortTaskCategoryRequest,
     StoreTaskCategoryRequest,
     TaskCategoryResult,
     UpdateTaskCategoryRequest,
@@ -16,7 +16,7 @@ export const taskCategoryApi = {
     destroy(id: string) {
         return axios.delete<{ success: boolean }>(`/task-categories/${id}`)
     },
-    reorder(data: ReorderTaskCategoryRequest) {
+    reorder(data: SortTaskCategoryRequest) {
         return axios.post<{ success: boolean }>('/task-categories/reorder', data)
     },
 }
