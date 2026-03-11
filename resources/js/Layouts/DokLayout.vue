@@ -3,6 +3,7 @@ import { Head, router } from '@inertiajs/vue3'
 import { ref } from 'vue'
 import { mainAppMenuItems } from '@/Constants/mainAppMenu'
 import LoadingOverlay from '@/Components/App/LoadingOverlay.vue'
+import SnackbarNotification from '@/Components/App/SnackbarNotification.vue'
 
 const drawer = ref(false)
 const handleMenuClick = (route: string) => {
@@ -20,6 +21,7 @@ const handleMenuClick = (route: string) => {
         </Head>
 
         <LoadingOverlay />
+        <SnackbarNotification />
 
         <v-app-bar
             name="app-bar"

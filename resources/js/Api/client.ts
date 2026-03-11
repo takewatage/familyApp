@@ -1,5 +1,12 @@
 import axios, { type AxiosError, type AxiosResponse, type InternalAxiosRequestConfig } from 'axios'
 
+declare module 'axios' {
+    interface AxiosRequestConfig {
+        /** true: エラートーストを表示しない / false(デフォルト): 表示する */
+        suppressToast?: boolean
+    }
+}
+
 // =============================================================================
 // Types
 // =============================================================================
@@ -205,42 +212,43 @@ client.interceptors.response.use(
     },
     (error: AxiosError<ApiErrorResponse>) => {
         const status = error.response?.status
+        const suppress = error.config?.suppressToast === true
 
         // ネットワークエラー（レスポンスなし）
         if (!error.response) {
-            toast.error('ネットワークエラーが発生しました。接続を確認してください。')
+            if (!suppress) toast.error('ネットワークエラーが発生しました。接続を確認してください。')
             return Promise.reject(new ApiError(error))
         }
 
         // 認証切れ → ログインページへリダイレクト
         if (status === 401) {
-            toast.error(getErrorMessage(401))
+            if (!suppress) toast.error(getErrorMessage(401))
             window.location.href = '/login'
             return Promise.reject(new ApiError(error))
         }
 
         // CSRF トークン期限切れ → ページリロード
         if (status === 419) {
-            toast.warning(getErrorMessage(419))
+            if (!suppress) toast.warning(getErrorMessage(419))
             window.location.reload()
             return Promise.reject(new ApiError(error))
         }
 
         // バリデーションエラー → トースト表示（詳細は呼び出し側で処理）
         if (status === 422) {
-            toast.error(getErrorMessage(422))
+            if (!suppress) toast.error(error.response.data?.message || getErrorMessage(422))
             return Promise.reject(new ApiError(error))
         }
 
         // レート制限
         if (status === 429) {
-            toast.warning(getErrorMessage(429))
+            if (!suppress) toast.warning(getErrorMessage(429))
             return Promise.reject(new ApiError(error))
         }
 
         // その他のエラー
         if (status) {
-            toast.error(error.response.data?.message || getErrorMessage(status))
+            if (!suppress) toast.error(error.response.data?.message || getErrorMessage(status))
         }
 
         return Promise.reject(new ApiError(error))

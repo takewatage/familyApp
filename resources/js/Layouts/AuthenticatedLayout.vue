@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import AppHeader from '@/Components/Layout/AppHeader.vue'
 import LoadingOverlay from '@/Components/App/LoadingOverlay.vue'
+import SnackbarNotification from '@/Components/App/SnackbarNotification.vue'
 import { Head } from '@inertiajs/vue3'
 </script>
 
@@ -15,6 +16,7 @@ import { Head } from '@inertiajs/vue3'
         <AppHeader />
 
         <LoadingOverlay />
+        <SnackbarNotification />
 
         <v-main>
             <Transition

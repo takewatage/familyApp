@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3'
 import LoadingOverlay from '@/Components/App/LoadingOverlay.vue'
+import SnackbarNotification from '@/Components/App/SnackbarNotification.vue'
 </script>
 
 <template>
@@ -8,6 +9,7 @@ import LoadingOverlay from '@/Components/App/LoadingOverlay.vue'
         <Head title="KoDo" />
 
         <LoadingOverlay />
+        <SnackbarNotification />
 
         <Transition
             name="page"

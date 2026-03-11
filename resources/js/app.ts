@@ -13,12 +13,16 @@ import { keysToCamel, keysToSnake } from '@/Utils/caseConverter'
 import { setupDialogPlugin } from '@/Composables/Common/useDialogService'
 import { setupOverlayPlugin } from '@/Composables/Common/useOverlayService'
 import { useLoading } from '@/Composables/Common/useLoading'
+import { setToastHandler } from '@/Api/client'
+import { useSnackbar } from '@/Composables/Common/useSnackbar'
 
 // AxiosRequestConfig にカスタムプロパティを追加
 declare module 'axios' {
     interface AxiosRequestConfig {
         /** true: ローディング表示 / false(デフォルト): 非表示 */
         showLoading?: boolean
+        /** true: エラートーストを表示しない / false(デフォルト): 表示する */
+        suppressToast?: boolean
     }
 }
 
@@ -53,6 +57,9 @@ createInertiaApp({
 })
 
 const { start: loadingStart, end: loadingEnd } = useLoading()
+
+const { success, error, warning } = useSnackbar()
+setToastHandler({ success, error, warning })
 
 // リクエスト: camelCase → snake_case + ローディング制御
 axios.interceptors.request.use((config) => {
