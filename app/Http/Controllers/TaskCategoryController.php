@@ -7,6 +7,7 @@ use App\Dtos\Task\StoreTaskCategoryRequest;
 use App\Dtos\Task\TaskCategoryData;
 use App\Dtos\Task\TaskCategoryResult;
 use App\Dtos\Task\UpdateTaskCategoryRequest;
+use App\Events\CategoryUpdated;
 use App\Models\TaskCategory;
 use App\Services\CurrentFamilyService;
 use Illuminate\Http\JsonResponse;
@@ -28,6 +29,8 @@ class TaskCategoryController extends Controller
             'sort' => ($maxSort ?? 0) + 1,
         ]);
 
+        broadcast(new CategoryUpdated($category, 'created'))->toOthers();
+
         return response()->json(new TaskCategoryResult(
             success: true,
             category: TaskCategoryData::from($category->toArray()),
@@ -46,6 +49,8 @@ class TaskCategoryController extends Controller
             'name' => $request->name,
         ]);
 
+        broadcast(new CategoryUpdated($taskCategory, 'updated'))->toOthers();
+
         return response()->json(new TaskCategoryResult(
             success: true,
             category: TaskCategoryData::from($taskCategory->toArray()),
@@ -61,7 +66,11 @@ class TaskCategoryController extends Controller
             ->firstOrFail();
 
         $taskCategory->tasks()->delete();
+
+        $categoryData = $taskCategory->toArray();
         $taskCategory->delete();
+
+        broadcast(new CategoryUpdated(new TaskCategory($categoryData), 'deleted'))->toOthers();
 
         return response()->json(['success' => true]);
     }

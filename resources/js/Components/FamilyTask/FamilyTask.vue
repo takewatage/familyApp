@@ -66,12 +66,42 @@ const init = () => {
         : ''
 }
 
+const onCategoryDeleted = (categoryId: string) => {
+    categories.value = categories.value.filter((c) => c.id !== categoryId)
+    if (selectedCategory.value === categoryId) {
+        selectedCategory.value = categories.value.length
+            ? categories.value[0].id
+            : ''
+    }
+}
+
 const setupEchoListeners = () => {
     if (!props.data.familyId) return
 
-    window.Echo.private(`family.${props.data.familyId}`).listen(
-        '.task.updated',
-        (e: { task: TaskData; action: string }) => {
+    window.Echo.private(`family.${props.data.familyId}`)
+        .listen(
+            '.category.updated',
+            (e: { category: TaskCategoryData; action: string }) => {
+                const { category, action } = e
+
+                switch (action) {
+                    case 'created':
+                        categories.value.push(category)
+                        break
+                    case 'updated': {
+                        const idx = categories.value.findIndex(
+                            (c) => c.id === category.id,
+                        )
+                        if (idx !== -1) categories.value[idx] = category
+                        break
+                    }
+                    case 'deleted':
+                        onCategoryDeleted(category.id)
+                        break
+                }
+            },
+        )
+        .listen('.task.updated', (e: { task: TaskData; action: string }) => {
             const { task, action } = e
 
             switch (action) {
@@ -85,8 +115,7 @@ const setupEchoListeners = () => {
                     removeTask(task.id)
                     break
             }
-        },
-    )
+        })
 }
 
 const cleanupEchoListeners = () => {
@@ -230,7 +259,7 @@ watch(
         class="empty-state">
         <v-icon
             icon="mdi-shape-plus-outline"
-            color="primary"/>
+            color="primary" />
         <h3 class="text-h6 mb-2">カテゴリーがありません</h3>
         <p class="text-body-2">上の追加ボタンから追加しましょう</p>
     </div>
@@ -254,7 +283,7 @@ watch(
                     class="empty-state">
                     <v-icon
                         icon="mdi-coffee-to-go-outline"
-                        color="primary"/>
+                        color="primary" />
                     <h3 class="text-h6 mb-2">タスクがありません</h3>
                     <p class="text-body-2">右下の＋ボタンから追加しましょう</p>
                 </div>
@@ -268,7 +297,7 @@ watch(
                         :task="item"
                         show-edit
                         @toggle="toggleTask(item)"
-                        @edit="onEditTask(item)"/>
+                        @edit="onEditTask(item)" />
                 </TransitionGroup>
             </div>
             <v-list-subheader class="d-flex align-center">
@@ -299,7 +328,7 @@ watch(
                         v-for="task in completeTasks"
                         :key="task.id"
                         :task="task"
-                        @toggle="toggleTask(task)"/>
+                        @toggle="toggleTask(task)" />
                 </div>
             </v-expand-transition>
         </v-list>
@@ -321,7 +350,7 @@ watch(
             :categories="categories"
             :selected-category="selectedCategory"
             :on-close="() => (addTaskOpen = false)"
-            @task-created="addTask"/>
+            @task-created="addTask" />
     </v-bottom-sheet>
 </template>
 
