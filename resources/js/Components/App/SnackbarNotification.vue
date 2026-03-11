@@ -9,6 +9,7 @@ const { show, message, color } = useSnackbar()
         v-model="show"
         :color="color"
         location="bottom"
+        variant="tonal"
         :timeout="4000">
         {{ message }}
         <template #actions>
