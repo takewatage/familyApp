@@ -52,6 +52,7 @@ class TaskController extends Controller
 
     /**
      * タスクの完了状態をトグル
+     * @throws ValidationException
      */
     public function toggle(string $task_id): JsonResponse
     {
@@ -60,7 +61,7 @@ class TaskController extends Controller
         $task = Task::find($task_id);
 
         if (!$task) {
-            ValidationException::withMessages(['task' => 'タスクが見つかりません。']);
+            throw ValidationException::withMessages(['task' => 'タスクが見つかりません。']);
         }
 
         // 権限チェック
