@@ -1,3 +1,6 @@
+export type DeleteCompletedTasksRequest = {
+    categoryId: string
+}
 export type MyPageData = {
     name: string
     email: string

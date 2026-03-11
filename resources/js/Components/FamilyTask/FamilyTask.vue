@@ -13,7 +13,15 @@ const props = defineProps<{
     data: TaskPageData
 }>()
 
-const { tasks, toggleTask, addTask, updateTask, deleteTask, removeTask } = useTask(props.data.tasks || [])
+const {
+    tasks,
+    toggleTask,
+    addTask,
+    updateTask,
+    deleteTask,
+    removeTask,
+    deleteCompletedTasks,
+} = useTask(props.data.tasks || [])
 const { confirm } = useConfirmDialog()
 
 const selectedCategory = ref('')
@@ -26,7 +34,9 @@ const { tab } = useTab()
 const dialogService = useDialogService()
 
 const unCompleteTasks = computed(() => {
-    return tasks.value.filter((x) => x.categoryId === selectedCategory.value && !x.isCompleted)
+    return tasks.value.filter(
+        (x) => x.categoryId === selectedCategory.value && !x.isCompleted,
+    )
 })
 
 const completeTasks = computed(() => {
@@ -35,7 +45,10 @@ const completeTasks = computed(() => {
         .sort((a, b) => {
             if (!a.completedAt) return 1
             if (!b.completedAt) return -1
-            return new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime()
+            return (
+                new Date(b.completedAt).getTime() -
+                new Date(a.completedAt).getTime()
+            )
         })
 })
 
@@ -48,27 +61,32 @@ const nonTasks = computed(() => {
 })
 
 const init = () => {
-    selectedCategory.value = props.data.categories.length ? props.data.categories[0].id : ''
+    selectedCategory.value = props.data.categories.length
+        ? props.data.categories[0].id
+        : ''
 }
 
 const setupEchoListeners = () => {
     if (!props.data.familyId) return
 
-    window.Echo.private(`family.${props.data.familyId}`).listen('.task.updated', (e: { task: TaskData; action: string }) => {
-        const { task, action } = e
+    window.Echo.private(`family.${props.data.familyId}`).listen(
+        '.task.updated',
+        (e: { task: TaskData; action: string }) => {
+            const { task, action } = e
 
-        switch (action) {
-            case 'created':
-                addTask(task)
-                break
-            case 'updated':
-                updateTask(task)
-                break
-            case 'deleted':
-                removeTask(task.id)
-                break
-        }
-    })
+            switch (action) {
+                case 'created':
+                    addTask(task)
+                    break
+                case 'updated':
+                    updateTask(task)
+                    break
+                case 'deleted':
+                    removeTask(task.id)
+                    break
+            }
+        },
+    )
 }
 
 const cleanupEchoListeners = () => {
@@ -147,6 +165,20 @@ const onDelete = async (task: TaskData): Promise<boolean> => {
     return deleteTask(task)
 }
 
+const onDeleteCompleted = async () => {
+    const result = await confirm({
+        title: '完了タスクの削除',
+        message: `このカテゴリーの完了済みタスクをすべて削除しますか？`,
+        confirmText: '削除',
+        confirmColor: 'error',
+        persistent: true,
+    })
+
+    if (!result) return
+
+    await deleteCompletedTasks(selectedCategory.value)
+}
+
 onMounted(() => {
     init()
     setupEchoListeners()
@@ -198,7 +230,7 @@ watch(
         class="empty-state">
         <v-icon
             icon="mdi-shape-plus-outline"
-            color="primary" />
+            color="primary"/>
         <h3 class="text-h6 mb-2">カテゴリーがありません</h3>
         <p class="text-body-2">上の追加ボタンから追加しましょう</p>
     </div>
@@ -222,7 +254,7 @@ watch(
                     class="empty-state">
                     <v-icon
                         icon="mdi-coffee-to-go-outline"
-                        color="primary" />
+                        color="primary"/>
                     <h3 class="text-h6 mb-2">タスクがありません</h3>
                     <p class="text-body-2">右下の＋ボタンから追加しましょう</p>
                 </div>
@@ -236,16 +268,29 @@ watch(
                         :task="item"
                         show-edit
                         @toggle="toggleTask(item)"
-                        @edit="onEditTask(item)" />
+                        @edit="onEditTask(item)"/>
                 </TransitionGroup>
             </div>
-            <v-list-subheader
-                class="d-flex align-center cursor-pointer"
-                @click="showCompletedTasks = !showCompletedTasks">
-                <span>完了タスク ({{ completeTasks.length }})</span>
-                <v-icon class="ml-1">
-                    {{ showCompletedTasks ? 'mdi-chevron-up' : 'mdi-chevron-down' }}
-                </v-icon>
+            <v-list-subheader class="d-flex align-center">
+                <div
+                    class="d-flex align-center cursor-pointer flex-grow-1"
+                    @click="showCompletedTasks = !showCompletedTasks">
+                    <span>完了タスク ({{ completeTasks.length }})</span>
+                    <v-icon class="ml-1">
+                        {{
+                            showCompletedTasks
+                                ? 'mdi-chevron-up'
+                                : 'mdi-chevron-down'
+                        }}
+                    </v-icon>
+                    <v-icon
+                        v-if="completeTasks.length > 0"
+                        size="small"
+                        class="ml-2"
+                        @click.stop="onDeleteCompleted">
+                        mdi-close-octagon-outline
+                    </v-icon>
+                </div>
             </v-list-subheader>
 
             <v-expand-transition>
@@ -254,7 +299,7 @@ watch(
                         v-for="task in completeTasks"
                         :key="task.id"
                         :task="task"
-                        @toggle="toggleTask(task)" />
+                        @toggle="toggleTask(task)"/>
                 </div>
             </v-expand-transition>
         </v-list>
@@ -276,7 +321,7 @@ watch(
             :categories="categories"
             :selected-category="selectedCategory"
             :on-close="() => (addTaskOpen = false)"
-            @task-created="addTask" />
+            @task-created="addTask"/>
     </v-bottom-sheet>
 </template>
 

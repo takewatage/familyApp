@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Dtos\Task\DeleteCompletedTasksRequest;
 use App\Dtos\Task\SaveTaskRequestData;
 use App\Dtos\Task\TaskData;
 use App\Dtos\Task\TaskPageData;
@@ -150,6 +151,27 @@ class TaskController extends Controller
             'success' => true,
             'task' => TaskData::from($task->toArray()),
         ]);
+    }
+
+    /**
+     * 完了済みタスクの一括削除
+     */
+    public function destroyCompleted(DeleteCompletedTasksRequest $request): JsonResponse
+    {
+        $familyId = $this->currentFamilyService->getCurrentFamilyId();
+
+        $tasks = Task::where('family_id', $familyId)
+            ->where('category_id', $request->category_id)
+            ->where('is_completed', true)
+            ->get();
+
+        foreach ($tasks as $task) {
+            $taskData = $task->toArray();
+            $task->delete();
+            broadcast(new TaskUpdated(new Task($taskData), 'deleted'))->toOthers();
+        }
+
+        return response()->json(['success' => true]);
     }
 
     /**

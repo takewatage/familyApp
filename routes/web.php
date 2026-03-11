@@ -24,6 +24,7 @@ Route::middleware(['auth'])->group(function () {
     Route::patch('/task/{task}', [TaskController::class, 'update'])->name('tasks.update');
     Route::patch('/task/{task_id}/toggle', [TaskController::class, 'toggle'])->name('tasks.toggle');
     Route::delete('/task/{task}', [TaskController::class, 'destroy'])->name('tasks.destroy');
+    Route::delete('/tasks/completed', [TaskController::class, 'destroyCompleted'])->name('tasks.destroyCompleted');
 });
 
 require __DIR__ . '/auth.php';

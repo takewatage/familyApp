@@ -1,11 +1,11 @@
 import client from './client'
-import { SaveTaskData, TaskData } from '@/Types/dto.generated'
+import { SaveTaskRequestData, TaskData } from '@/Types/dto.generated'
 
 export const familyTaskApi = {
-    store(data: SaveTaskData) {
+    store(data: SaveTaskRequestData) {
         return client.post<{ task: TaskData }>('/task', data)
     },
-    update(taskId: string, data: SaveTaskData) {
+    update(taskId: string, data: SaveTaskRequestData) {
         return client.patch<{ task: TaskData }>(`/task/${taskId}`, data)
     },
     toggle(taskId: string) {
@@ -13,5 +13,8 @@ export const familyTaskApi = {
     },
     destroy(taskId: string) {
         return client.delete(`/task/${taskId}`)
+    },
+    destroyCompleted(categoryId: string) {
+        return client.delete('/tasks/completed', { data: { categoryId } })
     },
 }

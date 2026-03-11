@@ -10,7 +10,9 @@ export const useTask = (initialTasks: TaskData[] = []) => {
         const backup = index !== -1 ? { ...tasks.value[index] } : null
         if (index !== -1) {
             tasks.value[index].isCompleted = !tasks.value[index].isCompleted
-            tasks.value[index].completedAt = tasks.value[index].isCompleted ? new Date().toISOString() : null
+            tasks.value[index].completedAt = tasks.value[index].isCompleted
+                ? new Date().toString()
+                : null
         }
         try {
             const res = await familyTaskApi.toggle(task.id)
@@ -57,5 +59,26 @@ export const useTask = (initialTasks: TaskData[] = []) => {
         tasks.value = tasks.value.filter((t) => t.id !== taskId)
     }
 
-    return { tasks, toggleTask, addTask, updateTask, deleteTask, removeTask }
+    const deleteCompletedTasks = async (categoryId: string) => {
+        const backup = [...tasks.value]
+        tasks.value = tasks.value.filter(
+            (t) => !(t.categoryId === categoryId && t.isCompleted),
+        )
+        try {
+            await familyTaskApi.destroyCompleted(categoryId)
+        } catch (error) {
+            tasks.value = backup
+            console.error('Failed to delete completed tasks:', error)
+        }
+    }
+
+    return {
+        tasks,
+        toggleTask,
+        addTask,
+        updateTask,
+        deleteTask,
+        removeTask,
+        deleteCompletedTasks,
+    }
 }
