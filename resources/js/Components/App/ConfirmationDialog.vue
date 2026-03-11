@@ -34,8 +34,8 @@ interface Props extends DialogComponentProps<boolean> {
 const props = withDefaults(defineProps<Props>(), {
     title: 'Confirm',
     message: 'Are you sure?',
-    confirmText: 'Confirm',
-    cancelText: 'Cancel',
+    confirmText: 'OK',
+    cancelText: 'キャンセル',
     confirmColor: 'primary',
     persistent: false,
 })

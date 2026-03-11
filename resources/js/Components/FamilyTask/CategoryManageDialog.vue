@@ -1,10 +1,17 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { VueDraggable } from 'vue-draggable-plus'
-import { SortTaskCategoryRequest, TaskCategoryData } from '@/Types/dto.generated'
-import { DialogComponentProps } from '@/Composables/Common/useDialogService'
+import {
+    SortTaskCategoryRequest,
+    TaskCategoryData,
+} from '@/Types/dto.generated'
+import {
+    DialogComponentProps,
+    useDialogService,
+} from '@/Composables/Common/useDialogService'
 import { useConfirmDialog } from '@/Composables/Common/useConfirmDialogService'
 import { taskCategoryApi } from '@/Api/taskCategoryApi'
+import CategoryEditDialog from '@/Components/FamilyTask/CategoryEditDialog.vue'
 
 type Props = {
     categories: TaskCategoryData[]
@@ -14,11 +21,10 @@ type Props = {
 const props = defineProps<Props>()
 
 const localCategories = ref<TaskCategoryData[]>([...props.categories])
-const editingId = ref<string | null>(null)
-const editForm = ref({ name: '' })
-const isAdding = ref(false)
-const addForm = ref({ name: '' })
-const isSubmitting = ref(false)
+const isSheet = ref(false)
+const sheetCategoryData = ref<null | TaskCategoryData>(null)
+
+const { open } = useDialogService()
 
 const notifyChange = () => {
     props.onCategoriesChange([...localCategories.value])
@@ -26,7 +32,9 @@ const notifyChange = () => {
 
 const onDragEnd = async () => {
     // 順番が変わったかチェック
-    const hasChanged = localCategories.value.some((cat, index) => cat.sort !== index + 1)
+    const hasChanged = localCategories.value.some(
+        (cat, index) => cat.sort !== index + 1,
+    )
     if (!hasChanged) return
 
     const params: SortTaskCategoryRequest = {
@@ -43,50 +51,61 @@ const onDragEnd = async () => {
     }
 }
 
-const startEdit = (category: TaskCategoryData) => {
-    editingId.value = category.id
-    editForm.value = { name: category.name }
-    isAdding.value = false
+const openEditDialog = (category?: TaskCategoryData) => {
+    open({
+        component: CategoryEditDialog,
+        props: {
+            category,
+            onSaved: (saved: TaskCategoryData) => {
+                if (category) {
+                    const index = localCategories.value.findIndex(
+                        (c) => c.id === saved.id,
+                    )
+                    if (index !== -1) {
+                        localCategories.value[index] = saved
+                    }
+                } else {
+                    localCategories.value.push(saved)
+                }
+                notifyChange()
+            },
+        },
+        maxWidth: 400,
+    })
 }
 
-const cancelEdit = () => {
-    editingId.value = null
-}
-
-const saveEdit = async (category: TaskCategoryData) => {
-    if (!editForm.value.name.trim()) return
-    isSubmitting.value = true
-    try {
-        const response = await taskCategoryApi.update(category.id, { name: editForm.value.name })
-        const index = localCategories.value.findIndex((c) => c.id === category.id)
-        if (index !== -1) {
-            localCategories.value[index] = response.data.category
-        }
-        editingId.value = null
-        notifyChange()
-    } catch (error) {
-        console.error('Failed to update category:', error)
-    } finally {
-        isSubmitting.value = false
+const startEdit = () => {
+    if (!sheetCategoryData.value) {
+        return
     }
+    const category = sheetCategoryData.value
+    isSheet.value = false
+    openEditDialog(category)
 }
 
-const deleteCategory = async (category: TaskCategoryData) => {
+const deleteCategory = async () => {
+    if (!sheetCategoryData.value) {
+        return
+    }
+
     const { confirm } = useConfirmDialog()
     const result = await confirm({
         title: 'カテゴリーの削除',
-        message: `「${category.name}」を削除しますか？\nこのカテゴリーに含まれるタスクも全て削除されます。`,
+        message: `「${sheetCategoryData.value.name}」を削除しますか？\nこのカテゴリーに含まれるタスクも全て削除されます。`,
         confirmText: '削除',
         confirmColor: 'error',
     })
     if (!result) return
 
     const backup = [...localCategories.value]
-    localCategories.value = localCategories.value.filter((c) => c.id !== category.id)
+    localCategories.value = localCategories.value.filter(
+        (c) => c.id !== sheetCategoryData.value?.id,
+    )
     notifyChange()
 
     try {
-        await taskCategoryApi.destroy(category.id)
+        await taskCategoryApi.destroy(sheetCategoryData.value.id)
+        isSheet.value = false
     } catch (error) {
         localCategories.value = backup
         notifyChange()
@@ -94,29 +113,9 @@ const deleteCategory = async (category: TaskCategoryData) => {
     }
 }
 
-const startAdd = () => {
-    isAdding.value = true
-    editingId.value = null
-    addForm.value = { name: '' }
-}
-
-const cancelAdd = () => {
-    isAdding.value = false
-}
-
-const saveAdd = async () => {
-    if (!addForm.value.name.trim()) return
-    isSubmitting.value = true
-    try {
-        const response = await taskCategoryApi.store({ name: addForm.value.name })
-        localCategories.value.push(response.data.category)
-        isAdding.value = false
-        notifyChange()
-    } catch (error) {
-        console.error('Failed to create category:', error)
-    } finally {
-        isSubmitting.value = false
-    }
+const openSheet = (cateogry: TaskCategoryData) => {
+    sheetCategoryData.value = cateogry
+    isSheet.value = true
 }
 </script>
 
@@ -133,42 +132,7 @@ const saveAdd = async () => {
                     v-for="category in localCategories"
                     :key="category.id"
                     class="mb-2">
-                    <!-- 編集フォーム -->
-                    <v-card
-                        v-if="editingId === category.id"
-                        elevation="3"
-                        class="pa-3">
-                        <v-text-field
-                            v-model="editForm.name"
-                            label="カテゴリー名"
-                            variant="outlined"
-                            density="compact"
-                            autofocus
-                            hide-details
-                            class="mb-3" />
-                        <div class="d-flex gap-2 justify-end">
-                            <v-btn
-                                size="small"
-                                variant="text"
-                                @click="cancelEdit">
-                                キャンセル
-                            </v-btn>
-                            <v-btn
-                                size="small"
-                                color="primary"
-                                variant="flat"
-                                :loading="isSubmitting"
-                                :disabled="!editForm.name.trim()"
-                                @click="saveEdit(category)">
-                                保存
-                            </v-btn>
-                        </div>
-                    </v-card>
-
-                    <!-- 通常カード -->
-                    <v-card
-                        v-else
-                        class="category-card">
+                    <v-card class="category-card">
                         <div class="d-flex align-center px-3 py-4">
                             <v-icon
                                 class="drag-handle mr-3"
@@ -176,71 +140,47 @@ const saveAdd = async () => {
                                 size="20">
                                 mdi-drag
                             </v-icon>
-                            <span class="text-body-1 flex-grow-1">{{ category.name }}</span>
+                            <span class="text-body-1 flex-grow-1">
+                                {{ category.name }}
+                            </span>
                             <v-btn
                                 density="comfortable"
-                                icon="mdi-pencil"
+                                icon="mdi-dots-horizontal"
                                 variant="text"
-                                size="small"
-                                @click="startEdit(category)" />
-                            <v-btn
-                                density="comfortable"
-                                icon="mdi-delete-outline"
-                                variant="text"
-                                size="small"
-                                color="error"
-                                @click="deleteCategory(category)" />
+                                @click="openSheet(category)"/>
                         </div>
                     </v-card>
                 </div>
             </VueDraggable>
-
-            <!-- 追加フォーム -->
-            <v-card
-                v-if="isAdding"
-                variant="outlined"
-                class="mt-2 pa-3">
-                <div class="text-subtitle-2 mb-3 text-medium-emphasis">新しいカテゴリー</div>
-                <v-text-field
-                    v-model="addForm.name"
-                    label="カテゴリー名"
-                    variant="outlined"
-                    density="compact"
-                    autofocus
-                    hide-details
-                    class="mb-3" />
-                <div class="d-flex gap-2 justify-end">
-                    <v-btn
-                        size="small"
-                        variant="text"
-                        @click="cancelAdd">
-                        キャンセル
-                    </v-btn>
-                    <v-btn
-                        size="small"
-                        color="primary"
-                        variant="flat"
-                        :loading="isSubmitting"
-                        :disabled="!addForm.name.trim()"
-                        @click="saveAdd">
-                        追加
-                    </v-btn>
-                </div>
-            </v-card>
         </div>
 
         <!-- 固定フッター -->
         <div class="footer pa-3">
             <v-btn
-                v-if="!isAdding"
                 prepend-icon="mdi-plus"
                 color="primary"
                 variant="tonal"
                 block
-                @click="startAdd">
+                @click="openEditDialog()">
                 カテゴリーを追加
             </v-btn>
         </div>
+
+        <v-bottom-sheet v-model="isSheet">
+            <v-list>
+                <v-list-subheader title="カテゴリー編集"></v-list-subheader>
+                <v-list-item
+                    v-ripple="{ class: `text-primary` }"
+                    title="編集"
+                    prepend-icon="mdi-pencil"
+                    @click="startEdit()"/>
+                <v-list-item
+                    v-ripple="{ class: `text-primary` }"
+                    prepend-icon="mdi-delete-outline"
+                    title="削除"
+                    @click="deleteCategory()"/>
+            </v-list>
+        </v-bottom-sheet>
     </div>
 </template>
 
