@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -70,5 +71,15 @@ class User extends Authenticatable
     public function families()
     {
         return $this->belongsToMany(Family::class, 'family_user')->withPivot('role')->withTimestamps();
+    }
+
+    public function files(): MorphMany
+    {
+        return $this->morphMany(File::class, 'fileable');
+    }
+
+    public function avatar(): ?File
+    {
+        return $this->files()->where('collection', 'avatar')->first();
     }
 }

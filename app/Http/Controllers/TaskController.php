@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Dtos\Model\TaskData;
 use App\Dtos\Task\DeleteCompletedTasksRequest;
 use App\Dtos\Task\SaveTaskRequestData;
-use App\Dtos\Task\TaskData;
 use App\Dtos\Task\TaskPageData;
 use App\Events\TaskUpdated;
 use App\Models\Task;

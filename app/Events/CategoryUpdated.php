@@ -2,7 +2,7 @@
 
 namespace App\Events;
 
-use App\Dtos\Task\TaskCategoryData;
+use App\Dtos\Model\TaskCategoryData;
 use App\Models\TaskCategory;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
@@ -37,7 +37,7 @@ class CategoryUpdated implements ShouldBroadcastNow
     {
         return [
             'category' => TaskCategoryData::from($this->category->toArray()),
-            'action'   => $this->action,
+            'action' => $this->action,
         ];
     }
 }

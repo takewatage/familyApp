@@ -53,6 +53,27 @@
 
 ```shell
 sail artisan ide-helper:meta
+```
 
+### ModelからData class 生成
+
+```
+# 特定のモデルから生成
+
+sail artisan make:data-from-model User
+
+# 全モデルから一括生成
+
+sail artisan make:data-from-model
+
+# 既存ファイルを上書き
+
+sail artisan make:data-from-model User --force
+
+```
+
+### DataClassからtypescript生成
+
+```shell
 sail artisan typescript:transform
 ```

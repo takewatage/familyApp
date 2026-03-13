@@ -1,11 +1,11 @@
 import { ref } from 'vue'
 import { familyTaskApi } from '@/Api/familyTaskApi'
-import type { TaskData } from '@/Types/dto.generated'
+import type { Task } from '@/Types/dto.generated'
 
-export const useTask = (initialTasks: TaskData[] = []) => {
-    const tasks = ref<TaskData[]>(initialTasks)
+export const useTask = (initialTasks: Task[] = []) => {
+    const tasks = ref<Task[]>(initialTasks)
 
-    const toggleTask = async (task: TaskData) => {
+    const toggleTask = async (task: Task) => {
         const index = tasks.value.findIndex((t) => t.id === task.id)
         const backup = index !== -1 ? { ...tasks.value[index] } : null
         if (index !== -1) {
@@ -28,20 +28,20 @@ export const useTask = (initialTasks: TaskData[] = []) => {
         }
     }
 
-    const addTask = (newTask: TaskData) => {
+    const addTask = (newTask: Task) => {
         if (!tasks.value.find((t) => t.id === newTask.id)) {
             tasks.value.push(newTask)
         }
     }
 
-    const updateTask = (updatedTask: TaskData) => {
+    const updateTask = (updatedTask: Task) => {
         const index = tasks.value.findIndex((t) => t.id === updatedTask.id)
         if (index !== -1) {
             tasks.value[index] = { ...updatedTask }
         }
     }
 
-    const deleteTask = async (task: TaskData): Promise<boolean> => {
+    const deleteTask = async (task: Task): Promise<boolean> => {
         const backup = [...tasks.value]
         tasks.value = tasks.value.filter((t) => t.id !== task.id)
         try {

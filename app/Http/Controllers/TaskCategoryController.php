@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Dtos\Model\TaskCategoryData;
 use App\Dtos\Task\SortTaskCategoryRequest;
 use App\Dtos\Task\StoreTaskCategoryRequest;
-use App\Dtos\Task\TaskCategoryData;
 use App\Dtos\Task\TaskCategoryResult;
 use App\Dtos\Task\UpdateTaskCategoryRequest;
 use App\Events\CategoryUpdated;

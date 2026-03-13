@@ -2,6 +2,8 @@
 
 namespace App\Dtos\Task;
 
+use App\Dtos\Model\TaskCategoryData;
+use App\Dtos\Model\TaskData;
 use Spatie\LaravelData\Attributes\MapInputName;
 use Spatie\LaravelData\Attributes\MapOutputName;
 use Spatie\LaravelData\Data;
