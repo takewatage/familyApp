@@ -20,17 +20,20 @@ id: string;
 fileableType: string;
 fileableId: string;
 collection: string;
-externalId: string;
-directUrl: string;
+path: string;
+url: string;
 name: string;
 mimeType: string;
 sort: string;
 createdAt?: string;
 updatedAt?: string;
-fileable?: FileData;
 };
 export type MyPageData = {
 user: UserData;
+};
+export type SaveProfileData = {
+name: string;
+avatarImage?: any;
 };
 export type SaveTaskRequestData = {
 id?: string;
@@ -94,7 +97,7 @@ email: string;
 emailVerifiedAt?: string;
 createdAt?: string;
 updatedAt?: string;
+avatar?: FileData | null;
 families?: Array<FamilyData>;
 files?: Array<FileData>;
-avatar?: FileData;
 };

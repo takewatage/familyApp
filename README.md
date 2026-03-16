@@ -77,3 +77,9 @@ sail artisan make:data-from-model User --force
 ```shell
 sail artisan typescript:transform
 ```
+
+### キャッシュ関係クリア
+
+```shell
+sail artisan optimize:clear
+```

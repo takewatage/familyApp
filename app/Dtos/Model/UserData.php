@@ -16,21 +16,19 @@ use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 class UserData extends Data
 {
     public function __construct(
-        public string                  $id,
-        public string                  $name,
-        public string                  $email,
-        public ?string                 $email_verified_at,
-        public ?string                 $created_at,
-        public ?string                 $updated_at,
+        public string $id,
+        public string $name,
+        public string $email,
+        public ?string $email_verified_at,
+        public ?string $created_at,
+        public ?string $updated_at,
+        // accessor
+        public FileData|Optional|null $avatar,
         // relation: BelongsToMany
         /** @var DataCollection<int, FamilyData> */
         public DataCollection|Optional $families,
         // relation: MorphMany
         /** @var DataCollection<int, FileData> */
-        public DataCollection|Optional $files,
-
-        public ?FileData               $avatar,
-    )
-    {
-    }
+        public DataCollection|Optional $files
+    ) {}
 }

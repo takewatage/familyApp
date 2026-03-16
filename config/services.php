@@ -33,4 +33,10 @@ return [
             'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
     ],
+
+    'HStorage' => [
+        'api_key' => env('HSTORAGE_API_KEY'),
+        'secret_key' => env('HSTORAGE_SECRET_KEY'),
+        'email' => env('HSTORAGE_EMAIL'),
+    ],
 ];

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
@@ -78,7 +79,7 @@ class User extends Authenticatable
         return $this->morphMany(File::class, 'fileable');
     }
 
-    public function avatar(): ?File
+    public function getAvatarAttribute(): ?File
     {
         return $this->files()->where('collection', 'avatar')->first();
     }

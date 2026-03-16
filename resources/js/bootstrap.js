@@ -4,7 +4,7 @@ import Pusher from 'pusher-js'
 
 window.axios = axios
 
-Pusher.logToConsole = true
+Pusher.logToConsole = import.meta.env.VITE_PUSHER_LOG === 'true'
 
 window.Pusher = Pusher
 

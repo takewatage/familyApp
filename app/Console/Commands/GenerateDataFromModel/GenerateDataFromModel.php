@@ -9,6 +9,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 use ReflectionClass;
+use ReflectionNamedType;
 use Symfony\Component\Finder\Finder;
 
 class GenerateDataFromModel extends Command
@@ -159,6 +160,12 @@ class GenerateDataFromModel extends Command
             collect(data_get($inspect, 'relations', []))
         );
 
+        // accessor 情報を収集
+        $accessorProperties = $this->buildAccessorProperties(
+            collect(data_get($inspect, 'attributes', [])),
+            $ref,
+        );
+
         // use 文を収集
         $imports = collect([
             'Spatie\\LaravelData\\Attributes\\MapOutputName',
@@ -167,18 +174,19 @@ class GenerateDataFromModel extends Command
             'Spatie\\TypeScriptTransformer\\Attributes\\TypeScript',
         ]);
 
-        // Optional が必要かチェック（リレーションがある場合）
-        $needsOptional = $relationProperties->isNotEmpty();
+        // Optional が必要かチェック（リレーションまたは accessor がある場合）
+        $needsOptional = $relationProperties->isNotEmpty() || $accessorProperties->isNotEmpty();
         if ($needsOptional) {
             $imports->push('Spatie\\LaravelData\\Optional');
         }
 
-        // リレーション先の Data クラスの use 文
-        $relationImports = $relationProperties
+        // リレーション・accessor の Data クラスの use 文
+        $extraImports = $relationProperties
+            ->merge($accessorProperties)
             ->pluck('import')
             ->filter()
             ->unique();
-        $imports = $imports->merge($relationImports);
+        $imports = $imports->merge($extraImports);
 
         // DataCollection が必要かチェック
         $needsDataCollection = $relationProperties->contains(fn($p) => $p['is_collection']);
@@ -188,6 +196,7 @@ class GenerateDataFromModel extends Command
 
         // プロパティ文字列を組み立て
         $allProperties = $properties
+            ->merge($accessorProperties)
             ->merge($relationProperties)
             ->map(fn($p) => $this->formatProperty($p))
             ->join("\n");
@@ -215,6 +224,7 @@ class GenerateDataFromModel extends Command
     {
         return $attributes
             ->filter(fn($attr) => !data_get($attr, 'hidden', false))
+            ->filter(fn($attr) => data_get($attr, 'cast') !== 'accessor')
             ->map(function ($attr) {
                 $name = data_get($attr, 'name');
                 $type = $this->resolvePhpType($attr);
@@ -274,6 +284,55 @@ class GenerateDataFromModel extends Command
     }
 
     /**
+     * accessor (get*Attribute) からプロパティ定義を構築
+     */
+    protected function buildAccessorProperties(Collection $attributes, ReflectionClass $ref): Collection
+    {
+        return $attributes
+            ->filter(fn($attr) => data_get($attr, 'cast') === 'accessor')
+            ->filter(fn($attr) => !data_get($attr, 'hidden', false))
+            ->map(function ($attr) use ($ref) {
+                $name = data_get($attr, 'name');
+
+                // get{Name}Attribute メソッドを探す
+                $methodName = 'get' . Str::studly($name) . 'Attribute';
+                $type = 'string';
+                $nullable = false;
+                $import = null;
+
+                if ($ref->hasMethod($methodName)) {
+                    $method = $ref->getMethod($methodName);
+                    $returnType = $method->getReturnType();
+
+                    if ($returnType instanceof ReflectionNamedType) {
+                        $nullable = $returnType->allowsNull();
+                        $typeName = $returnType->getName();
+
+                        if (class_exists($typeName) && is_subclass_of($typeName, Model::class)) {
+                            // Model の場合は対応する Data クラスに変換
+                            $shortName = (new ReflectionClass($typeName))->getShortName();
+                            $type = "{$shortName}Data";
+                            $import = "App\\Dtos\\Model\\{$shortName}Data";
+                        } elseif ($returnType->isBuiltin()) {
+                            $type = $typeName;
+                        } else {
+                            $type = '\\' . $typeName;
+                        }
+                    }
+                }
+
+                return [
+                    'name' => $name,
+                    'type' => $type,
+                    'nullable' => $nullable,
+                    'is_collection' => false,
+                    'import' => $import,
+                    'comment' => '// accessor',
+                ];
+            });
+    }
+
+    /**
      * ModelInspector の属性情報から PHP の型を解決
      */
     protected function resolvePhpType(array $attr): string
@@ -327,8 +386,9 @@ class GenerateDataFromModel extends Command
             $parts[] = "        /** @var DataCollection<int, {$dataClass}> */";
         }
 
-        // Optional（リレーション）
-        if ($prop['import'] !== null) {
+        // Optional（リレーションまたは accessor）
+        $isOptional = $prop['import'] !== null || ($comment ?? '') === '// accessor';
+        if ($isOptional) {
             $typeHint = $nullable
                 ? "{$typeHint}|Optional|null"
                 : "{$typeHint}|Optional";

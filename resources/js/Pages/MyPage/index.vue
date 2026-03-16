@@ -1,11 +1,29 @@
 <script setup lang="ts">
 import DokLayout from '@/Layouts/DokLayout.vue'
 import { usePageProps } from '@/Composables/Common/usePageProps'
+import { useDialogService } from '@/Composables/Common/useDialogService'
 import { MyPageData } from '@/Types/dto.generated'
+import EditProfileForm from '@/Components/MyPage/EditProfileForm.vue'
 
 defineOptions({ layout: DokLayout })
 
 const props = usePageProps<MyPageData>()
+const { open } = useDialogService()
+
+const onEdit = async () => {
+    open<MyPageData>({
+        component: EditProfileForm,
+        props: {
+            name: props.value.user.name,
+            avatar: props.value.user.avatar,
+        },
+        fullscreen: true,
+        transition: 'dialog-bottom-transition',
+        toolbar: {
+            title: 'プロフィール編集',
+        },
+    })
+}
 </script>
 
 <template>
@@ -16,23 +34,28 @@ const props = usePageProps<MyPageData>()
                 sm="8"
                 md="6">
                 <v-card class="pa-4">
-                    <v-card-title class="text-h5 mb-4">マイページ</v-card-title>
+                    <div class="d-flex align-center justify-space-between mb-4">
+                        <v-card-title class="text-h5 pa-0">マイページ</v-card-title>
+                        <v-btn
+                            icon="mdi-pencil"
+                            variant="text"
+                            @click="onEdit"/>
+                    </div>
 
-                    <v-card-text>
+                    <v-card-text class="pa-0">
                         <div class="d-flex flex-column align-center mb-6">
                             <v-avatar
                                 size="100"
                                 color="primary"
                                 class="mb-3">
                                 <v-img
-                                    v-if="props.avatarUrl"
-                                    :src="props.avatarUrl"
-                                    alt="アバター" />
+                                    v-if="props.user.avatar"
+                                    :src="props.user.avatar.url"/>
                                 <v-icon
                                     v-else
                                     icon="mdi-account"
                                     size="60"
-                                    color="white" />
+                                    color="white"/>
                             </v-avatar>
                         </div>
 
@@ -40,17 +63,17 @@ const props = usePageProps<MyPageData>()
                             <v-list-item
                                 prepend-icon="mdi-account"
                                 title="ユーザー名"
-                                :subtitle="props.name" />
-                            <v-divider />
+                                :subtitle="props.user.name"/>
+                            <v-divider/>
                             <v-list-item
                                 prepend-icon="mdi-email"
                                 title="メールアドレス"
-                                :subtitle="props.email" />
-                            <v-divider />
+                                :subtitle="props.user.email"/>
+                            <v-divider/>
                             <v-list-item
                                 prepend-icon="mdi-calendar"
                                 title="登録日"
-                                :subtitle="props.createdAt" />
+                                :subtitle="props.user.createdAt"/>
                         </v-list>
                     </v-card-text>
                 </v-card>

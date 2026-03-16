@@ -8,7 +8,10 @@ return [
      * to transform, this will be the `app` path by default.
      */
 
-    'auto_discover_types' => [app_path('Dtos')],
+    'auto_discover_types' => [
+        app_path('Dtos'),
+        app_path('Models'),
+        app_path('Models')],
 
     /*
      * Collectors will search for classes in the `auto_discover_types` paths and choose the correct
@@ -27,6 +30,7 @@ return [
      */
 
     'transformers' => [
+        App\Utils\ModelTransformer::class,
         CamelCaseDataTransformer::class,
         Spatie\LaravelTypeScriptTransformer\Transformers\SpatieStateTransformer::class,
         //        Spatie\TypeScriptTransformer\Transformers\EnumTransformer::class,
@@ -61,7 +65,15 @@ return [
      * But you can also use the `ModuleWriter` or implement your own.
      */
 
+    /**
+     * namespaceなし
+     */
     'writer' => Spatie\TypeScriptTransformer\Writers\ModuleWriter::class,
+    /**
+     * namespaceあり
+     */
+//    'writer' => Spatie\TypeScriptTransformer\Writers\TypeDefinitionWriter::class,
+
 
     /*
      * The generated TypeScript file can be formatted. We ship a Prettier formatter
@@ -84,10 +96,5 @@ return [
      * make them optional instead.
      */
 
-    'transform_null_to_optional' => false,
-
-    /*
-     * namespace を削除
-     */
-    'namespace' => null,
+    'transform_null_to_optional' => true,
 ];

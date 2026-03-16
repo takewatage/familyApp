@@ -3,6 +3,7 @@ import { ref, watch } from 'vue'
 
 const props = defineProps<{
     modelValue?: File | null
+    currentUrl?: string | null
 }>()
 
 const emit = defineEmits<{
@@ -10,7 +11,7 @@ const emit = defineEmits<{
 }>()
 
 const vFileInputRef = ref<InstanceType<typeof import('vuetify/components').VFileInput> | null>(null)
-const previewUrl = ref<string | null>(null)
+const previewUrl = ref<string | null>(props.currentUrl ?? null)
 
 watch(
     () => props.modelValue,
@@ -18,7 +19,7 @@ watch(
         if (file) {
             previewUrl.value = URL.createObjectURL(file)
         } else {
-            previewUrl.value = null
+            previewUrl.value = props.currentUrl ?? null
         }
     },
 )
@@ -40,7 +41,7 @@ const onFileChange = (files: File | File[] | null) => {
 
 const clearImage = () => {
     emit('update:modelValue', null)
-    previewUrl.value = null
+    previewUrl.value = props.currentUrl ?? null
 }
 </script>
 

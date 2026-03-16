@@ -1,6 +1,22 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 /**
+ * 再帰的にキー変換すべきプレーンオブジェクトかどうか判定
+ */
+function isPlainObject(val: any): val is Record<string, any> {
+    return (
+        val !== null &&
+        typeof val === 'object' &&
+        !Array.isArray(val) &&
+        !(val instanceof File) &&
+        !(val instanceof Blob) &&
+        !(val instanceof Date) &&
+        !(val instanceof FormData)
+    )
+}
+
+
+/**
  * camelCaseをsnake_caseに変換
  */
 export function toSnakeCase(str: string): string {
@@ -17,55 +33,38 @@ export function toCamelCase(str: string): string {
 /**
  * オブジェクトのキーをcamelCaseからsnake_caseに変換（deep対応）
  */
-export function keysToSnake<T extends Record<string, any>>(obj: T): Record<string, any> {
-    if (obj === null || typeof obj !== 'object') {
-        return obj
-    }
-
+export function keysToSnake(obj: any): any {
     if (Array.isArray(obj)) {
-        return obj.map((item) => keysToSnake(item))
+        return obj.map(keysToSnake)
     }
-
-    const result: Record<string, any> = {}
-    for (const key in obj) {
-        if (Object.prototype.hasOwnProperty.call(obj, key)) {
-            const value = obj[key]
-            const snakeKey = toSnakeCase(key)
-
-            if (value !== null && typeof value === 'object') {
-                result[snakeKey] = keysToSnake(value)
-            } else {
-                result[snakeKey] = value
+    if (isPlainObject(obj)) {
+        const result: Record<string, any> = {}
+        for (const key in obj) {
+            if (Object.prototype.hasOwnProperty.call(obj, key)) {
+                result[toSnakeCase(key)] = keysToSnake(obj[key])
             }
         }
+        return result
     }
-    return result
+    // File, Blob, Date, プリミティブ等はそのまま
+    return obj
 }
 
 /**
  * オブジェクトのキーをsnake_caseからcamelCaseに変換（deep対応）
  */
-export function keysToCamel<T extends Record<string, any>>(obj: T): Record<string, any> {
-    if (obj === null || typeof obj !== 'object') {
-        return obj
-    }
-
+export function keysToCamel(obj: any): any {
     if (Array.isArray(obj)) {
-        return obj.map((item) => keysToCamel(item))
+        return obj.map(keysToCamel)
     }
-
-    const result: Record<string, any> = {}
-    for (const key in obj) {
-        if (Object.prototype.hasOwnProperty.call(obj, key)) {
-            const value = obj[key]
-            const camelKey = toCamelCase(key)
-
-            if (value !== null && typeof value === 'object') {
-                result[camelKey] = keysToCamel(value)
-            } else {
-                result[camelKey] = value
+    if (isPlainObject(obj)) {
+        const result: Record<string, any> = {}
+        for (const key in obj) {
+            if (Object.prototype.hasOwnProperty.call(obj, key)) {
+                result[toCamelCase(key)] = keysToCamel(obj[key])
             }
         }
+        return result
     }
-    return result
+    return obj
 }

@@ -45,15 +45,10 @@ class File extends Model
         'fileable_type',
         'fileable_id',
         'collection',
-        'external_id',
-        'direct_url',
+        'path',
+        'url',
         'name',
         'mime_type',
         'sort',
     ];
-
-    public function fileable(): MorphTo
-    {
-        return $this->morphTo();
-    }
 }

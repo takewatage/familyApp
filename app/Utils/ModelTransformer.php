@@ -4,6 +4,7 @@ namespace App\Utils;
 
 use FumeApp\ModelTyper\Actions\Generator;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use ReflectionClass;
 use Spatie\TypeScriptTransformer\Structures\TransformedType;
