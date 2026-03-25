@@ -11,7 +11,7 @@ class SaveProfileData extends Data
 {
     public function __construct(
         public string        $name,
-
+        public ?string       $birthday,
         public ?UploadedFile $avatar_image,
     )
     {
@@ -21,7 +21,8 @@ class SaveProfileData extends Data
     {
         return [
             'name' => ['required', 'string', 'max:255'],
-            'avatar_image' => ['file', 'mimes:jpeg,png,jpg,gif', 'max:10000'],
+            'birthday' => ['nullable', 'date_format:Y-m-d'],
+            'avatar_image' => ['nullable', 'file', 'mimes:jpeg,png,jpg,gif', 'max:10000'],
         ];
     }
 }

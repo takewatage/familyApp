@@ -15,6 +15,7 @@ return new class extends Migration {
             $table->uuid('id')->primary();
             $table->string('name')->comment('ユーザー名');
             $table->string('email')->unique()->comment('メールアドレス');
+            $table->date('birthday')->nullable()->comment('誕生日');
             $table->timestamp('email_verified_at')->nullable()->comment('メール認証日時');
             $table->string('password')->comment('パスワード（ハッシュ）');
             $table->rememberToken();

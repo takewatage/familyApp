@@ -33,6 +33,7 @@ user: UserData;
 };
 export type SaveProfileData = {
 name: string;
+birthday: string;
 avatarImage?: any;
 };
 export type SaveTaskRequestData = {
@@ -94,6 +95,7 @@ export type UserData = {
 id: string;
 name: string;
 email: string;
+birthday?: string;
 emailVerifiedAt?: string;
 createdAt?: string;
 updatedAt?: string;

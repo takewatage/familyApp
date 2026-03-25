@@ -32,7 +32,7 @@ class MyPageController extends Controller
     public function updateProfile(SaveProfileData $data): RedirectResponse
     {
         $user = auth()->user();
-        $user->update(['name' => $data->name]);
+        $user->update(['name' => $data->name, 'birthday' => $data->birthday]);
         if ($data->avatar_image) {
             $old = $user->files()->where('collection', 'avatar')->first();
 

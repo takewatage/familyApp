@@ -4,6 +4,8 @@ import { usePageProps } from '@/Composables/Common/usePageProps'
 import { useDialogService } from '@/Composables/Common/useDialogService'
 import { MyPageData } from '@/Types/dto.generated'
 import EditProfileForm from '@/Components/MyPage/EditProfileForm.vue'
+import { computed } from 'vue'
+import { formatDate } from '@/Utils/dateFormatter'
 
 defineOptions({ layout: DokLayout })
 
@@ -15,7 +17,8 @@ const onEdit = async () => {
         component: EditProfileForm,
         props: {
             name: props.value.user.name,
-            avatar: props.value.user.avatar,
+            birthday: props.value.user.birthday ?? null,
+            avatar: props.value.user.avatar ?? null,
         },
         fullscreen: true,
         transition: 'dialog-bottom-transition',
@@ -71,9 +74,14 @@ const onEdit = async () => {
                                 :subtitle="props.user.email"/>
                             <v-divider/>
                             <v-list-item
+                                prepend-icon="mdi-cake-variant"
+                                title="生年月日"
+                                :subtitle="formatDate(props.user.birthday) || '未設定'"/>
+                            <v-divider/>
+                            <v-list-item
                                 prepend-icon="mdi-calendar"
                                 title="登録日"
-                                :subtitle="props.user.createdAt"/>
+                                :subtitle="formatDate(props.user.createdAt)"/>
                         </v-list>
                     </v-card-text>
                 </v-card>

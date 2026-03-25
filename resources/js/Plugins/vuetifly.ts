@@ -2,6 +2,7 @@ import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 import { aliases, mdi } from 'vuetify/iconsets/mdi'
+import { ja } from 'vuetify/locale'
 
 const pinkTheme = {
     dark: false,
@@ -24,6 +25,10 @@ const pinkTheme = {
 export const vuetify = createVuetify({
     components,
     directives,
+    locale: {
+        locale: 'ja',
+        messages: { ja },
+    },
     theme: {
         defaultTheme: 'pinkTheme',
         themes: {
