@@ -4,7 +4,7 @@ import { usePageProps } from '@/Composables/Common/usePageProps'
 import { useDialogService } from '@/Composables/Common/useDialogService'
 import { MyPageData } from '@/Types/dto.generated'
 import EditProfileForm from '@/Components/MyPage/EditProfileForm.vue'
-import { computed } from 'vue'
+import UserSettingsForm from '@/Components/MyPage/UserSettingsForm.vue'
 import { formatDate } from '@/Utils/dateFormatter'
 
 defineOptions({ layout: DokLayout })
@@ -85,6 +85,7 @@ const onEdit = async () => {
                         </v-list>
                     </v-card-text>
                 </v-card>
+                <UserSettingsForm :settings="props.settings"/>
             </v-col>
         </v-row>
     </v-container>

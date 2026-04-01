@@ -11,6 +11,7 @@ class MyPageData extends Data
 {
     public function __construct(
         public UserData $user,
+        public UserSettingsResult $settings,
     )
     {
     }

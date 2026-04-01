@@ -13,6 +13,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/home', [HomeController::class, 'index'])->name('home');
     Route::get('/mypage', [MyPageController::class, 'index'])->name('mypage.index');
     Route::post('/mypage', [MyPageController::class, 'updateProfile'])->name('mypage.update');
+    Route::post('/mypage/settings', [MyPageController::class, 'updateSettings'])->name('mypage.settings.update');
     Route::get('/dok', [DokController::class, 'index'])->name('dok');
 
     Route::post('/task-categories/reorder', [TaskCategoryController::class, 'reorder'])->name('task-categories.reorder');

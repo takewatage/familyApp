@@ -101,6 +101,7 @@ sail yarn build
 | `/home`                             | GET     | ホーム画面                     | ✅完了  |
 | `/mypage`                           | GET     | マイページ画面                  | ✅完了  |
 | `/mypage`                           | POST    | プロフィール更新                | ✅完了  |
+| `/mypage/settings`                  | POST    | ユーザー設定保存                | ✅完了  |
 | `/tasks`                            | GET     | タスク一覧画面                  | ✅完了  |
 | `/task`                             | POST    | タスク作成                     | ✅完了  |
 | `/task/{task}`                      | PATCH   | タスク更新                     | ✅完了  |
@@ -125,7 +126,7 @@ sail yarn build
 
 | テーブル名             | 説明                                    |
 |----------------------|-----------------------------------------|
-| `users`              | ユーザー基本情報（UUID, name, email, birthday nullable）|
+| `users`              | ユーザー基本情報（UUID, name, email, birthday nullable, settings JSON nullable）|
 | `families`           | 家族グループ情報（UUID, name, code, owner_id）|
 | `family_user`        | ユーザーと家族グループの中間テーブル（role付き）|
 | `task_categories`    | タスクカテゴリー（family_id, name, sort）  |

@@ -14,6 +14,7 @@ use Illuminate\Notifications\Notifiable;
  * @property string $name
  * @property string $email
  * @property string $birthday
+ * @property array<string, mixed>|null $settings
  * @property \Illuminate\Support\Carbon|null $email_verified_at
  * @property string $password
  * @property string|null $remember_token
@@ -45,7 +46,7 @@ class User extends Authenticatable
      *
      * @var list<string>
      */
-    protected $fillable = ['name', 'email', 'password', 'birthday'];
+    protected $fillable = ['name', 'email', 'password', 'birthday', 'settings'];
 
     /**
      * The attributes that should be hidden for serialization.
@@ -64,6 +65,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'settings' => 'array',
         ];
     }
 

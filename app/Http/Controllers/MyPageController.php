@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Dtos\MyPage\MyPageData;
 use App\Dtos\MyPage\SaveProfileData;
+use App\Dtos\MyPage\UpdateSettingsRequest;
+use App\Dtos\MyPage\UserSettingsResult;
 use App\Models\User;
 use App\Services\ImageUploadService;
 use Illuminate\Http\RedirectResponse;
@@ -26,6 +28,7 @@ class MyPageController extends Controller
 
         return Inertia::render('MyPage/index', MyPageData::from([
             'user' => $user->setAppends(['avatar']),
+            'settings' => UserSettingsResult::fromArray($user->settings ?? []),
         ]));
     }
 
@@ -54,5 +57,16 @@ class MyPageController extends Controller
         }
 
         return back()->with('message', 'プロフィールを更新しました');
+    }
+
+    public function updateSettings(UpdateSettingsRequest $data): RedirectResponse
+    {
+        $user = auth()->user();
+        $user->settings = [
+            'theme' => $data->theme,
+        ];
+        $user->save();
+
+        return back()->with('message', '設定を保存しました');
     }
 }

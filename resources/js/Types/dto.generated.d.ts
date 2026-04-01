@@ -30,10 +30,11 @@ updatedAt?: string;
 };
 export type MyPageData = {
 user: UserData;
+settings: UserSettingsResult;
 };
 export type SaveProfileData = {
 name: string;
-birthday: string;
+birthday?: string;
 avatarImage?: any;
 };
 export type SaveTaskRequestData = {
@@ -102,4 +103,7 @@ updatedAt?: string;
 avatar?: FileData | null;
 families?: Array<FamilyData>;
 files?: Array<FileData>;
+};
+export type UserSettingsResult = {
+theme: string;
 };

@@ -20,6 +20,7 @@
 | 完了タスク             | Completed Task | `is_completed = true` のタスク        | `Task.is_completed`, `Task.completed_at` |
 | ドク（Dok）(どっちがお得かね) | Dok            | 日用品・買い物の価格を比較する機能                 | `DokController`, `Pages/Dok/`            |
 | アバター              | Avatar         | ユーザーのプロフィール画像                     | `User.files`（collection: 'avatar'）       |
+| ユーザー設定           | UserSettings   | ユーザーごとの個別設定（テーマ等）。`users.settings` JSONカラムに保存 | `User.settings`, `UserSettingsResult` DTO |
 | ファイル              | File           | ポリモーフィックに各モデルに紐付けられるファイルリソース      | `File` モデル                               |
 | ソート順              | Sort           | タスク・カテゴリーの表示順を管理する整数値             | `Task.sort`, `TaskCategory.sort`         |
 
