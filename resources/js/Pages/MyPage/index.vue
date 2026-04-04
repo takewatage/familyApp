@@ -2,10 +2,10 @@
 import DokLayout from '@/Layouts/DokLayout.vue'
 import { usePageProps } from '@/Composables/Common/usePageProps'
 import { useDialogService } from '@/Composables/Common/useDialogService'
-import { MyPageData } from '@/Types/dto.generated'
+import type { MyPageData } from '@/Types/dto.generated'
 import EditProfileForm from '@/Components/MyPage/EditProfileForm.vue'
-import UserSettingsForm from '@/Components/MyPage/UserSettingsForm.vue'
 import { formatDate } from '@/Utils/dateFormatter'
+import { router } from '@inertiajs/vue3'
 
 defineOptions({ layout: DokLayout })
 
@@ -85,7 +85,39 @@ const onEdit = async () => {
                         </v-list>
                     </v-card-text>
                 </v-card>
-                <UserSettingsForm :settings="props.settings"/>
+                <v-card class="mt-4">
+                    <v-card-title>設定</v-card-title>
+                    <v-list>
+                        <v-list-item
+                            prepend-icon="mdi-palette"
+                            title="テーマカラー設定"
+                            append-icon="mdi-chevron-right"
+                            @click="router.visit(route('mypage.settings.index'))"/>
+                    </v-list>
+                </v-card>
+
+                <v-card class="mt-4">
+                    <v-card-title>家族設定</v-card-title>
+                    <v-list>
+                        <v-list-item
+                            prepend-icon="mdi-home-edit"
+                            title="家族設定変更"
+                            append-icon="mdi-chevron-right"
+                            @click="router.visit(route('family.settings.index'))"/>
+                        <v-divider/>
+                        <v-list-item
+                            prepend-icon="mdi-account-group"
+                            title="メンバー管理"
+                            append-icon="mdi-chevron-right"
+                            @click="router.visit(route('family.members.index'))"/>
+                        <v-divider/>
+                        <v-list-item
+                            prepend-icon="mdi-swap-horizontal"
+                            title="家族切り替え"
+                            append-icon="mdi-chevron-right"
+                            @click="router.visit(route('family.switch.index'))"/>
+                    </v-list>
+                </v-card>
             </v-col>
         </v-row>
     </v-container>

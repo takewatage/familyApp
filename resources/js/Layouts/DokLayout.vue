@@ -1,9 +1,16 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3'
 import { ref } from 'vue'
+
+const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'instant' })
+}
 import { mainAppMenuItems } from '@/Constants/mainAppMenu'
 import LoadingOverlay from '@/Components/App/LoadingOverlay.vue'
 import SnackbarNotification from '@/Components/App/SnackbarNotification.vue'
+import { useAppTheme } from '@/Composables/Common/useAppTheme'
+
+useAppTheme()
 
 const drawer = ref(false)
 const handleMenuClick = (route: string) => {
@@ -17,11 +24,11 @@ const handleMenuClick = (route: string) => {
         <Head title="どっちがお得カネ">
             <meta
                 name="description"
-                content="どっちがお得カネ" />
+                content="どっちがお得カネ"/>
         </Head>
 
-        <LoadingOverlay />
-        <SnackbarNotification />
+        <LoadingOverlay/>
+        <SnackbarNotification/>
 
         <v-app-bar
             name="app-bar"
@@ -29,7 +36,7 @@ const handleMenuClick = (route: string) => {
             <template #prepend>
                 <v-app-bar-nav-icon
                     variant="text"
-                    @click.stop="drawer = !drawer" />
+                    @click.stop="drawer = !drawer"/>
             </template>
             <!--            <v-tabs-->
             <!--                v-model="tab"-->
@@ -44,7 +51,7 @@ const handleMenuClick = (route: string) => {
             <!--                </v-tab>-->
             <!--            </v-tabs>-->
             <template #append>
-                <v-btn icon="mdi-dots-vertical" />
+                <v-btn icon="mdi-dots-vertical"/>
             </template>
         </v-app-bar>
 
@@ -57,7 +64,7 @@ const handleMenuClick = (route: string) => {
                     :key="item.route"
                     :prepend-icon="item.icon"
                     :title="item.title"
-                    @click="handleMenuClick(item.route)" />
+                    @click="handleMenuClick(item.route)"/>
             </v-list>
         </v-navigation-drawer>
 
@@ -65,9 +72,10 @@ const handleMenuClick = (route: string) => {
             <Transition
                 name="page"
                 mode="out-in"
-                appear>
+                appear
+                @enter="scrollToTop">
                 <div :key="$page.url">
-                    <slot />
+                    <slot/>
                 </div>
             </Transition>
         </v-main>
@@ -77,7 +85,7 @@ const handleMenuClick = (route: string) => {
 <style lang="scss" scoped>
 .page-enter-active,
 .page-leave-active {
-    transition: all 0.5s ease-out;
+    transition: all 0.3s ease;
 }
 
 .page-enter-from,

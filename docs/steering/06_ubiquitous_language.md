@@ -14,13 +14,16 @@
 | ユーザー              | User           | Family App を利用する個人。メールアドレスで識別される  | `User` モデル、`UserData` DTO                |
 | 家族                | Family         | 複数のユーザーが共有する家族グループ。ユニークなコードで識別される | `Family` モデル、`FamilyData` DTO            |
 | 家族コード             | Family Code    | 家族グループへの招待に使う8文字のユニークコード          | `Family.code`                            |
-| オーナー              | Owner          | 家族グループを作成したユーザー                   | `Family.owner_id`                        |
+| オーナー              | Owner          | 家族グループを作成したユーザー（`family_user.role = 'owner'`）。家族設定の編集権限を持つ | `Family.owner_id`, `family_user.role` |
 | タスク               | Task           | 家族が管理するToDoアイテム                   | `Task` モデル、`TaskData` DTO                |
 | カテゴリー             | TaskCategory   | タスクを分類するグループ。例: 「家事」「買い物」         | `TaskCategory` モデル                       |
 | 完了タスク             | Completed Task | `is_completed = true` のタスク        | `Task.is_completed`, `Task.completed_at` |
 | ドク（Dok）(どっちがお得かね) | Dok            | 日用品・買い物の価格を比較する機能                 | `DokController`, `Pages/Dok/`            |
 | アバター              | Avatar         | ユーザーのプロフィール画像                     | `User.files`（collection: 'avatar'）       |
-| ユーザー設定           | UserSettings   | ユーザーごとの個別設定（テーマ等）。`users.settings` JSONカラムに保存 | `User.settings`, `UserSettingsResult` DTO |
+| ユーザー設定           | UserSettings   | ユーザーごとの個別設定（テーマ・テーマカラー）。`users.settings` JSONカラムに保存。スキーマ: `{ theme, theme_color }` | `User.settings`, `UserSettingsResult` DTO |
+| テーマカラー           | ThemeColor     | プライマリカラーのプリセット。`pink` / `blue` / `purple` / `green` / `orange` / `teal` から選択 | `UserSettings.theme_color` |
+| 仮想ユーザー           | VirtualUser    | アプリにログインせずにタスク等の担当者として割り当てられる家族内の人物。`virtual_users` テーブルで管理 | `VirtualUser` モデル、`VirtualUserData` DTO |
+| アクティブ家族         | ActiveFamily   | ユーザーが現在操作対象としている家族グループ。`users.settings.activeFamilyId` に保存 | `User.settings['activeFamilyId']` |
 | ファイル              | File           | ポリモーフィックに各モデルに紐付けられるファイルリソース      | `File` モデル                               |
 | ソート順              | Sort           | タスク・カテゴリーの表示順を管理する整数値             | `Task.sort`, `TaskCategory.sort`         |
 

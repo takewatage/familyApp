@@ -10,5 +10,7 @@ class UpdateSettingsRequest extends Data
     public function __construct(
         #[In(['light', 'dark', 'system'])]
         public readonly string $theme,
+        #[In(['pink', 'blue', 'purple', 'green', 'orange', 'teal'])]
+        public readonly string $theme_color,
     ) {}
 }

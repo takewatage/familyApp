@@ -28,8 +28,14 @@ class MyPageController extends Controller
 
         return Inertia::render('MyPage/index', MyPageData::from([
             'user' => $user->setAppends(['avatar']),
-            'settings' => UserSettingsResult::fromArray($user->settings ?? []),
         ]));
+    }
+
+    public function settingsIndex(Request $request): Response
+    {
+        $user = $request->user();
+
+        return Inertia::render('MyPage/UserSettings', UserSettingsResult::fromArray($user->settings ?? []));
     }
 
     public function updateProfile(SaveProfileData $data): RedirectResponse
@@ -64,6 +70,7 @@ class MyPageController extends Controller
         $user = auth()->user();
         $user->settings = [
             'theme' => $data->theme,
+            'theme_color' => $data->theme_color,
         ];
         $user->save();
 

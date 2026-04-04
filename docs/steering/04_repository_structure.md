@@ -6,15 +6,17 @@
 family-app/
 ├── app/                              # アプリケーションコード（PHP）
 │   ├── Dtos/                         # Data Transfer Objects（Spatie Laravel Data）
-│   │   ├── Model/                    # モデル対応DTO（UserData, FamilyData, TaskData等）
+│   │   ├── Model/                    # モデル対応DTO（UserData, FamilyData, VirtualUserData等）
+│   │   ├── Family/                   # 家族設定・メンバー管理・切り替え関連DTO
 │   │   ├── Task/                     # タスク関連リクエスト・レスポンスDTO
 │   │   └── MyPage/                   # マイページ関連DTO
 │   ├── Events/                       # Laravelイベント（TaskUpdated, CategoryUpdated）
 │   ├── Http/
 │   │   └── Controllers/              # HTTPコントローラー
 │   │       └── Auth/                 # 認証関連コントローラー
-│   ├── Models/                       # Eloquentモデル
-│   └── Services/                     # ビジネスロジック（ImageUploadService等）
+│   ├── Models/                       # Eloquentモデル（User, Family, VirtualUser, Task等）
+│   ├── Policies/                     # Laravel認可ポリシー（FamilyPolicy等）
+│   └── Services/                     # ビジネスロジック（ImageUploadService, CurrentFamilyService等）
 ├── database/
 │   ├── migrations/                   # DBマイグレーションファイル
 │   ├── factories/                    # テスト用モデルファクトリー
@@ -29,11 +31,12 @@ family-app/
 │   │   │   ├── Auth/                 # 認証関連コンポーネント
 │   │   │   ├── Common/               # 共通コンポーネント（再利用可能）
 │   │   │   ├── Dok/                  # Dok機能コンポーネント
+│   │   │   ├── Family/               # 家族設定・メンバー管理・切り替えコンポーネント
 │   │   │   ├── FamilyTask/           # タスク関連コンポーネント
 │   │   │   ├── Layout/               # レイアウトコンポーネント
 │   │   │   └── MyPage/               # マイページコンポーネント
 │   │   ├── Composables/              # Vue3 Composition API（useXxx形式）
-│   │   │   ├── Common/               # 共通Composables
+│   │   │   ├── Common/               # 共通Composables（useAppTheme, useSnackbar等）
 │   │   │   ├── Dok/                  # Dok関連Composables
 │   │   │   └── Task/                 # タスク関連Composables
 │   │   ├── Constants/                # 定数定義
@@ -41,7 +44,7 @@ family-app/
 │   │   ├── Pages/                    # Inertiaページコンポーネント
 │   │   │   ├── Auth/                 # 認証ページ
 │   │   │   ├── Dok/                  # Dokページ
-│   │   │   ├── MyPage/               # マイページ
+│   │   │   ├── MyPage/               # マイページ（家族設定ページ含む）
 │   │   │   └── Task/                 # タスクページ
 │   │   ├── Plugins/                  # Vueプラグイン設定（Vuetify等）
 │   │   ├── Types/                    # TypeScript型定義
@@ -122,6 +125,8 @@ family-app/
 
 - **役割**: Vue3 Composition APIを使った再利用可能なロジック
 - **命名**: `use` + 機能名（例: `useTask.ts`、`useSnackbar.ts`）
+- **主要ファイル**:
+  - `Common/useAppTheme.ts`: Vuetify テーマ（ライト/ダーク/システム）とプライマリカラーを適用する。`DokLayout.vue` から呼び出し、`$page.props.userSettings` を watch して即時反映
 
 ### resources/js/Types/
 

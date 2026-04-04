@@ -29,10 +29,16 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $settings = $request->user()?->settings ?? [];
+
         return [
             ...parent::share($request),
             'auth' => [
                 'user' => $request->user(),
+            ],
+            'userSettings' => [
+                'theme' => $settings['theme'] ?? 'system',
+                'themeColor' => $settings['theme_color'] ?? 'pink',
             ],
         ];
     }

@@ -20,6 +20,7 @@ class FamilyData extends Data
         public string $id,
         public string $name,
         public string $code,
+        public ?string $code_expires_at,
         public string $owner_id,
         public int $max_members,
         public ?array $settings,

@@ -56,6 +56,7 @@
 3. **API通信（Axios）**: `client.ts` 経由でAxiosリクエスト送信（camelCase ↔ snake_case 自動変換）
 4. **リアルタイム更新**: Pusher Private Channel `family.{family_id}` で `TaskUpdated`・`CategoryUpdated` イベントを配信
 5. **型安全**: PHPの `#[TypeScript]` DTO → `dto.generated.d.ts` に自動生成 → フロントエンドで使用
+6. **共有プロパティ**: `HandleInertiaRequests::share()` で全ページに `userSettings`（theme, themeColor）を配信 → `useAppTheme` composable が Vuetify テーマへ即時反映
 
 ## 3. 開発環境
 
@@ -101,6 +102,7 @@ sail yarn build
 | `/home`                             | GET     | ホーム画面                     | ✅完了  |
 | `/mypage`                           | GET     | マイページ画面                  | ✅完了  |
 | `/mypage`                           | POST    | プロフィール更新                | ✅完了  |
+| `/mypage/settings`                  | GET     | 設定ページ                      | ✅完了  |
 | `/mypage/settings`                  | POST    | ユーザー設定保存                | ✅完了  |
 | `/tasks`                            | GET     | タスク一覧画面                  | ✅完了  |
 | `/task`                             | POST    | タスク作成                     | ✅完了  |
@@ -113,6 +115,16 @@ sail yarn build
 | `/task-categories/{taskCategory}`   | DELETE  | カテゴリー削除                  | ✅完了  |
 | `/task-categories/reorder`          | POST    | カテゴリー並び替え              | ✅完了  |
 | `/dok`                              | GET     | Dok画面                       | ⚠️一部完了 |
+| `/family/settings`                  | GET     | 家族設定変更ページ              | ✅完了     |
+| `/family/settings`                  | PATCH   | 家族基本情報の更新（オーナーのみ）| ✅完了     |
+| `/family/code/regenerate`           | POST    | 家族コード再生成（オーナーのみ）  | ✅完了     |
+| `/family/members`                   | GET     | メンバー管理ページ              | ✅完了     |
+| `/family/members/{user}`            | DELETE  | メンバー除名（オーナーのみ）     | ✅完了     |
+| `/family/virtual-users`             | POST    | 仮想ユーザー作成               | ✅完了     |
+| `/family/virtual-users/{virtualUser}` | PATCH | 仮想ユーザー更新               | ✅完了     |
+| `/family/virtual-users/{virtualUser}` | DELETE| 仮想ユーザー削除               | ✅完了     |
+| `/families/switch`                  | GET     | 家族切り替えページ              | ✅完了     |
+| `/families/{family}/switch`         | POST    | アクティブ家族の切り替え         | ✅完了     |
 
 ### API Routes（Axios）
 
@@ -126,12 +138,13 @@ sail yarn build
 
 | テーブル名             | 説明                                    |
 |----------------------|-----------------------------------------|
-| `users`              | ユーザー基本情報（UUID, name, email, birthday nullable, settings JSON nullable）|
-| `families`           | 家族グループ情報（UUID, name, code, owner_id）|
+| `users`              | ユーザー基本情報（UUID, name, email, birthday nullable, settings JSON nullable）settings スキーマ: `{ theme: 'light'\|'dark'\|'system', theme_color: 'pink'\|'blue'\|'purple'\|'green'\|'orange'\|'teal' }` |
+| `families`           | 家族グループ情報（UUID, name, code, code_expires_at nullable, owner_id）|
 | `family_user`        | ユーザーと家族グループの中間テーブル（role付き）|
 | `task_categories`    | タスクカテゴリー（family_id, name, sort）  |
 | `tasks`              | タスク（family_id, category_id, content, color, memo, is_completed, sort）|
 | `files`              | ファイル管理（ポリモーフィック: avatar等）  |
+| `virtual_users`      | 仮想ユーザー（family_id, name）アバターはfilesテーブルで管理 |
 | `password_reset_tokens` | パスワードリセット用トークン             |
 | `sessions`           | ユーザーセッション                        |
 | `cache`              | キャッシュテーブル                        |
@@ -140,6 +153,8 @@ sail yarn build
 ### 主要なリレーション
 
 - `User` ↔ `Family`: 多対多（`family_user` 中間テーブル、role属性）
+- `Family` → `VirtualUser`: 1対多
+- `VirtualUser` → `File`: 1対多（ポリモーフィック、avatar）
 - `Family` → `TaskCategory`: 1対多
 - `TaskCategory` → `Task`: 1対多
 - `User` → `File`: 1対多（ポリモーフィック）

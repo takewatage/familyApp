@@ -28,6 +28,13 @@ declare module 'axios' {
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel'
 
+// ページ遷移時のスクロールリセットを Transition の enter フェーズまで遅延させる
+// （leave フェーズ中に画面がトップに飛ぶ見た目を防ぐため）
+import { router } from '@inertiajs/vue3'
+router.on('before', (event) => {
+    event.detail.visit.preserveScroll = true
+})
+
 createInertiaApp({
     title: (title) => `${title} - ${appName}`,
     resolve: (name) => {

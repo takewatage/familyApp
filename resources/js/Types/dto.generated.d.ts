@@ -5,6 +5,7 @@ export type FamilyData = {
 id: string;
 name: string;
 code: string;
+codeExpiresAt?: string;
 ownerId: string;
 maxMembers: number;
 settings?: Array<any>;
@@ -14,6 +15,31 @@ deletedAt?: string;
 owner?: UserData;
 categories?: Array<TaskCategoryData>;
 tasks?: Array<TaskData>;
+};
+export type FamilyForSwitchData = {
+id: string;
+name: string;
+memberNames: Array<string>;
+};
+export type FamilyMemberData = {
+id: string;
+name: string;
+role: string;
+avatar?: FileData | null;
+};
+export type FamilyMembersResult = {
+family: FamilyData;
+members: Array<FamilyMemberData>;
+virtualUsers: Array<VirtualUserData>;
+isOwner: boolean;
+};
+export type FamilySettingsResult = {
+family: FamilyData;
+isOwner: boolean;
+};
+export type FamilySwitchResult = {
+families: Array<FamilyForSwitchData>;
+currentFamilyId?: string;
 };
 export type FileData = {
 id: string;
@@ -30,7 +56,6 @@ updatedAt?: string;
 };
 export type MyPageData = {
 user: UserData;
-settings: UserSettingsResult;
 };
 export type SaveProfileData = {
 name: string;
@@ -44,6 +69,10 @@ categoryId: string;
 content: string;
 color?: string;
 memo?: string;
+};
+export type SaveVirtualUserRequest = {
+name: string;
+avatarImage?: any;
 };
 export type SortCategoryRequestData = {
 id: string;
@@ -106,4 +135,13 @@ files?: Array<FileData>;
 };
 export type UserSettingsResult = {
 theme: string;
+themeColor: string;
+};
+export type VirtualUserData = {
+id: string;
+familyId: string;
+name: string;
+createdAt?: string;
+updatedAt?: string;
+avatar?: FileData | null;
 };
