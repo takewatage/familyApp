@@ -83,7 +83,7 @@ class Family extends Model
 
     public function members(): BelongsToMany
     {
-        return $this->belongsToMany(User::class, 'family_user')->withPivot('role')->withTimestamps();
+        return $this->belongsToMany(User::class, 'family_user')->using(FamilyUser::class)->withPivot('role')->withTimestamps();
     }
 
     public function virtualUsers(): HasMany

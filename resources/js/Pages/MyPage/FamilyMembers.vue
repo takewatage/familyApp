@@ -7,6 +7,7 @@ import { useSnackbar } from '@/Composables/Common/useSnackbar'
 import { router } from '@inertiajs/vue3'
 import type { FamilyMembersResult, VirtualUserData } from '@/Types/dto.generated'
 import VirtualUserDialog from '@/Components/Family/VirtualUserDialog.vue'
+import InviteBottomSheet from '@/Components/Family/InviteBottomSheet.vue'
 
 defineOptions({ layout: DokLayout })
 
@@ -77,8 +78,16 @@ function deleteVirtualUser() {
     })
 }
 
+const inviteSheetVisible = ref(false)
+
 function roleLabel(role: string): string {
-    return role === 'owner' ? 'オーナー' : 'メンバー'
+    const labels: Record<string, string> = {
+        owner: 'オーナー',
+        parent: '保護者',
+        child: '子ども',
+        guest: 'メンバー',
+    }
+    return labels[role] ?? 'メンバー'
 }
 </script>
 
@@ -133,26 +142,21 @@ function roleLabel(role: string): string {
                                     </v-btn>
                                 </template>
                             </v-list-item>
-                            <v-divider v-if="index < props.members.length - 1"/>
+                            <v-divider/>
                         </template>
                     </v-list>
-                </v-card>
 
-                <!-- 招待コード -->
-                <v-card class="mt-4">
-                    <v-card-title>招待コード</v-card-title>
-                    <v-card-text>
-                        <div class="d-flex align-center gap-2">
-                            <span class="text-h6 font-weight-bold letter-spacing-wide">
-                                {{ props.family.code }}
-                            </span>
-                            <v-btn
-                                icon="mdi-content-copy"
-                                size="small"
-                                variant="text"
-                                @click="navigator.clipboard.writeText(props.family.code)"/>
-                        </div>
-                    </v-card-text>
+                    <v-card-actions class="pa-2">
+                        <v-btn
+                            block
+                            color="primary"
+                            variant="tonal"
+                            prepend-icon="mdi-account-plus"
+                            @click="inviteSheetVisible = true">
+                            メンバーを招待する
+                        </v-btn>
+                    </v-card-actions>
+
                 </v-card>
 
                 <!-- 仮想メンバー一覧 -->
@@ -263,4 +267,10 @@ function roleLabel(role: string): string {
             </v-card-actions>
         </v-card>
     </v-dialog>
+
+    <!-- 招待ボトムシート -->
+    <InviteBottomSheet
+        v-model="inviteSheetVisible"
+        :family-name="props.family.name"
+        :invite-urls="props.inviteUrls"/>
 </template>

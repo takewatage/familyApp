@@ -6,6 +6,7 @@
 family-app/
 ├── app/                              # アプリケーションコード（PHP）
 │   ├── Dtos/                         # Data Transfer Objects（Spatie Laravel Data）
+│   │   ├── Auth/                     # 認証・招待登録関連DTO（InviteConfirmResult, RegisterPageResult）
 │   │   ├── Model/                    # モデル対応DTO（UserData, FamilyData, VirtualUserData等）
 │   │   ├── Family/                   # 家族設定・メンバー管理・切り替え関連DTO
 │   │   ├── Task/                     # タスク関連リクエスト・レスポンスDTO

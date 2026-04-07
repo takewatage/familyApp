@@ -9,7 +9,12 @@ use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Auth\VerifyEmailController;
+use App\Http\Controllers\InviteController;
 use Illuminate\Support\Facades\Route;
+
+// 招待URL（ゲスト・ログイン済み両方アクセス可）
+Route::get('/join/{code}', [InviteController::class, 'show'])->name('invite.show');
+Route::middleware('auth')->post('/join/{code}', [InviteController::class, 'join'])->name('invite.join');
 
 Route::middleware('guest')->group(function () {
     Route::get('register', [RegisteredUserController::class, 'create'])->name('register');

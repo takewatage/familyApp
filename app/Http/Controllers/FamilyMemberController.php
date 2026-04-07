@@ -9,6 +9,7 @@ use App\Dtos\Model\VirtualUserData;
 use App\Models\User;
 use App\Services\CurrentFamilyService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\URL;
 use Inertia\Inertia;
 use Inertia\Response;
 class FamilyMemberController extends Controller
@@ -51,11 +52,20 @@ class FamilyMemberController extends Controller
             );
         });
 
+        $inviteUrls = [];
+        foreach (['parent', 'child', 'guest'] as $role) {
+            $inviteUrls[$role] = URL::signedRoute('invite.show', [
+                'code' => $family->code,
+                'role' => $role,
+            ]);
+        }
+
         return Inertia::render('MyPage/FamilyMembers', FamilyMembersResult::from([
             'family' => $family->toArray(),
             'members' => $members->values(),
             'virtual_users' => $virtualUsers->values(),
             'is_owner' => $family->owner_id === auth()->id(),
+            'invite_urls' => $inviteUrls,
         ]));
     }
 

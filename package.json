@@ -38,6 +38,7 @@
         "dayjs": "^1.11.19",
         "laravel-echo": "^2.3.0",
         "pusher-js": "^8.4.0",
+        "qrcode": "^1.5.4",
         "sass": "^1.93.2",
         "typescript": "^5.6.0",
         "vite-plugin-vuetify": "^2.1.2",

@@ -29,6 +29,7 @@
 | Day.js                             | 1.11     | 日付処理                                     |
 | vue-draggable-plus                 | 0.6      | ドラッグ＆ドロップによる並び替え               |
 | Laravel Echo                       | -        | WebSocketイベントのフロントエンド受信          |
+| qrcode                             | -        | QRコード生成（DataURL → `<img>` 表示）       |
 
 ## 2. アーキテクチャ概要
 
@@ -57,6 +58,7 @@
 4. **リアルタイム更新**: Pusher Private Channel `family.{family_id}` で `TaskUpdated`・`CategoryUpdated` イベントを配信
 5. **型安全**: PHPの `#[TypeScript]` DTO → `dto.generated.d.ts` に自動生成 → フロントエンドで使用
 6. **共有プロパティ**: `HandleInertiaRequests::share()` で全ページに `userSettings`（theme, themeColor）を配信 → `useAppTheme` composable が Vuetify テーマへ即時反映
+7. **署名付き招待URL**: `URL::signedRoute()` でサーバーサイドが署名を生成。`InviteController` で `hasValidSignature()` を検証し、クライアントによる `role` パラメータの改ざんを防止
 
 ## 3. 開発環境
 
@@ -99,6 +101,8 @@ sail yarn build
 
 | エンドポイント                        | メソッド | 説明                          | 状態    |
 |-------------------------------------|---------|------------------------------|---------|
+| `/join/{code}`                      | GET     | 招待確認ページ（guest/auth共通） | ✅完了  |
+| `/join/{code}`                      | POST    | ログイン済みユーザーの家族参加    | ✅完了  |
 | `/home`                             | GET     | ホーム画面                     | ✅完了  |
 | `/mypage`                           | GET     | マイページ画面                  | ✅完了  |
 | `/mypage`                           | POST    | プロフィール更新                | ✅完了  |

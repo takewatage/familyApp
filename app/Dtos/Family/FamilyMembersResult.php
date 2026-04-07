@@ -21,5 +21,7 @@ class FamilyMembersResult extends Data
         /** @var DataCollection<int, VirtualUserData> */
         public DataCollection $virtual_users,
         public bool $is_owner,
+        /** @var array<string, string> ロール別署名付き招待URL */
+        public array $invite_urls = [],
     ) {}
 }

@@ -32,6 +32,7 @@ family: FamilyData;
 members: Array<FamilyMemberData>;
 virtualUsers: Array<VirtualUserData>;
 isOwner: boolean;
+inviteUrls: Record<string, string>;
 };
 export type FamilySettingsResult = {
 family: FamilyData;
@@ -54,8 +55,19 @@ sort: string;
 createdAt?: string;
 updatedAt?: string;
 };
+export type InviteConfirmResult = {
+familyName?: string;
+memberCount: number;
+code: string;
+alreadyJoined: boolean;
+isFull: boolean;
+error?: string;
+};
 export type MyPageData = {
 user: UserData;
+};
+export type RegisterPageResult = {
+familyName: string;
 };
 export type SaveProfileData = {
 name: string;
