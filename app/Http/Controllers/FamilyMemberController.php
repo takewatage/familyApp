@@ -8,15 +8,17 @@ use App\Dtos\Model\FileData;
 use App\Dtos\Model\VirtualUserData;
 use App\Models\User;
 use App\Services\CurrentFamilyService;
+use App\Services\InviteUrlService;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 class FamilyMemberController extends Controller
 {
-    public function __construct(private readonly CurrentFamilyService $currentFamilyService)
-    {
-    }
+    public function __construct(
+        private readonly CurrentFamilyService $currentFamilyService,
+        private readonly InviteUrlService $inviteUrlService,
+    ) {}
 
     public function index(): Response|RedirectResponse
     {
@@ -52,13 +54,7 @@ class FamilyMemberController extends Controller
             );
         });
 
-        $inviteUrls = [];
-        foreach (['parent', 'child', 'guest'] as $role) {
-            $inviteUrls[$role] = URL::signedRoute('invite.show', [
-                'code' => $family->code,
-                'role' => $role,
-            ]);
-        }
+        $inviteUrls = $this->inviteUrlService->generateInviteUrls($family);
 
         return Inertia::render('MyPage/FamilyMembers', FamilyMembersResult::from([
             'family' => $family->toArray(),
@@ -77,7 +73,7 @@ class FamilyMemberController extends Controller
             return redirect()->route('home');
         }
 
-        $this->authorize('removeMember', $family);
+        Gate::authorize('removeMember', $family);
 
         if ($user->id === auth()->id()) {
             return back()->withErrors(['member' => '自分自身を除名することはできません']);

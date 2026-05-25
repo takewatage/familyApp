@@ -1,42 +1,39 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import DokLayout from '@/Layouts/DokLayout.vue'
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
 import { usePageProps } from '@/Composables/Common/usePageProps'
 import { useDialogService } from '@/Composables/Common/useDialogService'
 import { useSnackbar } from '@/Composables/Common/useSnackbar'
+import { useConfirmDialog } from '@/Composables/Common/useConfirmDialogService'
 import { router } from '@inertiajs/vue3'
 import type { FamilyMembersResult, VirtualUserData } from '@/Types/dto.generated'
 import VirtualUserDialog from '@/Components/Family/VirtualUserDialog.vue'
 import InviteBottomSheet from '@/Components/Family/InviteBottomSheet.vue'
 
-defineOptions({ layout: DokLayout })
+defineOptions({ layout: AuthenticatedLayout })
 
 const props = usePageProps<FamilyMembersResult>()
 const { open } = useDialogService()
 const snackbar = useSnackbar()
+const { confirm } = useConfirmDialog()
 
-const removeTargetId = ref<string | null>(null)
-const removeConfirmDialog = ref(false)
+const inviteSheetVisible = ref(false)
 
-const deleteVirtualUserTargetId = ref<string | null>(null)
-const deleteVirtualUserDialog = ref(false)
+async function removeMember(userId: string) {
+    const ok = await confirm({
+        title: 'メンバーを除名しますか？',
+        message: 'この操作は取り消せません。',
+        confirmText: '除名する',
+        confirmColor: 'error',
+    })
 
-function confirmRemoveMember(userId: string) {
-    removeTargetId.value = userId
-    removeConfirmDialog.value = true
-}
-
-function removeMember() {
-    if (!removeTargetId.value) {
+    if (!ok) {
         return
     }
 
-    router.delete(route('family.members.destroy', { user: removeTargetId.value }), {
+    router.delete(route('family.members.destroy', { user: userId }), {
         preserveScroll: true,
-        onSuccess: () => {
-            snackbar.success('メンバーを除名しました')
-            removeConfirmDialog.value = false
-        },
+        onSuccess: () => snackbar.success('メンバーを除名しました'),
         onError: () => snackbar.error('除名に失敗しました'),
     })
 }
@@ -58,27 +55,24 @@ function openEditVirtualUser(virtualUser: VirtualUserData) {
     })
 }
 
-function confirmDeleteVirtualUser(id: string) {
-    deleteVirtualUserTargetId.value = id
-    deleteVirtualUserDialog.value = true
-}
+async function deleteVirtualUser(id: string) {
+    const ok = await confirm({
+        title: '仮想メンバーを削除しますか？',
+        message: 'この操作は取り消せません。',
+        confirmText: '削除する',
+        confirmColor: 'error',
+    })
 
-function deleteVirtualUser() {
-    if (!deleteVirtualUserTargetId.value) {
+    if (!ok) {
         return
     }
 
-    router.delete(route('family.virtual-users.destroy', { virtualUser: deleteVirtualUserTargetId.value }), {
+    router.delete(route('family.virtual-users.destroy', { virtualUser: id }), {
         preserveScroll: true,
-        onSuccess: () => {
-            snackbar.success('仮想メンバーを削除しました')
-            deleteVirtualUserDialog.value = false
-        },
+        onSuccess: () => snackbar.success('仮想メンバーを削除しました'),
         onError: () => snackbar.error('削除に失敗しました'),
     })
 }
-
-const inviteSheetVisible = ref(false)
 
 function roleLabel(role: string): string {
     const labels: Record<string, string> = {
@@ -137,7 +131,7 @@ function roleLabel(role: string): string {
                                         size="small"
                                         variant="text"
                                         color="error"
-                                        @click="confirmRemoveMember(member.id)">
+                                        @click="removeMember(member.id)">
                                         除名
                                     </v-btn>
                                 </template>
@@ -193,7 +187,7 @@ function roleLabel(role: string): string {
                                         size="small"
                                         variant="text"
                                         color="error"
-                                        @click="confirmDeleteVirtualUser(vu.id)"/>
+                                        @click="deleteVirtualUser(vu.id)"/>
                                 </template>
                             </v-list-item>
                             <v-divider v-if="index < props.virtualUsers.length - 1"/>
@@ -215,58 +209,6 @@ function roleLabel(role: string): string {
             </v-col>
         </v-row>
     </v-container>
-
-    <!-- 仮想メンバー削除確認ダイアログ -->
-    <v-dialog
-        v-model="deleteVirtualUserDialog"
-        max-width="360">
-        <v-card>
-            <v-card-title>仮想メンバーを削除しますか？</v-card-title>
-            <v-card-text>
-                この操作は取り消せません。
-            </v-card-text>
-            <v-card-actions>
-                <v-btn
-                    variant="text"
-                    @click="deleteVirtualUserDialog = false">
-                    キャンセル
-                </v-btn>
-                <v-spacer/>
-                <v-btn
-                    color="error"
-                    variant="flat"
-                    @click="deleteVirtualUser">
-                    削除する
-                </v-btn>
-            </v-card-actions>
-        </v-card>
-    </v-dialog>
-
-    <!-- 除名確認ダイアログ -->
-    <v-dialog
-        v-model="removeConfirmDialog"
-        max-width="360">
-        <v-card>
-            <v-card-title>メンバーを除名しますか？</v-card-title>
-            <v-card-text>
-                この操作は取り消せません。
-            </v-card-text>
-            <v-card-actions>
-                <v-btn
-                    variant="text"
-                    @click="removeConfirmDialog = false">
-                    キャンセル
-                </v-btn>
-                <v-spacer/>
-                <v-btn
-                    color="error"
-                    variant="flat"
-                    @click="removeMember">
-                    除名する
-                </v-btn>
-            </v-card-actions>
-        </v-card>
-    </v-dialog>
 
     <!-- 招待ボトムシート -->
     <InviteBottomSheet

@@ -10,6 +10,7 @@ use App\Models\Family;
 use App\Services\CurrentFamilyService;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -41,7 +42,7 @@ class FamilySettingsController extends Controller
             return redirect()->route('home');
         }
 
-        $this->authorize('update', $family);
+        Gate::authorize('update', $family);
 
         $family->update([
             'name' => $data->name,
@@ -59,7 +60,7 @@ class FamilySettingsController extends Controller
             return redirect()->route('home');
         }
 
-        $this->authorize('regenerateCode', $family);
+        Gate::authorize('regenerateCode', $family);
 
         $family->update([
             'code' => Family::generateUniqueCode(),

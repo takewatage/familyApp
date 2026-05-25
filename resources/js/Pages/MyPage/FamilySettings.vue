@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import DokLayout from '@/Layouts/DokLayout.vue'
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
 import { usePageProps } from '@/Composables/Common/usePageProps'
 import { useDialogService } from '@/Composables/Common/useDialogService'
 import { useInertiaForm } from '@/Composables/Common/useInertiaForm'
@@ -8,7 +8,7 @@ import { router } from '@inertiajs/vue3'
 import type { FamilySettingsResult, UpdateFamilySettingsRequest } from '@/Types/dto.generated'
 import RegenerateFamilyCodeDialog from '@/Components/Family/RegenerateFamilyCodeDialog.vue'
 
-defineOptions({ layout: DokLayout })
+defineOptions({ layout: AuthenticatedLayout })
 
 const props = usePageProps<FamilySettingsResult>()
 const { open } = useDialogService()

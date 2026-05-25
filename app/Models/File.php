@@ -12,8 +12,8 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  * @property string $fileable_type
  * @property string $fileable_id
  * @property string $collection
- * @property string $external_id
- * @property string $direct_url
+ * @property string $path
+ * @property string $url
  * @property string $name
  * @property string $mime_type
  * @property int $sort

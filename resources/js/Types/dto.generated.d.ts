@@ -32,7 +32,7 @@ family: FamilyData;
 members: Array<FamilyMemberData>;
 virtualUsers: Array<VirtualUserData>;
 isOwner: boolean;
-inviteUrls: Record<string, string>;
+inviteUrls: { [key: string]: string };
 };
 export type FamilySettingsResult = {
 family: FamilyData;
@@ -55,6 +55,9 @@ sort: string;
 createdAt?: string;
 updatedAt?: string;
 };
+export type FooterSettingsResult = {
+footerItems: Array<string>;
+};
 export type InviteConfirmResult = {
 familyName?: string;
 memberCount: number;
@@ -62,6 +65,7 @@ code: string;
 alreadyJoined: boolean;
 isFull: boolean;
 error?: string;
+inviteRole: string;
 };
 export type MyPageData = {
 user: UserData;
@@ -73,6 +77,7 @@ export type SaveProfileData = {
 name: string;
 birthday?: string;
 avatarImage?: any;
+deleteAvatar?: boolean;
 };
 export type SaveTaskRequestData = {
 id?: string;
@@ -147,7 +152,8 @@ files?: Array<FileData>;
 };
 export type UserSettingsResult = {
 theme: string;
-themeColor: string;
+themeName: string;
+footerItems: Array<string>;
 };
 export type VirtualUserData = {
 id: string;

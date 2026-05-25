@@ -27,7 +27,7 @@ class FamilySwitchController extends Controller
         ));
 
         return Inertia::render('MyPage/FamilySwitch', FamilySwitchResult::from([
-            'families' => $familiesData->values()->toArray(),
+            'families' => $familiesData->values(),
             'current_family_id' => $this->currentFamilyService->getCurrentFamilyId(),
         ]));
     }

@@ -12,8 +12,9 @@ class VirtualUserController extends Controller
 {
     public function __construct(
         private readonly CurrentFamilyService $currentFamilyService,
-        private readonly ImageUploadService $imageService,
-    ) {
+        private readonly ImageUploadService   $imageService,
+    )
+    {
     }
 
     public function store(SaveVirtualUserRequest $data): RedirectResponse
@@ -46,7 +47,7 @@ class VirtualUserController extends Controller
         if ($data->avatar_image) {
             $old = $virtualUser->files()->where('collection', 'avatar')->first();
             if ($old) {
-                $this->imageService->delete($old->external_id);
+                $this->imageService->delete($old->path);
                 $old->delete();
             }
             $this->uploadAvatar($virtualUser, $data->avatar_image);
@@ -65,7 +66,7 @@ class VirtualUserController extends Controller
 
         $old = $virtualUser->files()->where('collection', 'avatar')->first();
         if ($old) {
-            $this->imageService->delete($old->external_id);
+            $this->imageService->delete($old->path);
             $old->delete();
         }
 
@@ -76,7 +77,7 @@ class VirtualUserController extends Controller
 
     private function uploadAvatar(VirtualUser $virtualUser, $image): void
     {
-        $result = $this->imageService->upload($image, 400);
+        $result = $this->imageService->upload($image, 400, storagePath: "familyApp/{$virtualUser->family_id}/avatar");
 
         $virtualUser->files()->create([
             'collection' => 'avatar',

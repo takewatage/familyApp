@@ -21,9 +21,11 @@ const form = useInertiaForm<SaveVirtualUserRequest>({
 
 function handleSubmit() {
     if (isEdit) {
-        form.patch(route('family.virtual-users.update', { virtualUser: props.virtualUser!.id }), {
+        // PHP は PATCH のマルチパートボディを解析しないため POST + _method スプーフィングで送信
+        form.post(route('family.virtual-users.update', { virtualUser: props.virtualUser!.id }), {
             preserveScroll: true,
             only: ['virtualUsers'],
+            transform: (data: any) => ({ ...data, _method: 'PATCH' }),
             onSuccess: () => {
                 snackbar.success('仮想メンバーを更新しました')
                 props.onClose()
@@ -48,7 +50,9 @@ function handleSubmit() {
             <div class="d-flex justify-center mb-4">
                 <ImageUploadField
                     v-model="form.avatarImage"
-                    :current-url="props.virtualUser?.avatar?.url"/>
+                    :current-url="props.virtualUser?.avatar?.url"
+                    preview-variant="avatar"
+                />
             </div>
             <v-text-field
                 v-model="form.name"

@@ -13,6 +13,7 @@ class SaveProfileData extends Data
         public string        $name,
         public ?string       $birthday,
         public ?UploadedFile $avatar_image,
+        public bool          $delete_avatar = false,
     )
     {
     }

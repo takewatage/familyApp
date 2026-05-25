@@ -17,11 +17,12 @@ const form = useInertiaForm<SaveProfileData>({
     name: props.name ?? '',
     birthday: props.birthday ?? null,
     avatarImage: undefined,
+    deleteAvatar: false,
 })
 
 function handleSubmit() {
     form.post(route('mypage.update'), {
-        only: ['user'],
+        only: ['user', 'auth'],
         onSuccess: () => props.onClose(),
     })
 }
@@ -33,7 +34,9 @@ function handleSubmit() {
             <div class="d-flex justify-center mb-4">
                 <ImageUploadField
                     v-model="form.avatarImage"
-                    :current-url="props.avatar?.url"/>
+                    preview-variant="avatar"
+                    :current-url="props.avatar?.url"
+                    @clear="() => (form.deleteAvatar = true)"/>
             </div>
             <v-text-field
                 v-model="form.name"

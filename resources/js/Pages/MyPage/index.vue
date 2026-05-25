@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import DokLayout from '@/Layouts/DokLayout.vue'
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
 import { usePageProps } from '@/Composables/Common/usePageProps'
 import { useDialogService } from '@/Composables/Common/useDialogService'
 import type { MyPageData } from '@/Types/dto.generated'
@@ -7,7 +7,7 @@ import EditProfileForm from '@/Components/MyPage/EditProfileForm.vue'
 import { formatDate } from '@/Utils/dateFormatter'
 import { router } from '@inertiajs/vue3'
 
-defineOptions({ layout: DokLayout })
+defineOptions({ layout: AuthenticatedLayout })
 
 const props = usePageProps<MyPageData>()
 const { open } = useDialogService()
@@ -92,7 +92,14 @@ const onEdit = async () => {
                             prepend-icon="mdi-palette"
                             title="テーマカラー設定"
                             append-icon="mdi-chevron-right"
-                            @click="router.visit(route('mypage.settings.index'))"/>
+                            @click="router.visit(route('mypage.setting.theme-color.index'))"/>
+                        <v-divider/>
+                        <v-list-item
+                            prepend-icon="mdi-view-grid-outline"
+                            title="アプリショートカット設定"
+                            subtitle="フッターに表示するアプリを設定"
+                            append-icon="mdi-chevron-right"
+                            @click="router.visit(route('mypage.footer-settings.index'))"/>
                     </v-list>
                 </v-card>
 

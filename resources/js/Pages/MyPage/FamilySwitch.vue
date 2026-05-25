@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import DokLayout from '@/Layouts/DokLayout.vue'
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
 import { usePageProps } from '@/Composables/Common/usePageProps'
 import { useSnackbar } from '@/Composables/Common/useSnackbar'
 import { router } from '@inertiajs/vue3'
 import type { FamilySwitchResult } from '@/Types/dto.generated'
 
-defineOptions({ layout: DokLayout })
+defineOptions({ layout: AuthenticatedLayout })
 
 const props = usePageProps<FamilySwitchResult>()
 const snackbar = useSnackbar()

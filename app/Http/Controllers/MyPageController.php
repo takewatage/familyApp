@@ -2,11 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Dtos\MyPage\FooterSettingsResult;
 use App\Dtos\MyPage\MyPageData;
 use App\Dtos\MyPage\SaveProfileData;
+use App\Dtos\MyPage\UpdateFooterItemsRequest;
 use App\Dtos\MyPage\UpdateSettingsRequest;
 use App\Dtos\MyPage\UserSettingsResult;
 use App\Models\User;
+use App\Services\CurrentFamilyService;
 use App\Services\ImageUploadService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -18,6 +21,7 @@ class MyPageController extends Controller
 {
     public function __construct(
         private ImageUploadService $imageService,
+        private CurrentFamilyService $currentFamilyService,
     )
     {
     }
@@ -42,15 +46,26 @@ class MyPageController extends Controller
     {
         $user = auth()->user();
         $user->update(['name' => $data->name, 'birthday' => $data->birthday]);
+
+        if ($data->delete_avatar && !$data->avatar_image) {
+            $old = $user->files()->where('collection', 'avatar')->first();
+
+            if ($old) {
+                $this->imageService->delete($old->path);
+                $old->delete();
+            }
+        }
+
         if ($data->avatar_image) {
             $old = $user->files()->where('collection', 'avatar')->first();
 
             if ($old) {
-                $this->imageService->delete($old->external_id);
+                $this->imageService->delete($old->path);
                 $old->delete();
             }
 
-            $result = $this->imageService->upload($data->avatar_image, 400);
+            $familyId = $this->currentFamilyService->getCurrentFamilyId() ?? 'unassigned';
+            $result = $this->imageService->upload($data->avatar_image, 400, storagePath: "familyApp/{$familyId}/avatar");
 
             $user->files()->create([
                 'collection' => 'avatar',
@@ -69,11 +84,30 @@ class MyPageController extends Controller
     {
         $user = auth()->user();
         $user->settings = [
-            'theme' => $data->theme,
-            'theme_color' => $data->theme_color,
+            'theme'        => $data->theme,
+            'theme_name'   => $data->theme_name,
+            'footer_items' => $data->footer_items,
         ];
         $user->save();
 
         return back()->with('message', '設定を保存しました');
+    }
+
+    public function footerSettingsIndex(Request $request): Response
+    {
+        $user = $request->user();
+
+        return Inertia::render('MyPage/FooterSettings', FooterSettingsResult::fromArray($user->settings ?? []));
+    }
+
+    public function updateFooterItems(UpdateFooterItemsRequest $data): RedirectResponse
+    {
+        $user = auth()->user();
+        $settings = $user->settings ?? [];
+        $settings['footer_items'] = $data->footer_items;
+        $user->settings = $settings;
+        $user->save();
+
+        return back()->with('message', 'フッター設定を保存しました');
     }
 }

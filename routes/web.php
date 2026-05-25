@@ -17,8 +17,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/home', [HomeController::class, 'index'])->name('home');
     Route::get('/mypage', [MyPageController::class, 'index'])->name('mypage.index');
     Route::post('/mypage', [MyPageController::class, 'updateProfile'])->name('mypage.update');
-    Route::get('/mypage/settings', [MyPageController::class, 'settingsIndex'])->name('mypage.settings.index');
-    Route::post('/mypage/settings', [MyPageController::class, 'updateSettings'])->name('mypage.settings.update');
+    Route::get('/mypage/setting/theme-color', [MyPageController::class, 'settingsIndex'])->name('mypage.setting.theme-color.index');
+    Route::post('/mypage/setting/theme-color', [MyPageController::class, 'updateSettings'])->name('mypage.setting.theme-color.update');
+    Route::get('/mypage/footer-settings', [MyPageController::class, 'footerSettingsIndex'])->name('mypage.footer-settings.index');
+    Route::post('/mypage/footer-settings', [MyPageController::class, 'updateFooterItems'])->name('mypage.footer-settings.update');
     Route::get('/dok', [DokController::class, 'index'])->name('dok');
 
     // 家族設定

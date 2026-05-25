@@ -67,12 +67,18 @@ class HStorageClient
      */
     public function delete(string $externalId): bool
     {
-        $response = Http::withHeaders($this->buildAuthHeaders())
-            ->delete("{$this->baseUrl}/file/my", [
-                'external_id' => $externalId,
-            ]);
+        try {
+            $response = Http::withHeaders($this->buildAuthHeaders())
+                ->delete("{$this->baseUrl}/file/my?external_id={$externalId}");
 
-        return $response->successful();
+            return $response->successful();
+        } catch (\Illuminate\Http\Client\ConnectionException $e) {
+            // HStorage は削除成功時に空レスポンスを返すため cURL error 52 が発生するが、正常とみなす
+            if (str_contains($e->getMessage(), 'Empty reply from server')) {
+                return true;
+            }
+            throw $e;
+        }
     }
 
     // -------------------------------------------------------------------------

@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import DokLayout from '@/Layouts/DokLayout.vue'
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
 import { usePageProps } from '@/Composables/Common/usePageProps'
 import { router } from '@inertiajs/vue3'
 import UserSettingsForm from '@/Components/MyPage/UserSettingsForm.vue'
 import type { UserSettingsResult } from '@/Types/dto.generated'
 
-defineOptions({ layout: DokLayout })
+defineOptions({ layout: AuthenticatedLayout })
 
 const props = usePageProps<UserSettingsResult>()
 </script>

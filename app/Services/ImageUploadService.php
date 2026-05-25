@@ -52,10 +52,11 @@ class ImageUploadService
         UploadedFile $file,
         int          $width = 800,
         int          $quality = self::DEFAULT_QUALITY,
+        string       $storagePath = 'familyApp',
     ): array
     {
         $encoded = $this->resizeToWebp($file, $width, $quality);
-        $filename = $this->generateFilename();
+        $filename = $storagePath . '/' . Str::ulid() . '.webp';
 
         return $this->client->upload(
             fileContents: (string)$encoded,
@@ -67,6 +68,7 @@ class ImageUploadService
      * プリセットを使って複数サイズを一括生成
      * @param UploadedFile $file
      * @param string $preset
+     * @param string $storagePath 保存先パス（例: familyApp/{familyId}/product）
      * @param int $quality
      * @return array<string, array{external_id: string, direct_url: string, share_url: string}>
      * @throws \Illuminate\Http\Client\ConnectionException
@@ -74,6 +76,7 @@ class ImageUploadService
     public function uploadWithPreset(
         UploadedFile $file,
         string       $preset,
+        string       $storagePath = 'familyApp',
         int          $quality = self::DEFAULT_QUALITY,
     ): array
     {
@@ -85,7 +88,7 @@ class ImageUploadService
 
         foreach ($this->presets[$preset] as $variant => $config) {
             $encoded = $this->resizeToWebp($file, $config['width'], $quality);
-            $filename = $this->generateFilename($variant);
+            $filename = $storagePath . '/' . $variant . '_' . Str::ulid() . '.webp';
 
             $results[$variant] = $this->client->upload(
                 fileContents: (string)$encoded,
@@ -125,8 +128,4 @@ class ImageUploadService
         return (string)$image->toWebp($quality);
     }
 
-    private function generateFilename(string $prefix = 'img'): string
-    {
-        return $prefix . '_' . Str::ulid() . '.webp';
-    }
 }

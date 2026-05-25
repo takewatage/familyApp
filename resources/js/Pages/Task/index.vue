@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import DokLayout from '@/Layouts/DokLayout.vue'
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
 import { usePageProps } from '@/Composables/Common/usePageProps'
 import { TaskPageData } from '@/Types/dto.generated'
 import FamilyTask from '@/Components/FamilyTask/FamilyTask.vue'
 
-defineOptions({ layout: DokLayout })
+defineOptions({ layout: AuthenticatedLayout })
 
 const props = usePageProps<TaskPageData>()
 </script>

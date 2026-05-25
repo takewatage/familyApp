@@ -17,7 +17,7 @@ family-app/
 │   │       └── Auth/                 # 認証関連コントローラー
 │   ├── Models/                       # Eloquentモデル（User, Family, VirtualUser, Task等）
 │   ├── Policies/                     # Laravel認可ポリシー（FamilyPolicy等）
-│   └── Services/                     # ビジネスロジック（ImageUploadService, CurrentFamilyService等）
+│   └── Services/                     # ビジネスロジック（ImageUploadService, CurrentFamilyService, InviteUrlService等）
 ├── database/
 │   ├── migrations/                   # DBマイグレーションファイル
 │   ├── factories/                    # テスト用モデルファクトリー
@@ -34,18 +34,17 @@ family-app/
 │   │   │   ├── Dok/                  # Dok機能コンポーネント
 │   │   │   ├── Family/               # 家族設定・メンバー管理・切り替えコンポーネント
 │   │   │   ├── FamilyTask/           # タスク関連コンポーネント
-│   │   │   ├── Layout/               # レイアウトコンポーネント
 │   │   │   └── MyPage/               # マイページコンポーネント
 │   │   ├── Composables/              # Vue3 Composition API（useXxx形式）
 │   │   │   ├── Common/               # 共通Composables（useAppTheme, useSnackbar等）
 │   │   │   ├── Dok/                  # Dok関連Composables
 │   │   │   └── Task/                 # タスク関連Composables
-│   │   ├── Constants/                # 定数定義
+│   │   ├── Constants/                # 定数定義（footerApps.ts: フッターアプリ定義）
 │   │   ├── Layouts/                  # Inertiaページレイアウト
 │   │   ├── Pages/                    # Inertiaページコンポーネント
 │   │   │   ├── Auth/                 # 認証ページ
 │   │   │   ├── Dok/                  # Dokページ
-│   │   │   ├── MyPage/               # マイページ（家族設定ページ含む）
+│   │   │   ├── MyPage/               # マイページ（家族設定・設定・フッター設定ページ含む）
 │   │   │   └── Task/                 # タスクページ
 │   │   ├── Plugins/                  # Vueプラグイン設定（Vuetify等）
 │   │   ├── Types/                    # TypeScript型定義
@@ -127,12 +126,18 @@ family-app/
 - **役割**: Vue3 Composition APIを使った再利用可能なロジック
 - **命名**: `use` + 機能名（例: `useTask.ts`、`useSnackbar.ts`）
 - **主要ファイル**:
-  - `Common/useAppTheme.ts`: Vuetify テーマ（ライト/ダーク/システム）とプライマリカラーを適用する。`DokLayout.vue` から呼び出し、`$page.props.userSettings` を watch して即時反映
+  - `Common/useAppTheme.ts`: Vuetify テーマ（ライト/ダーク/システム）とプライマリー・セカンダリーカラーを適用する。`THEMES` 定数（7プリセット）を export し、`AuthenticatedLayout.vue` から呼び出す。`$page.props.userSettings` を watch して即時反映
 
 ### resources/js/Types/
 
 - **役割**: TypeScript型定義
-- **注意**: `dto.generated.d.ts` は `php artisan typescript:transform` で自動生成されるため手動編集禁止
+- **注意**: `dto.generated.d.ts` は `php artisan typescript:transform` で自動生成される。Docker 未起動時は手動更新も可
+
+### resources/js/Constants/
+
+- **役割**: フロントエンド定数定義
+- **主要ファイル**:
+  - `footerApps.ts`: フッターナビゲーションに表示できるアプリ一覧（`FOOTER_APPS`）、デフォルト項目（`DEFAULT_FOOTER_ITEMS`）、必須項目（`REQUIRED_FOOTER_ITEMS`）、非表示ルート（`FOOTER_HIDDEN_ROUTES`）を定義。新しいアプリを追加する際はここに追記する
 
 ### docs/
 

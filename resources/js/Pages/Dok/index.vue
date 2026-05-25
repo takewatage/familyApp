@@ -1,17 +1,10 @@
 <script setup lang="ts">
-import DokLayout from '@/Layouts/DokLayout.vue'
-import { computed } from 'vue'
-import { useLayout } from 'vuetify'
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
 import { useTab } from '@/Composables/Dok/useTab'
 import Dok from '@/Pages/Dok/dok.vue'
 
-defineOptions({ layout: DokLayout })
+defineOptions({ layout: AuthenticatedLayout })
 
-const { getLayoutItem } = useLayout()
-const tabHeight = computed((): number => {
-    const appBarSize = getLayoutItem('app-bar')?.size || 0
-    return window.innerHeight - appBarSize
-})
 const { tab } = useTab()
 </script>
 
@@ -20,8 +13,7 @@ const { tab } = useTab()
         <v-tabs-window v-model="tab">
             <v-tabs-window-item
                 class="main-content"
-                value="dok"
-                :style="{ height: tabHeight + 'px' }">
+                value="dok">
                 <Dok />
             </v-tabs-window-item>
             <v-tabs-window-item value="todo"></v-tabs-window-item>
@@ -31,7 +23,7 @@ const { tab } = useTab()
 
 <style lang="scss" scoped>
 .main-content {
-    transition: height 0.2s ease-in;
+    height: calc(100vh - var(--v-layout-top) - var(--v-layout-bottom));
     position: relative;
 }
 </style>

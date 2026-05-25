@@ -59,6 +59,10 @@ class RegisteredUserController extends Controller
             'avatar_image' => ['nullable', 'image', 'max:10240'],
         ]);
 
+        $inviteCode = session('invite_family_code');
+        $inviteFamily = $inviteCode ? Family::where('code', $inviteCode)->first() : null;
+        $familyId = $inviteFamily?->id ?? 'unassigned';
+
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
@@ -67,7 +71,7 @@ class RegisteredUserController extends Controller
         ]);
 
         if ($request->hasFile('avatar_image')) {
-            $result = $this->imageService->upload($request->file('avatar_image'), 400);
+            $result = $this->imageService->upload($request->file('avatar_image'), 400, storagePath: "familyApp/{$familyId}/avatar");
 
             $user->files()->create([
                 'collection' => 'avatar',
@@ -84,22 +88,16 @@ class RegisteredUserController extends Controller
         Auth::login($user);
 
         // セッションのコードで家族に自動参加
-        $code = session('invite_family_code');
+        if ($inviteFamily && !($inviteFamily->code_expires_at && $inviteFamily->code_expires_at->isPast())) {
+            $role = in_array(session('invite_role'), ['parent', 'child', 'guest'])
+                ? session('invite_role')
+                : 'guest';
 
-        if ($code) {
-            $family = Family::where('code', $code)->first();
-
-            if ($family && !($family->code_expires_at && $family->code_expires_at->isPast())) {
-                $role = in_array(session('invite_role'), ['parent', 'child', 'guest'])
-                    ? session('invite_role')
-                    : 'guest';
-
-                $family->members()->attach($user->id, ['role' => $role]);
-                $this->currentFamilyService->setCurrentFamily($family->id);
-            }
-
-            session()->forget(['invite_family_code', 'invite_role']);
+            $inviteFamily->members()->attach($user->id, ['role' => $role]);
+            $this->currentFamilyService->setCurrentFamily($inviteFamily->id);
         }
+
+        session()->forget(['invite_family_code', 'invite_role']);
 
         return redirect()->route('home');
     }

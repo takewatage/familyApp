@@ -57,7 +57,7 @@
 3. **API通信（Axios）**: `client.ts` 経由でAxiosリクエスト送信（camelCase ↔ snake_case 自動変換）
 4. **リアルタイム更新**: Pusher Private Channel `family.{family_id}` で `TaskUpdated`・`CategoryUpdated` イベントを配信
 5. **型安全**: PHPの `#[TypeScript]` DTO → `dto.generated.d.ts` に自動生成 → フロントエンドで使用
-6. **共有プロパティ**: `HandleInertiaRequests::share()` で全ページに `userSettings`（theme, themeColor）を配信 → `useAppTheme` composable が Vuetify テーマへ即時反映
+6. **共有プロパティ**: `HandleInertiaRequests::share()` で全ページに `userSettings`（theme, themeName, footerItems）を配信 → `useAppTheme` composable が Vuetify のプライマリー・セカンダリー両テーマカラーへ即時反映。`footerItems` は `AuthenticatedLayout.vue` がフッターナビゲーションの表示に使用
 7. **署名付き招待URL**: `URL::signedRoute()` でサーバーサイドが署名を生成。`InviteController` で `hasValidSignature()` を検証し、クライアントによる `role` パラメータの改ざんを防止
 
 ## 3. 開発環境
@@ -105,9 +105,11 @@ sail yarn build
 | `/join/{code}`                      | POST    | ログイン済みユーザーの家族参加    | ✅完了  |
 | `/home`                             | GET     | ホーム画面                     | ✅完了  |
 | `/mypage`                           | GET     | マイページ画面                  | ✅完了  |
-| `/mypage`                           | POST    | プロフィール更新                | ✅完了  |
+| `/mypage`                           | POST    | プロフィール更新（`name`, `birthday`, `avatar_image`, `delete_avatar`）| ✅完了  |
 | `/mypage/settings`                  | GET     | 設定ページ                      | ✅完了  |
-| `/mypage/settings`                  | POST    | ユーザー設定保存                | ✅完了  |
+| `/mypage/settings`                  | POST    | ユーザー設定保存（テーマ・テーマカラー） | ✅完了  |
+| `/mypage/footer-settings`           | GET     | アプリショートカット設定ページ    | ✅完了  |
+| `/mypage/footer-settings`           | POST    | フッター項目の保存               | ✅完了  |
 | `/tasks`                            | GET     | タスク一覧画面                  | ✅完了  |
 | `/task`                             | POST    | タスク作成                     | ✅完了  |
 | `/task/{task}`                      | PATCH   | タスク更新                     | ✅完了  |
@@ -142,7 +144,7 @@ sail yarn build
 
 | テーブル名             | 説明                                    |
 |----------------------|-----------------------------------------|
-| `users`              | ユーザー基本情報（UUID, name, email, birthday nullable, settings JSON nullable）settings スキーマ: `{ theme: 'light'\|'dark'\|'system', theme_color: 'pink'\|'blue'\|'purple'\|'green'\|'orange'\|'teal' }` |
+| `users`              | ユーザー基本情報（UUID, name, email, birthday nullable, settings JSON nullable）settings スキーマ: `{ theme: 'light'\|'dark'\|'system', theme_name: 'pink'\|'sunset'\|'ocean'\|'forest'\|'lavender'\|'autumn'\|'midnight', footer_items: string[] }` |
 | `families`           | 家族グループ情報（UUID, name, code, code_expires_at nullable, owner_id）|
 | `family_user`        | ユーザーと家族グループの中間テーブル（role付き）|
 | `task_categories`    | タスクカテゴリー（family_id, name, sort）  |
@@ -168,4 +170,33 @@ sail yarn build
 | 連携先  | 方式                    | 用途                                         |
 |--------|------------------------|---------------------------------------------|
 | Pusher | WebSocket（Laravel Broadcasting）| タスク・カテゴリーのリアルタイム同期          |
-| HStorage | HTTP API              | 画像ファイルのクラウドストレージ保存           |
+| HStorage | HTTP API（presigned URL + PUT / DELETE）| 画像ファイルのクラウドストレージ保存・削除 |
+
+### HStorage ファイル命名規則
+
+HStorage はフォルダ管理非対応のフラットストレージ。ファイル名にパスライクな文字列を含めて管理する。
+
+```
+familyApp/{family_uuid}/{collection}/{ULID}.webp
+```
+
+| セグメント | 値の例 | 説明 |
+|---|---|---|
+| `familyApp` | 固定プレフィックス | アプリ識別子 |
+| `{family_uuid}` | `01JXXXXXXXXXXXXXXXXXXXXXXX` | 所属家族の UUID |
+| `{collection}` | `avatar` | ファイルの用途（filesテーブルの collection と対応） |
+| `{ULID}.webp` | `01JXXXXXXXXXXXXXXXXXXXXXXX.webp` | ULID + WebP固定 |
+
+- `family_uuid` が確定していない場合（登録フロー等）は `unassigned` を使用
+- `ImageUploadService::upload()` の `storagePath` 引数でパスを指定する
+- ファイルの論理的な管理は `files` テーブル（`fileable_type`, `fileable_id`, `collection`）で行い、HStorage はキーバリューストアとして割り切る
+
+### HStorage 削除 API
+
+```
+DELETE https://api.hstorage.io/file/my?external_id={external_id}
+```
+
+- `external_id` はクエリパラメータで渡す
+- 削除成功時にサーバーが空レスポンス（cURL error 52: Empty reply）を返す仕様のため、`ConnectionException` をキャッチして正常完了とみなす
+- `files` テーブルの `path` カラムに HStorage の `external_id` を保存しており、削除時は `$file->path` を使用する

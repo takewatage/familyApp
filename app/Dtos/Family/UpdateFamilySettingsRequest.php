@@ -2,11 +2,8 @@
 
 namespace App\Dtos\Family;
 
-use Spatie\LaravelData\Attributes\MapInputName;
 use Spatie\LaravelData\Data;
-use Spatie\LaravelData\Mappers\CamelCaseMapper;
 
-#[MapInputName(CamelCaseMapper::class)]
 class UpdateFamilySettingsRequest extends Data
 {
     public function __construct(
