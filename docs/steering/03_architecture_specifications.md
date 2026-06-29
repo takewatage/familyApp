@@ -103,7 +103,7 @@ sail yarn build
 |-------------------------------------|---------|------------------------------|---------|
 | `/join/{code}`                      | GET     | 招待確認ページ（guest/auth共通） | ✅完了  |
 | `/join/{code}`                      | POST    | ログイン済みユーザーの家族参加    | ✅完了  |
-| `/home`                             | GET     | ホーム画面                     | ✅完了  |
+| `/home`                             | GET     | ホーム画面（`HomeResult`: メンバー・仮想ユーザーをアバター込みで返却） | ✅完了  |
 | `/mypage`                           | GET     | マイページ画面                  | ✅完了  |
 | `/mypage`                           | POST    | プロフィール更新（`name`, `birthday`, `avatar_image`, `delete_avatar`）| ✅完了  |
 | `/mypage/settings`                  | GET     | 設定ページ                      | ✅完了  |

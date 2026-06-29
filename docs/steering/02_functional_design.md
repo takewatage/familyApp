@@ -91,6 +91,36 @@
 
 ---
 
+### S-004: ホーム画面
+
+#### 概要
+
+ログイン後のトップ画面（`/home`）。ヒーローセクションで「今日の日付・家族名・メンバーアバター一覧」を表示し、その下に利用可能なアプリをグリッドで一覧する。
+
+#### 構成要素
+
+- **Pages/Home.vue**: ページコンポーネント（AuthenticatedLayout 使用）
+- **HomeController::index()**: `CurrentFamilyService` 経由でアクティブ家族を取得し、`HomeResult` DTO を返す
+- **Dtos/Home/HomeResult.php**: `members`（`FamilyMemberData[]`）・`virtualUsers`（`VirtualUserData[]`）を保持する props 用 DTO
+
+#### ヒーローセクション
+
+- 背景: テーマカラー（`primary` → `secondary`）の 135deg グラデーション
+- 日付ラベル: `〇月〇日（曜日）` 形式（`todayLabel` computed でクライアント生成）
+- 家族名: 共有プロパティ `currentFamily` から取得（未設定時は非表示）
+- メンバーアバター一覧: 実ユーザー（`members`）＋仮想ユーザー（`virtualUsers`）を横並び表示。アバター画像があれば画像、無ければ名前の先頭1文字（イニシャル）を表示
+
+#### アプリグリッド
+
+- `FOOTER_APPS` 定数から `home` を除き、遷移アクション（`APP_ACTIONS`）が定義されたアプリのみを4カラムグリッドで表示
+- 各アプリは絵文字アイコン＋アプリ名を中央揃えで表示し、タップで対応ページへ遷移（どっちがお得カネ→`/dok`、TODOリスト→`/tasks`）
+
+#### 制約
+
+- 家族グループ未所属（`currentFamily === null`）の場合、`HomeController` は `members`・`virtualUsers` を空配列で返し、家族名・アバターは非表示となる（画面はクラッシュしない）
+
+---
+
 ### S-005: タスク一覧画面
 
 #### 概要

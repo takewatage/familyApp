@@ -58,6 +58,10 @@ updatedAt?: string;
 export type FooterSettingsResult = {
 footerItems: Array<string>;
 };
+export type HomeResult = {
+members: Array<FamilyMemberData>;
+virtualUsers: Array<VirtualUserData>;
+};
 export type InviteConfirmResult = {
 familyName?: string;
 memberCount: number;
@@ -77,7 +81,7 @@ export type SaveProfileData = {
 name: string;
 birthday?: string;
 avatarImage?: any;
-deleteAvatar?: boolean;
+deleteAvatar: boolean;
 };
 export type SaveTaskRequestData = {
 id?: string;
