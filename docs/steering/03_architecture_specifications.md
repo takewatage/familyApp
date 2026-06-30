@@ -135,12 +135,16 @@ sail yarn build
 | `/budget/expenses`                  | POST    | 支出登録（`StoreExpenseRequest`。FK は family スコープ検証、店舗は既存名紐付け or テキスト保持） | ✅完了 |
 | `/budget/expenses/{expense}`        | PATCH   | 支出更新（`UpdateExpenseRequest`。family 越境は404、FK は family スコープ検証） | ✅完了 |
 | `/budget/expenses/{expense}`        | DELETE  | 支出削除（family 越境は404、店舗の利用回数を減算） | ✅完了 |
+| `/budget/categories`                | GET     | カテゴリー管理画面（`CategoriesPageResult`: 家族＋システム既定カテゴリー） | ✅完了 |
+| `/budget/categories`                | POST    | カテゴリー作成（`StoreCategoryRequest`。親は family/システム既定の最上位のみ＝親子2階層制限） | ✅完了 |
+| `/budget/categories/{category}`     | PATCH   | カテゴリー更新（`UpdateCategoryRequest`。family 越境/システム既定は404、自己親・子持ち親化を防止） | ✅完了 |
+| `/budget/categories/{category}`     | DELETE  | カテゴリー論理削除（`is_active=false`、子も無効化。family 越境/システム既定は404） | ✅完了 |
 
 ### API Routes（Axios）
 
 | エンドポイント | メソッド | 説明 | 状態 |
 |-------------|---------|------|------|
-| （現在はInertia経由が主、必要に応じて追加） | - | - | - |
+| `/budget/categories/reorder` | POST | カテゴリー並び替え（`ReorderCategoriesRequest`。家族カテゴリーのみ、`budgetCategoryApi.reorder`） | ✅完了 |
 
 ## 5. データベース
 

@@ -10,6 +10,7 @@ use App\Dtos\Model\CategoryData;
 use App\Dtos\Model\ExpenseData;
 use App\Dtos\Model\PaymentMethodData;
 use App\Dtos\Model\ShopData;
+use App\Http\Controllers\Concerns\AuthorizesFamilyOwnership;
 use App\Models\Category;
 use App\Models\Expense;
 use App\Models\PaymentMethod;
@@ -25,6 +26,8 @@ use Inertia\Response;
 
 class ExpenseController extends Controller
 {
+    use AuthorizesFamilyOwnership;
+
     public function __construct(
         private readonly CurrentFamilyService $currentFamilyService,
         private readonly ExpenseService $expenseService,
@@ -65,7 +68,7 @@ class ExpenseController extends Controller
 
     public function update(UpdateExpenseRequest $request, Expense $expense): RedirectResponse
     {
-        $this->authorizeFamily($expense);
+        $this->authorizeFamilyOwnership($expense);
 
         $this->expenseService->update($expense, $request->toArray());
 
@@ -74,21 +77,11 @@ class ExpenseController extends Controller
 
     public function destroy(Expense $expense): RedirectResponse
     {
-        $this->authorizeFamily($expense);
+        $this->authorizeFamilyOwnership($expense);
 
         $this->expenseService->delete($expense);
 
         return back();
-    }
-
-    /**
-     * 支出が現在の家族のものであることを保証する（越境操作の防止）。
-     */
-    private function authorizeFamily(Expense $expense): void
-    {
-        $familyId = $this->currentFamilyService->getCurrentFamilyId();
-
-        abort_if(! $familyId || $expense->family_id !== $familyId, 404);
     }
 
     private function resolveYearMonth(?string $month): string

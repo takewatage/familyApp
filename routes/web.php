@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\DokController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\FamilyMemberController;
@@ -52,6 +53,13 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/budget/expenses', [ExpenseController::class, 'store'])->name('budget.expenses.store');
     Route::patch('/budget/expenses/{expense}', [ExpenseController::class, 'update'])->name('budget.expenses.update');
     Route::delete('/budget/expenses/{expense}', [ExpenseController::class, 'destroy'])->name('budget.expenses.destroy');
+
+    // 家計簿: カテゴリー
+    Route::get('/budget/categories', [CategoryController::class, 'index'])->name('budget.categories.index');
+    Route::post('/budget/categories/reorder', [CategoryController::class, 'reorder'])->name('budget.categories.reorder');
+    Route::post('/budget/categories', [CategoryController::class, 'store'])->name('budget.categories.store');
+    Route::patch('/budget/categories/{category}', [CategoryController::class, 'update'])->name('budget.categories.update');
+    Route::delete('/budget/categories/{category}', [CategoryController::class, 'destroy'])->name('budget.categories.destroy');
 
     Route::get('/tasks', [TaskController::class, 'index'])->name('tasks');
     Route::post('/task', [TaskController::class, 'store'])->name('tasks.store');

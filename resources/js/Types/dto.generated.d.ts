@@ -1,3 +1,6 @@
+export type CategoriesPageResult = {
+categories: Array<CategoryData>;
+};
 export type CategoryData = {
 id: string;
 familyId?: string;
@@ -133,6 +136,9 @@ isActive: boolean;
 export type RegisterPageResult = {
 familyName: string;
 };
+export type ReorderCategoriesRequest = {
+categories: Array<SortItemData>;
+};
 export type SaveProfileData = {
 name: string;
 birthday?: string;
@@ -158,12 +164,18 @@ name: string;
 defaultCategoryId?: string;
 usageCount: number;
 };
-export type SortCategoryRequestData = {
+export type SortItemData = {
 id: string;
 sort: number;
 };
 export type SortTaskCategoryRequest = {
-categories: Array<SortCategoryRequestData>;
+categories: Array<SortItemData>;
+};
+export type StoreCategoryRequest = {
+name: string;
+color: string;
+icon?: string;
+parentId?: string;
 };
 export type StoreExpenseRequest = {
 amount: string;
@@ -212,6 +224,12 @@ export type TaskPageData = {
 categories: Array<TaskCategoryData>;
 tasks: Array<TaskData>;
 familyId: string;
+};
+export type UpdateCategoryRequest = {
+name: string;
+color: string;
+icon?: string;
+parentId?: string;
 };
 export type UpdateExpenseRequest = {
 amount: string;
