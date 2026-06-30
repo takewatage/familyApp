@@ -131,6 +131,10 @@ sail yarn build
 | `/family/virtual-users/{virtualUser}` | DELETE| 仮想ユーザー削除               | ✅完了     |
 | `/families/switch`                  | GET     | 家族切り替えページ              | ✅完了     |
 | `/families/{family}/switch`         | POST    | アクティブ家族の切り替え         | ✅完了     |
+| `/budget/expenses`                  | GET     | 支出一覧画面（月指定 `?month=YYYY-MM`。`ExpensePageResult`: 支出・カテゴリー/支払い方法/店舗/担当者の選択肢・月合計） | ✅完了 |
+| `/budget/expenses`                  | POST    | 支出登録（`StoreExpenseRequest`。FK は family スコープ検証、店舗は既存名紐付け or テキスト保持） | ✅完了 |
+| `/budget/expenses/{expense}`        | PATCH   | 支出更新（`UpdateExpenseRequest`。family 越境は404、FK は family スコープ検証） | ✅完了 |
+| `/budget/expenses/{expense}`        | DELETE  | 支出削除（family 越境は404、店舗の利用回数を減算） | ✅完了 |
 
 ### API Routes（Axios）
 

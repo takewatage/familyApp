@@ -118,6 +118,11 @@ class DatabaseSeeder extends Seeder
             'password' => Hash::make('testtest'),
         ]);
 
-        $this->call([CategorySeeder::class, TaskSeeder::class]);
+        $this->call([
+            DefaultCategoriesSeeder::class,
+            DefaultPaymentMethodsSeeder::class,
+            CategorySeeder::class,
+            TaskSeeder::class,
+        ]);
     }
 }

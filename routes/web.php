@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\DokController;
+use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\FamilyMemberController;
 use App\Http\Controllers\FamilySettingsController;
 use App\Http\Controllers\FamilySwitchController;
@@ -46,6 +47,12 @@ Route::middleware(['auth'])->group(function () {
     Route::patch('/task-categories/{taskCategory}', [TaskCategoryController::class, 'update'])->name('task-categories.update');
     Route::delete('/task-categories/{taskCategory}', [TaskCategoryController::class, 'destroy'])->name('task-categories.destroy');
 
+    // 家計簿: 支出
+    Route::get('/budget/expenses', [ExpenseController::class, 'index'])->name('budget.expenses.index');
+    Route::post('/budget/expenses', [ExpenseController::class, 'store'])->name('budget.expenses.store');
+    Route::patch('/budget/expenses/{expense}', [ExpenseController::class, 'update'])->name('budget.expenses.update');
+    Route::delete('/budget/expenses/{expense}', [ExpenseController::class, 'destroy'])->name('budget.expenses.destroy');
+
     Route::get('/tasks', [TaskController::class, 'index'])->name('tasks');
     Route::post('/task', [TaskController::class, 'store'])->name('tasks.store');
     Route::patch('/task/{task}', [TaskController::class, 'update'])->name('tasks.update');
@@ -54,4 +61,4 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('/tasks/completed', [TaskController::class, 'destroyCompleted'])->name('tasks.destroyCompleted');
 });
 
-require __DIR__ . '/auth.php';
+require __DIR__.'/auth.php';

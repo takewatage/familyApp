@@ -1,5 +1,46 @@
+export type CategoryData = {
+id: string;
+familyId?: string;
+parentId?: string;
+name: string;
+icon?: string;
+color: string;
+sortOrder: number;
+isSystem: boolean;
+isActive: boolean;
+};
 export type DeleteCompletedTasksRequest = {
 categoryId: string;
+};
+export type ExpenseData = {
+id: string;
+familyId: string;
+memberType?: string;
+memberId?: string;
+memberName?: string;
+categoryId: string;
+categoryName: string;
+categoryColor: string;
+categoryIcon?: string;
+paymentMethodId: string;
+paymentMethodName: string;
+shopId?: string;
+shopName?: string;
+shopDisplayName?: string;
+amount: string;
+expenseDate: string;
+memo?: string;
+isRecurring: boolean;
+createdAt?: string;
+};
+export type ExpensePageResult = {
+expenses: Array<ExpenseData>;
+categories: Array<CategoryData>;
+paymentMethods: Array<PaymentMethodData>;
+shops: Array<ShopData>;
+memberOptions: Array<MemberOptionData>;
+yearMonth: string;
+totalAmount: string;
 };
 export type FamilyData = {
 id: string;
@@ -71,8 +112,23 @@ isFull: boolean;
 error?: string;
 inviteRole: string;
 };
+export type MemberOptionData = {
+key: string;
+memberType: string;
+memberId: string;
+name: string;
+};
 export type MyPageData = {
 user: UserData;
+};
+export type PaymentMethodData = {
+id: string;
+familyId?: string;
+name: string;
+icon?: string;
+sortOrder: number;
+isSystem: boolean;
+isActive: boolean;
 };
 export type RegisterPageResult = {
 familyName: string;
@@ -95,12 +151,30 @@ export type SaveVirtualUserRequest = {
 name: string;
 avatarImage?: any;
 };
+export type ShopData = {
+id: string;
+familyId: string;
+name: string;
+defaultCategoryId?: string;
+usageCount: number;
+};
 export type SortCategoryRequestData = {
 id: string;
 sort: number;
 };
 export type SortTaskCategoryRequest = {
 categories: Array<SortCategoryRequestData>;
+};
+export type StoreExpenseRequest = {
+amount: string;
+categoryId: string;
+paymentMethodId: string;
+expenseDate: string;
+shopId?: string;
+shopName?: string;
+memberType?: string;
+memberId?: string;
+memo?: string;
 };
 export type StoreTaskCategoryRequest = {
 name: string;
@@ -138,6 +212,17 @@ export type TaskPageData = {
 categories: Array<TaskCategoryData>;
 tasks: Array<TaskData>;
 familyId: string;
+};
+export type UpdateExpenseRequest = {
+amount: string;
+categoryId: string;
+paymentMethodId: string;
+expenseDate: string;
+shopId?: string;
+shopName?: string;
+memberType?: string;
+memberId?: string;
+memo?: string;
 };
 export type UpdateTaskCategoryRequest = {
 name: string;
