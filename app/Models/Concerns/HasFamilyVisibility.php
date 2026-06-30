@@ -20,4 +20,15 @@ trait HasFamilyVisibility
             }
         });
     }
+
+    /**
+     * 選択肢提示用スコープ。有効（is_active=true）かつ可視（システム既定 or 家族）で表示順に並べる。
+     * カテゴリー・支払い方法の選択肢クエリ（支出フォーム・各管理画面）で共通利用する。
+     */
+    public function scopeActiveOptions(Builder $query, ?string $familyId): Builder
+    {
+        return $query->where('is_active', true)
+            ->visibleTo($familyId)
+            ->orderBy('sort_order');
+    }
 }

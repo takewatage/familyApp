@@ -8,6 +8,7 @@ use App\Http\Controllers\FamilySettingsController;
 use App\Http\Controllers\FamilySwitchController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\MyPageController;
+use App\Http\Controllers\ShopController;
 use App\Http\Controllers\TaskCategoryController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\VirtualUserController;
@@ -60,6 +61,13 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/budget/categories', [CategoryController::class, 'store'])->name('budget.categories.store');
     Route::patch('/budget/categories/{category}', [CategoryController::class, 'update'])->name('budget.categories.update');
     Route::delete('/budget/categories/{category}', [CategoryController::class, 'destroy'])->name('budget.categories.destroy');
+
+    // 家計簿: 店舗
+    Route::get('/budget/shops', [ShopController::class, 'index'])->name('budget.shops.index');
+    Route::get('/budget/shops/search', [ShopController::class, 'search'])->name('budget.shops.search');
+    Route::post('/budget/shops', [ShopController::class, 'store'])->name('budget.shops.store');
+    Route::patch('/budget/shops/{shop}', [ShopController::class, 'update'])->name('budget.shops.update');
+    Route::delete('/budget/shops/{shop}', [ShopController::class, 'destroy'])->name('budget.shops.destroy');
 
     Route::get('/tasks', [TaskController::class, 'index'])->name('tasks');
     Route::post('/task', [TaskController::class, 'store'])->name('tasks.store');

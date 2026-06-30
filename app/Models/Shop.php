@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -31,6 +32,17 @@ class Shop extends Model
     protected $casts = [
         'usage_count' => 'integer',
     ];
+
+    /**
+     * 家族の店舗を候補表示順（利用回数降順 → 名前昇順）で取得するスコープ。
+     * 店舗一覧・検索・支出フォームの候補で共通利用する。
+     */
+    public function scopeForFamilyOrdered(Builder $query, ?string $familyId): Builder
+    {
+        return $query->where('family_id', $familyId)
+            ->orderByDesc('usage_count')
+            ->orderBy('name');
+    }
 
     public function family(): BelongsTo
     {

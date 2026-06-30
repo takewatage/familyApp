@@ -164,6 +164,10 @@ name: string;
 defaultCategoryId?: string;
 usageCount: number;
 };
+export type ShopsPageResult = {
+shops: Array<ShopData>;
+categories: Array<CategoryData>;
+};
 export type SortItemData = {
 id: string;
 sort: number;
@@ -187,6 +191,10 @@ shopName?: string;
 memberType?: string;
 memberId?: string;
 memo?: string;
+};
+export type StoreShopRequest = {
+name: string;
+defaultCategoryId?: string;
 };
 export type StoreTaskCategoryRequest = {
 name: string;
@@ -241,6 +249,10 @@ shopName?: string;
 memberType?: string;
 memberId?: string;
 memo?: string;
+};
+export type UpdateShopRequest = {
+name: string;
+defaultCategoryId?: string;
 };
 export type UpdateTaskCategoryRequest = {
 name: string;

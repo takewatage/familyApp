@@ -29,10 +29,7 @@ class CategoryController extends Controller
     {
         $familyId = $this->currentFamilyService->getCurrentFamilyId();
 
-        $categories = Category::query()
-            ->where('is_active', true)
-            ->visibleTo($familyId)
-            ->orderBy('sort_order')
+        $categories = Category::activeOptions($familyId)
             ->get()
             ->map(fn (Category $c) => CategoryData::from($c))
             ->all();

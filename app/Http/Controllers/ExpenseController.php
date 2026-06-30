@@ -100,10 +100,7 @@ class ExpenseController extends Controller
      */
     private function categoryOptions(?string $familyId): array
     {
-        return Category::query()
-            ->where('is_active', true)
-            ->visibleTo($familyId)
-            ->orderBy('sort_order')
+        return Category::activeOptions($familyId)
             ->get()
             ->map(fn (Category $c) => CategoryData::from($c))
             ->all();
@@ -114,10 +111,7 @@ class ExpenseController extends Controller
      */
     private function paymentMethodOptions(?string $familyId): array
     {
-        return PaymentMethod::query()
-            ->where('is_active', true)
-            ->visibleTo($familyId)
-            ->orderBy('sort_order')
+        return PaymentMethod::activeOptions($familyId)
             ->get()
             ->map(fn (PaymentMethod $p) => PaymentMethodData::from($p))
             ->all();
@@ -132,10 +126,7 @@ class ExpenseController extends Controller
             return [];
         }
 
-        return Shop::query()
-            ->where('family_id', $familyId)
-            ->orderByDesc('usage_count')
-            ->orderBy('name')
+        return Shop::forFamilyOrdered($familyId)
             ->get()
             ->map(fn (Shop $s) => ShopData::from($s))
             ->all();

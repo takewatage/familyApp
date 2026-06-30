@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
+import { useDebounceFn } from '@vueuse/core'
 import { useInertiaForm } from '@/Composables/Common/useInertiaForm'
 import { useSnackbar } from '@/Composables/Common/useSnackbar'
+import { budgetShopApi } from '@/Api/budgetShopApi'
 import type {
     CategoryData,
     ExpenseData,
@@ -87,10 +89,74 @@ const initialShopModel: ShopData | string | null = source?.shopId
 
 const shopModel = ref<ShopData | string | null>(initialShopModel)
 
+// オートコンプリート候補（初期は親から渡された利用頻度上位。入力に応じてサーバー検索で差し替える）
+const shopCandidates = ref<ShopData[]>([...props.shops])
+
+let shopSearchSeq = 0
+
+const onShopSearch = useDebounceFn(async (keyword: string) => {
+    // 店舗選択直後（検索欄が選択中の店名で埋まる）だけ再検索を抑止する
+    if (
+        shopModel.value
+        && typeof shopModel.value === 'object'
+        && shopModel.value.name === keyword
+    ) {
+        return
+    }
+
+    const seq = ++shopSearchSeq
+
+    try {
+        const { data } = await budgetShopApi.search(keyword)
+        // 後発リクエストが既に走っている場合は古い結果を破棄する（競合防止）
+        if (seq === shopSearchSeq) {
+            shopCandidates.value = data
+        }
+    } catch {
+        // 検索失敗時は候補を維持（手入力は引き続き可能）
+    }
+}, 300)
+
+// カテゴリーが店舗の既定値から自動セットされたものか（ユーザーの明示選択と区別する）
+const categoryAutoFilled = ref(false)
+let suppressCategoryWatch = false
+
+// ユーザーが手動でカテゴリーを変更したら、自動セット扱いを解除する（以降は上書きしない）
+watch(
+    () => form.categoryId,
+    () => {
+        if (!suppressCategoryWatch) {
+            categoryAutoFilled.value = false
+        }
+    },
+)
+
+// 店舗選択に応じてデフォルトカテゴリーを反映する（F-1）。
+// ユーザーが明示選択したカテゴリーは尊重して上書きせず、自動セット分のみ更新/クリアする。
+function applyShopDefaultCategory(defaultCategoryId: string | null) {
+    if (form.categoryId && !categoryAutoFilled.value) {
+        return
+    }
+
+    // 無効化された（選択肢に存在しない）デフォルトカテゴリーは自動セットしない
+    const validId
+        = defaultCategoryId && props.categories.some((c) => c.id === defaultCategoryId)
+            ? defaultCategoryId
+            : null
+
+    suppressCategoryWatch = true
+    form.categoryId = validId ?? ''
+    categoryAutoFilled.value = validId !== null
+    void nextTick(() => {
+        suppressCategoryWatch = false
+    })
+}
+
 watch(shopModel, (val) => {
     if (val && typeof val === 'object') {
         form.shopId = val.id
         form.shopName = undefined
+        applyShopDefaultCategory(val.defaultCategoryId ?? null)
     } else if (typeof val === 'string' && val.trim() !== '') {
         form.shopId = undefined
         form.shopName = val
@@ -154,7 +220,7 @@ function submit() {
 
         <v-combobox
             v-model="shopModel"
-            :items="shops"
+            :items="shopCandidates"
             item-title="name"
             label="店名"
             prepend-inner-icon="mdi-storefront-outline"
@@ -163,7 +229,8 @@ function submit() {
             return-object
             clearable
             :error-messages="form.errors.shopName"
-            class="mt-2"/>
+            class="mt-2"
+            @update:search="onShopSearch"/>
 
         <v-text-field
             v-model="form.expenseDate"

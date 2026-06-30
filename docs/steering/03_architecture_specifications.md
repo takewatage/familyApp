@@ -139,12 +139,17 @@ sail yarn build
 | `/budget/categories`                | POST    | カテゴリー作成（`StoreCategoryRequest`。親は family/システム既定の最上位のみ＝親子2階層制限） | ✅完了 |
 | `/budget/categories/{category}`     | PATCH   | カテゴリー更新（`UpdateCategoryRequest`。family 越境/システム既定は404、自己親・子持ち親化を防止） | ✅完了 |
 | `/budget/categories/{category}`     | DELETE  | カテゴリー論理削除（`is_active=false`、子も無効化。family 越境/システム既定は404） | ✅完了 |
+| `/budget/shops`                     | GET     | 店舗管理画面（`ShopsPageResult`: 家族の店舗・カテゴリー選択肢） | ✅完了 |
+| `/budget/shops`                     | POST    | 店舗作成（`StoreShopRequest`。family 内で店舗名一意・既定カテゴリーは family スコープ） | ✅完了 |
+| `/budget/shops/{shop}`              | PATCH   | 店舗更新（`UpdateShopRequest`。family 越境は404・店舗名一意は自分を除外） | ✅完了 |
+| `/budget/shops/{shop}`              | DELETE  | 店舗削除（family 越境は404。支出の `shop_id` は nullOnDelete） | ✅完了 |
 
 ### API Routes（Axios）
 
 | エンドポイント | メソッド | 説明 | 状態 |
 |-------------|---------|------|------|
 | `/budget/categories/reorder` | POST | カテゴリー並び替え（`ReorderCategoriesRequest`。家族カテゴリーのみ、`budgetCategoryApi.reorder`） | ✅完了 |
+| `/budget/shops/search` | GET | 店名オートコンプリート（家族スコープ・利用回数降順、`budgetShopApi.search`） | ✅完了 |
 
 ## 5. データベース
 
