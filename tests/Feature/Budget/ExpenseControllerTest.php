@@ -419,4 +419,18 @@ class ExpenseControllerTest extends TestCase
             'payment_method_id' => $systemPaymentMethod->id,
         ]);
     }
+
+    public function test_index_falls_back_to_current_month_for_out_of_range_month(): void
+    {
+        ['user' => $user, 'family' => $family] = $this->makeFamilyContext();
+
+        // 月が範囲外（13）だと Carbon が別月/別年へ桁上がりするため、当月へフォールバックする
+        $this->actingAs($user)
+            ->withSession(['current_family_id' => $family->id])
+            ->get(route('budget.expenses.index', ['month' => '2026-13']))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('Budget/ExpenseIndex')
+                ->where('yearMonth', now()->format('Y-m')));
+    }
 }

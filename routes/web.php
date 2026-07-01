@@ -8,6 +8,8 @@ use App\Http\Controllers\FamilySettingsController;
 use App\Http\Controllers\FamilySwitchController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\MyPageController;
+use App\Http\Controllers\PaymentMethodController;
+use App\Http\Controllers\QuickEntryController;
 use App\Http\Controllers\ShopController;
 use App\Http\Controllers\TaskCategoryController;
 use App\Http\Controllers\TaskController;
@@ -68,6 +70,19 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/budget/shops', [ShopController::class, 'store'])->name('budget.shops.store');
     Route::patch('/budget/shops/{shop}', [ShopController::class, 'update'])->name('budget.shops.update');
     Route::delete('/budget/shops/{shop}', [ShopController::class, 'destroy'])->name('budget.shops.destroy');
+
+    // 家計簿: 支払い方法
+    Route::get('/budget/payment-methods', [PaymentMethodController::class, 'index'])->name('budget.payment-methods.index');
+    Route::post('/budget/payment-methods', [PaymentMethodController::class, 'store'])->name('budget.payment-methods.store');
+    Route::patch('/budget/payment-methods/{paymentMethod}', [PaymentMethodController::class, 'update'])->name('budget.payment-methods.update');
+    Route::delete('/budget/payment-methods/{paymentMethod}', [PaymentMethodController::class, 'destroy'])->name('budget.payment-methods.destroy');
+
+    // 家計簿: クイック入力
+    Route::get('/budget/quick-entries', [QuickEntryController::class, 'index'])->name('budget.quick-entries.index');
+    Route::post('/budget/quick-entries', [QuickEntryController::class, 'store'])->name('budget.quick-entries.store');
+    Route::post('/budget/quick-entries/{quickEntry}/use', [QuickEntryController::class, 'use'])->name('budget.quick-entries.use');
+    Route::patch('/budget/quick-entries/{quickEntry}', [QuickEntryController::class, 'update'])->name('budget.quick-entries.update');
+    Route::delete('/budget/quick-entries/{quickEntry}', [QuickEntryController::class, 'destroy'])->name('budget.quick-entries.destroy');
 
     Route::get('/tasks', [TaskController::class, 'index'])->name('tasks');
     Route::post('/task', [TaskController::class, 'store'])->name('tasks.store');

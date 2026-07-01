@@ -7,14 +7,17 @@ family-app/
 ├── app/                              # アプリケーションコード（PHP）
 │   ├── Dtos/                         # Data Transfer Objects（Spatie Laravel Data）
 │   │   ├── Auth/                     # 認証・招待登録関連DTO（InviteConfirmResult, RegisterPageResult）
-│   │   ├── Model/                    # モデル対応DTO（UserData, FamilyData, VirtualUserData等）
+│   │   ├── Common/                   # 共通DTO
+│   │   ├── Model/                    # モデル対応DTO（UserData, FamilyData, ExpenseData, QuickEntryData等）
 │   │   ├── Family/                   # 家族設定・メンバー管理・切り替え関連DTO
 │   │   ├── Task/                     # タスク関連リクエスト・レスポンスDTO
+│   │   ├── Budget/                   # 家計簿関連DTO（Expense/Category/Shop/PaymentMethod/QuickEntry のRequest・Result）
 │   │   └── MyPage/                   # マイページ関連DTO
 │   ├── Events/                       # Laravelイベント（TaskUpdated, CategoryUpdated）
 │   ├── Http/
 │   │   └── Controllers/              # HTTPコントローラー
-│   │       └── Auth/                 # 認証関連コントローラー
+│   │       ├── Auth/                 # 認証関連コントローラー
+│   │       └── Concerns/             # コントローラー共通トレイト（AuthorizesFamilyOwnership, ProvidesBudgetOptions）
 │   ├── Models/                       # Eloquentモデル（User, Family, VirtualUser, Task等）
 │   ├── Policies/                     # Laravel認可ポリシー（FamilyPolicy等）
 │   └── Services/                     # ビジネスロジック（ImageUploadService, CurrentFamilyService, InviteUrlService等）
@@ -30,6 +33,7 @@ family-app/
 │   │   ├── Components/               # Vueコンポーネント
 │   │   │   ├── App/                  # アプリケーション全体コンポーネント
 │   │   │   ├── Auth/                 # 認証関連コンポーネント
+│   │   │   ├── Budget/               # 家計簿コンポーネント（ExpenseForm等）
 │   │   │   ├── Common/               # 共通コンポーネント（再利用可能）
 │   │   │   ├── Dok/                  # Dok機能コンポーネント
 │   │   │   ├── Family/               # 家族設定・メンバー管理・切り替えコンポーネント
@@ -43,6 +47,7 @@ family-app/
 │   │   ├── Layouts/                  # Inertiaページレイアウト
 │   │   ├── Pages/                    # Inertiaページコンポーネント
 │   │   │   ├── Auth/                 # 認証ページ
+│   │   │   ├── Budget/               # 家計簿ページ（ExpenseIndex, Categories, Shops, PaymentMethods, QuickEntries）
 │   │   │   ├── Dok/                  # Dokページ
 │   │   │   ├── MyPage/               # マイページ（家族設定・設定・フッター設定ページ含む）
 │   │   │   └── Task/                 # タスクページ

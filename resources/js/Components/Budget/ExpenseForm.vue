@@ -9,6 +9,7 @@ import type {
     ExpenseData,
     MemberOptionData,
     PaymentMethodData,
+    QuickEntryData,
     ShopData,
     StoreExpenseRequest,
 } from '@/Types/dto.generated'
@@ -21,6 +22,8 @@ const props = defineProps<{
     expense?: ExpenseData | null
     // 履歴からの再登録（F-4）: 内容を複製して新規登録する。日付は当日。
     duplicateFrom?: ExpenseData | null
+    // クイック入力（F-3）: よく使う組み合わせを新規登録フォームにプリセットする。日付は当日。
+    quickEntry?: QuickEntryData | null
 }>()
 
 const emit = defineEmits<{
@@ -34,6 +37,8 @@ const snackbar = useSnackbar()
 const isEdit = computed(() => !!props.expense)
 // 編集元（編集 or 再登録の複製元）
 const source = props.expense ?? props.duplicateFrom ?? null
+// クイック入力プリセット（新規登録時のみ・source が優先）
+const quick = props.quickEntry ?? null
 
 function todayStr(): string {
     const d = new Date()
@@ -43,16 +48,27 @@ function todayStr(): string {
     return `${d.getFullYear()}-${m}-${day}`
 }
 
+// 担当者（実ユーザー / 仮想ユーザー）。key = "{memberType}|{memberId}"
+// 担当者は polymorphic で削除時に自動 null 化されないため、既に家族から外れた担当者は
+// 選択肢に存在しない。stale な担当者をそのまま再送すると更新が 422 で弾かれ編集不能になるので、
+// 選択肢に無い担当者は初期値から外す（フォーム上は未選択扱い）。
+const initialMemberKey
+    = source?.memberType && source?.memberId ? `${source.memberType}|${source.memberId}` : null
+const validMemberKey
+    = initialMemberKey && props.memberOptions.some((m) => m.key === initialMemberKey)
+        ? initialMemberKey
+        : null
+
 const form = useInertiaForm<StoreExpenseRequest>({
-    amount: source?.amount ?? '',
-    categoryId: source?.categoryId ?? '',
-    paymentMethodId: source?.paymentMethodId ?? '',
+    amount: source?.amount ?? quick?.defaultAmount ?? '',
+    categoryId: source?.categoryId ?? quick?.categoryId ?? '',
+    paymentMethodId: source?.paymentMethodId ?? quick?.paymentMethodId ?? '',
     // 再登録時は当日、編集時は元の支出日
     expenseDate: props.expense?.expenseDate ?? todayStr(),
-    shopId: source?.shopId ?? undefined,
+    shopId: source?.shopId ?? quick?.shopId ?? undefined,
     shopName: source?.shopName ?? undefined,
-    memberType: source?.memberType ?? undefined,
-    memberId: source?.memberId ?? undefined,
+    memberType: validMemberKey ? (source?.memberType ?? undefined) : undefined,
+    memberId: validMemberKey ? (source?.memberId ?? undefined) : undefined,
     memo: source?.memo ?? undefined,
 })
 
@@ -64,10 +80,7 @@ const categoryItems = computed(() =>
     })),
 )
 
-// 担当者（実ユーザー / 仮想ユーザー）。key = "{memberType}|{memberId}"
-const memberKey = ref<string | null>(
-    source?.memberType && source?.memberId ? `${source.memberType}|${source.memberId}` : null,
-)
+const memberKey = ref<string | null>(validMemberKey)
 
 watch(memberKey, (key) => {
     if (!key) {
@@ -83,8 +96,10 @@ watch(memberKey, (key) => {
 })
 
 // 店舗: 既存店舗(オブジェクト)選択 or 新規店名(文字列)の手入力を許容
-const initialShopModel: ShopData | string | null = source?.shopId
-    ? (props.shops.find((s) => s.id === source?.shopId) ?? source?.shopDisplayName ?? null)
+// 再登録元 source を優先し、なければクイック入力の店舗 ID を初期選択する。
+const presetShopId = source?.shopId ?? quick?.shopId ?? null
+const initialShopModel: ShopData | string | null = presetShopId
+    ? (props.shops.find((s) => s.id === presetShopId) ?? source?.shopDisplayName ?? null)
     : (source?.shopName ?? null)
 
 const shopModel = ref<ShopData | string | null>(initialShopModel)

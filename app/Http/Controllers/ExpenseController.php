@@ -6,15 +6,10 @@ use App\Dtos\Budget\ExpensePageResult;
 use App\Dtos\Budget\MemberOptionData;
 use App\Dtos\Budget\StoreExpenseRequest;
 use App\Dtos\Budget\UpdateExpenseRequest;
-use App\Dtos\Model\CategoryData;
 use App\Dtos\Model\ExpenseData;
-use App\Dtos\Model\PaymentMethodData;
-use App\Dtos\Model\ShopData;
 use App\Http\Controllers\Concerns\AuthorizesFamilyOwnership;
-use App\Models\Category;
+use App\Http\Controllers\Concerns\ProvidesBudgetOptions;
 use App\Models\Expense;
-use App\Models\PaymentMethod;
-use App\Models\Shop;
 use App\Models\User;
 use App\Models\VirtualUser;
 use App\Services\CurrentFamilyService;
@@ -26,7 +21,7 @@ use Inertia\Response;
 
 class ExpenseController extends Controller
 {
-    use AuthorizesFamilyOwnership;
+    use AuthorizesFamilyOwnership, ProvidesBudgetOptions;
 
     public function __construct(
         private readonly CurrentFamilyService $currentFamilyService,
@@ -47,9 +42,10 @@ class ExpenseController extends Controller
 
         return Inertia::render('Budget/ExpenseIndex', ExpensePageResult::from([
             'expenses' => $expenseData,
-            'categories' => $this->categoryOptions($familyId),
-            'payment_methods' => $this->paymentMethodOptions($familyId),
-            'shops' => $this->shopOptions($familyId),
+            'categories' => $this->budgetCategoryOptions($familyId),
+            'payment_methods' => $this->budgetPaymentMethodOptions($familyId),
+            'shops' => $this->budgetShopOptions($familyId),
+            'quick_entries' => $this->budgetQuickEntryOptions($familyId),
             'member_options' => $this->memberOptions($familyId),
             'year_month' => $yearMonth,
             'total_amount' => $totalAmount,
@@ -86,50 +82,13 @@ class ExpenseController extends Controller
 
     private function resolveYearMonth(?string $month): string
     {
-        if ($month && preg_match('/^\d{4}-\d{2}$/', $month)) {
+        // 月は 01-12 のみ許可する。範囲外（00・13-99）を通すと Carbon が別月/別年へ桁上がりし、
+        // ヘッダー表示（$yearMonth）と実際の集計月がずれるため正規表現で弾く。
+        if ($month && preg_match('/^\d{4}-(0[1-9]|1[0-2])$/', $month)) {
             return $month;
         }
 
         return now()->format('Y-m');
-    }
-
-    /**
-     * 家族のカテゴリー + システムデフォルトを並び順で返す。
-     *
-     * @return CategoryData[]
-     */
-    private function categoryOptions(?string $familyId): array
-    {
-        return Category::activeOptions($familyId)
-            ->get()
-            ->map(fn (Category $c) => CategoryData::from($c))
-            ->all();
-    }
-
-    /**
-     * @return PaymentMethodData[]
-     */
-    private function paymentMethodOptions(?string $familyId): array
-    {
-        return PaymentMethod::activeOptions($familyId)
-            ->get()
-            ->map(fn (PaymentMethod $p) => PaymentMethodData::from($p))
-            ->all();
-    }
-
-    /**
-     * @return ShopData[]
-     */
-    private function shopOptions(?string $familyId): array
-    {
-        if (! $familyId) {
-            return [];
-        }
-
-        return Shop::forFamilyOrdered($familyId)
-            ->get()
-            ->map(fn (Shop $s) => ShopData::from($s))
-            ->all();
     }
 
     /**

@@ -6,8 +6,10 @@ import { usePageProps } from '@/Composables/Common/usePageProps'
 import { useConfirmDialog } from '@/Composables/Common/useConfirmDialogService'
 import { useSnackbar } from '@/Composables/Common/useSnackbar'
 import ExpenseForm from '@/Components/Budget/ExpenseForm.vue'
+import { budgetQuickEntryApi } from '@/Api/budgetQuickEntryApi'
 import { formatDateShort } from '@/Utils/dateFormatter'
-import type { ExpenseData, ExpensePageResult } from '@/Types/dto.generated'
+import { formatYen } from '@/Utils/currencyFormatter'
+import type { ExpenseData, ExpensePageResult, QuickEntryData } from '@/Types/dto.generated'
 
 defineOptions({ layout: AuthenticatedLayout })
 
@@ -18,6 +20,7 @@ const snackbar = useSnackbar()
 const dialog = ref(false)
 const editing = ref<ExpenseData | null>(null)
 const duplicating = ref<ExpenseData | null>(null)
+const presetQuick = ref<QuickEntryData | null>(null)
 // ダイアログ内 ExpenseForm を開くたびに再マウントして初期値をリセットする
 const formKey = ref(0)
 
@@ -27,7 +30,7 @@ const monthLabel = computed(() => {
     return `${y}年${Number(m)}月`
 })
 
-const totalLabel = computed(() => `¥${Number(props.value.totalAmount).toLocaleString()}`)
+const totalLabel = computed(() => formatYen(props.value.totalAmount))
 
 function shiftMonth(ym: string, delta: number): string {
     const [y, m] = ym.split('-').map(Number)
@@ -47,6 +50,17 @@ function goMonth(delta: number) {
 function openCreate() {
     editing.value = null
     duplicating.value = null
+    presetQuick.value = null
+    formKey.value++
+    dialog.value = true
+}
+
+// クイック入力（F-3）: よく使う組み合わせをプリセットして新規登録フォームを開く。
+// 利用回数の加算は「実際に登録できたとき」（onSaved）に行う。チップを開いてキャンセルしただけでは加算しない。
+function openQuick(quickEntry: QuickEntryData) {
+    editing.value = null
+    duplicating.value = null
+    presetQuick.value = quickEntry
     formKey.value++
     dialog.value = true
 }
@@ -54,6 +68,7 @@ function openCreate() {
 function openEdit(expense: ExpenseData) {
     editing.value = expense
     duplicating.value = null
+    presetQuick.value = null
     formKey.value++
     dialog.value = true
 }
@@ -62,12 +77,26 @@ function openEdit(expense: ExpenseData) {
 function openDuplicate(expense: ExpenseData) {
     editing.value = null
     duplicating.value = expense
+    presetQuick.value = null
     formKey.value++
     dialog.value = true
 }
 
-function onSaved(expenseDate: string) {
+async function onSaved(expenseDate: string) {
     dialog.value = false
+
+    // クイック入力からプリセットして実際に登録できた場合のみ利用回数を加算する
+    // （チップを開いてキャンセルしただけでは加算しない）。
+    const usedQuick = presetQuick.value
+    presetQuick.value = null
+
+    if (usedQuick) {
+        try {
+            await budgetQuickEntryApi.use(usedQuick.id)
+        } catch {
+            // 利用回数の加算失敗は登録完了を妨げない（次回リロードで整合する）
+        }
+    }
 
     const savedMonth = expenseDate.slice(0, 7)
 
@@ -82,7 +111,8 @@ function onSaved(expenseDate: string) {
         return
     }
 
-    router.reload({ only: ['expenses', 'totalAmount', 'shops'] })
+    // quickEntries も再取得し、利用回数の変化をチップの並びへ反映する
+    router.reload({ only: ['expenses', 'totalAmount', 'shops', 'quickEntries'] })
 }
 
 async function remove(expense: ExpenseData) {
@@ -102,10 +132,6 @@ async function remove(expense: ExpenseData) {
         onSuccess: () => snackbar.success('支出を削除しました'),
         onError: () => snackbar.error('削除に失敗しました'),
     })
-}
-
-function amountLabel(amount: string): string {
-    return `¥${Number(amount).toLocaleString()}`
 }
 </script>
 
@@ -130,6 +156,22 @@ function amountLabel(amount: string): string {
                         icon="mdi-chevron-right"
                         variant="text"
                         @click="goMonth(1)"/>
+                </div>
+
+                <!-- クイック入力（F-3）: ワンタップで登録フォームにプリセット -->
+                <div
+                    v-if="props.quickEntries.length"
+                    class="quick-chips mb-4">
+                    <v-chip
+                        v-for="qe in props.quickEntries"
+                        :key="qe.id"
+                        class="mr-2"
+                        color="primary"
+                        variant="tonal"
+                        :prepend-icon="qe.categoryIcon ? `mdi-${qe.categoryIcon}` : 'mdi-lightning-bolt'"
+                        @click="openQuick(qe)">
+                        {{ qe.name }}
+                    </v-chip>
                 </div>
 
                 <!-- 支出一覧 -->
@@ -175,7 +217,7 @@ function amountLabel(amount: string): string {
                                 <template #append>
                                     <div class="d-flex align-center">
                                         <span class="text-subtitle-1 font-weight-bold mr-2">
-                                            {{ amountLabel(expense.amount) }}
+                                            {{ formatYen(expense.amount) }}
                                         </span>
                                         <v-btn
                                             icon="mdi-content-copy"
@@ -235,6 +277,7 @@ function amountLabel(amount: string): string {
                         :member-options="props.memberOptions"
                         :expense="editing"
                         :duplicate-from="duplicating"
+                        :quick-entry="presetQuick"
                         @saved="onSaved"
                         @cancel="dialog = false"/>
                 </v-card-text>
@@ -249,5 +292,13 @@ function amountLabel(amount: string): string {
     right: 16px;
     bottom: 80px;
     z-index: 5;
+}
+
+// クイック入力チップは横スクロールで省スペースに収める（モバイルファースト）
+.quick-chips {
+    display: flex;
+    overflow-x: auto;
+    white-space: nowrap;
+    padding-bottom: 4px;
 }
 </style>

@@ -143,6 +143,14 @@ sail yarn build
 | `/budget/shops`                     | POST    | 店舗作成（`StoreShopRequest`。family 内で店舗名一意・既定カテゴリーは family スコープ） | ✅完了 |
 | `/budget/shops/{shop}`              | PATCH   | 店舗更新（`UpdateShopRequest`。family 越境は404・店舗名一意は自分を除外） | ✅完了 |
 | `/budget/shops/{shop}`              | DELETE  | 店舗削除（family 越境は404。支出の `shop_id` は nullOnDelete） | ✅完了 |
+| `/budget/payment-methods`           | GET     | 支払い方法管理画面（`PaymentMethodsPageResult`: 家族＋システム既定の有効な支払い方法） | ✅完了 |
+| `/budget/payment-methods`           | POST    | 支払い方法作成（`StorePaymentMethodRequest`。名前・アイコン） | ✅完了 |
+| `/budget/payment-methods/{paymentMethod}` | PATCH | 支払い方法更新（family 越境/システム既定は404） | ✅完了 |
+| `/budget/payment-methods/{paymentMethod}` | DELETE | 支払い方法論理削除（`is_active=false`。family 越境/システム既定は404） | ✅完了 |
+| `/budget/quick-entries`             | GET     | クイック入力管理画面（`QuickEntriesPageResult`: クイック入力・カテゴリー/支払い方法/店舗の選択肢。利用頻度降順） | ✅完了 |
+| `/budget/quick-entries`             | POST    | クイック入力作成（`StoreQuickEntryRequest`。FK は family/システム既定スコープ検証、店舗は family スコープ） | ✅完了 |
+| `/budget/quick-entries/{quickEntry}` | PATCH  | クイック入力更新（family 越境は404） | ✅完了 |
+| `/budget/quick-entries/{quickEntry}` | DELETE | クイック入力削除（物理削除。family 越境は404） | ✅完了 |
 
 ### API Routes（Axios）
 
@@ -150,6 +158,7 @@ sail yarn build
 |-------------|---------|------|------|
 | `/budget/categories/reorder` | POST | カテゴリー並び替え（`ReorderCategoriesRequest`。家族カテゴリーのみ、`budgetCategoryApi.reorder`） | ✅完了 |
 | `/budget/shops/search` | GET | 店名オートコンプリート（家族スコープ・利用回数降順、`budgetShopApi.search`） | ✅完了 |
+| `/budget/quick-entries/{quickEntry}/use` | POST | クイック入力の利用回数加算（支出フォームへのプリセット時、`budgetQuickEntryApi.use`。family 越境は404） | ✅完了 |
 
 ## 5. データベース
 

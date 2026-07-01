@@ -6,8 +6,8 @@ use App\Dtos\Budget\CategoriesPageResult;
 use App\Dtos\Budget\ReorderCategoriesRequest;
 use App\Dtos\Budget\StoreCategoryRequest;
 use App\Dtos\Budget\UpdateCategoryRequest;
-use App\Dtos\Model\CategoryData;
 use App\Http\Controllers\Concerns\AuthorizesFamilyOwnership;
+use App\Http\Controllers\Concerns\ProvidesBudgetOptions;
 use App\Models\Category;
 use App\Services\CurrentFamilyService;
 use Illuminate\Http\JsonResponse;
@@ -19,7 +19,7 @@ use Inertia\Response;
 
 class CategoryController extends Controller
 {
-    use AuthorizesFamilyOwnership;
+    use AuthorizesFamilyOwnership, ProvidesBudgetOptions;
 
     public function __construct(
         private readonly CurrentFamilyService $currentFamilyService,
@@ -29,13 +29,8 @@ class CategoryController extends Controller
     {
         $familyId = $this->currentFamilyService->getCurrentFamilyId();
 
-        $categories = Category::activeOptions($familyId)
-            ->get()
-            ->map(fn (Category $c) => CategoryData::from($c))
-            ->all();
-
         return Inertia::render('Budget/Categories', CategoriesPageResult::from([
-            'categories' => $categories,
+            'categories' => $this->budgetCategoryOptions($familyId),
         ]));
     }
 

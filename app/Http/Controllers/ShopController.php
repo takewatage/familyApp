@@ -5,10 +5,9 @@ namespace App\Http\Controllers;
 use App\Dtos\Budget\ShopsPageResult;
 use App\Dtos\Budget\StoreShopRequest;
 use App\Dtos\Budget\UpdateShopRequest;
-use App\Dtos\Model\CategoryData;
 use App\Dtos\Model\ShopData;
 use App\Http\Controllers\Concerns\AuthorizesFamilyOwnership;
-use App\Models\Category;
+use App\Http\Controllers\Concerns\ProvidesBudgetOptions;
 use App\Models\Shop;
 use App\Services\CurrentFamilyService;
 use Illuminate\Http\JsonResponse;
@@ -19,7 +18,7 @@ use Inertia\Response;
 
 class ShopController extends Controller
 {
-    use AuthorizesFamilyOwnership;
+    use AuthorizesFamilyOwnership, ProvidesBudgetOptions;
 
     public function __construct(
         private readonly CurrentFamilyService $currentFamilyService,
@@ -29,21 +28,9 @@ class ShopController extends Controller
     {
         $familyId = $this->currentFamilyService->getCurrentFamilyId();
 
-        $shops = $familyId
-            ? Shop::forFamilyOrdered($familyId)
-                ->get()
-                ->map(fn (Shop $s) => ShopData::from($s))
-                ->all()
-            : [];
-
-        $categories = Category::activeOptions($familyId)
-            ->get()
-            ->map(fn (Category $c) => CategoryData::from($c))
-            ->all();
-
         return Inertia::render('Budget/Shops', ShopsPageResult::from([
-            'shops' => $shops,
-            'categories' => $categories,
+            'shops' => $this->budgetShopOptions($familyId),
+            'categories' => $this->budgetCategoryOptions($familyId),
         ]));
     }
 

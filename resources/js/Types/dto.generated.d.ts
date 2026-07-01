@@ -41,6 +41,7 @@ expenses: Array<ExpenseData>;
 categories: Array<CategoryData>;
 paymentMethods: Array<PaymentMethodData>;
 shops: Array<ShopData>;
+quickEntries: Array<QuickEntryData>;
 memberOptions: Array<MemberOptionData>;
 yearMonth: string;
 totalAmount: string;
@@ -133,6 +134,31 @@ sortOrder: number;
 isSystem: boolean;
 isActive: boolean;
 };
+export type PaymentMethodsPageResult = {
+paymentMethods: Array<PaymentMethodData>;
+};
+export type QuickEntriesPageResult = {
+quickEntries: Array<QuickEntryData>;
+categories: Array<CategoryData>;
+paymentMethods: Array<PaymentMethodData>;
+shops: Array<ShopData>;
+};
+export type QuickEntryData = {
+id: string;
+familyId: string;
+name: string;
+categoryId: string;
+categoryName: string;
+categoryColor: string;
+categoryIcon?: string;
+paymentMethodId: string;
+paymentMethodName: string;
+shopId?: string;
+shopName?: string;
+defaultAmount?: string;
+sortOrder: number;
+usageCount: number;
+};
 export type RegisterPageResult = {
 familyName: string;
 };
@@ -191,6 +217,17 @@ shopName?: string;
 memberType?: string;
 memberId?: string;
 memo?: string;
+};
+export type StorePaymentMethodRequest = {
+name: string;
+icon?: string;
+};
+export type StoreQuickEntryRequest = {
+name: string;
+categoryId: string;
+paymentMethodId: string;
+shopId?: string;
+defaultAmount?: string;
 };
 export type StoreShopRequest = {
 name: string;

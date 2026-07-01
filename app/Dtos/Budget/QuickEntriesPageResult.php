@@ -3,7 +3,6 @@
 namespace App\Dtos\Budget;
 
 use App\Dtos\Model\CategoryData;
-use App\Dtos\Model\ExpenseData;
 use App\Dtos\Model\PaymentMethodData;
 use App\Dtos\Model\QuickEntryData;
 use App\Dtos\Model\ShopData;
@@ -14,22 +13,16 @@ use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
 #[TypeScript]
 #[MapOutputName(CamelCaseMapper::class)]
-class ExpensePageResult extends Data
+class QuickEntriesPageResult extends Data
 {
     public function __construct(
-        /** @var ExpenseData[] */
-        public array $expenses,
+        /** @var QuickEntryData[] */
+        public array $quick_entries,
         /** @var CategoryData[] */
         public array $categories,
         /** @var PaymentMethodData[] */
         public array $payment_methods,
         /** @var ShopData[] */
         public array $shops,
-        /** @var QuickEntryData[] */
-        public array $quick_entries,
-        /** @var MemberOptionData[] */
-        public array $member_options,
-        public string $year_month,
-        public string $total_amount,
     ) {}
 }
