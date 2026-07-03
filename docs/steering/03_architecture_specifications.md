@@ -151,6 +151,16 @@ sail yarn build
 | `/budget/quick-entries`             | POST    | クイック入力作成（`StoreQuickEntryRequest`。FK は family/システム既定スコープ検証、店舗は family スコープ） | ✅完了 |
 | `/budget/quick-entries/{quickEntry}` | PATCH  | クイック入力更新（family 越境は404） | ✅完了 |
 | `/budget/quick-entries/{quickEntry}` | DELETE | クイック入力削除（物理削除。family 越境は404） | ✅完了 |
+| `/budget/recurring-expenses`        | GET     | 繰り返し支出（固定費）管理画面（`RecurringExpensesPageResult`: 有効な繰り返し支出・カテゴリー/支払い方法/店舗/担当者の選択肢） | ✅完了 |
+| `/budget/recurring-expenses`        | POST    | 繰り返し支出作成（`StoreRecurringExpenseRequest`。FK は family/システム既定スコープ検証、担当者は family スコープ、支払日1-31） | ✅完了 |
+| `/budget/recurring-expenses/{recurringExpense}` | PATCH | 繰り返し支出更新（family 越境は404、FK は family スコープ検証） | ✅完了 |
+| `/budget/recurring-expenses/{recurringExpense}` | DELETE | 繰り返し支出の無効化（`is_active=false`。物理削除せず生成済み支出の参照を保つ。family 越境は404） | ✅完了 |
+
+### コンソールコマンド（スケジュール）
+
+| コマンド | スケジュール | 説明 | 状態 |
+|---------|------------|------|------|
+| `budget:generate-recurring-expenses` | 日次 01:00（`routes/console.php`） | 支払日が到来した繰り返し支出から `expenses` を生成（`is_recurring=true`・`recurring_expense_id` 紐付け）。冪等性は「当月に同一 recurring から生成済みの支出が存在するか」の存在チェックで担保（`last_generated_date` は fast-path の目安）。生成・店舗 usage_count 加算・marker 更新は `DB::transaction` で原子的。`--date=Y-m-d` で任意月を安全に補完可能（未実行月の自動キャッチアップは非対応・手動補完前提） | ✅完了 |
 
 ### API Routes（Axios）
 

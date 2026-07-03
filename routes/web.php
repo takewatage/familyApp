@@ -10,6 +10,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\MyPageController;
 use App\Http\Controllers\PaymentMethodController;
 use App\Http\Controllers\QuickEntryController;
+use App\Http\Controllers\RecurringExpenseController;
 use App\Http\Controllers\ShopController;
 use App\Http\Controllers\TaskCategoryController;
 use App\Http\Controllers\TaskController;
@@ -83,6 +84,12 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/budget/quick-entries/{quickEntry}/use', [QuickEntryController::class, 'use'])->name('budget.quick-entries.use');
     Route::patch('/budget/quick-entries/{quickEntry}', [QuickEntryController::class, 'update'])->name('budget.quick-entries.update');
     Route::delete('/budget/quick-entries/{quickEntry}', [QuickEntryController::class, 'destroy'])->name('budget.quick-entries.destroy');
+
+    // 家計簿: 繰り返し支出（固定費）
+    Route::get('/budget/recurring-expenses', [RecurringExpenseController::class, 'index'])->name('budget.recurring-expenses.index');
+    Route::post('/budget/recurring-expenses', [RecurringExpenseController::class, 'store'])->name('budget.recurring-expenses.store');
+    Route::patch('/budget/recurring-expenses/{recurringExpense}', [RecurringExpenseController::class, 'update'])->name('budget.recurring-expenses.update');
+    Route::delete('/budget/recurring-expenses/{recurringExpense}', [RecurringExpenseController::class, 'destroy'])->name('budget.recurring-expenses.destroy');
 
     Route::get('/tasks', [TaskController::class, 'index'])->name('tasks');
     Route::post('/task', [TaskController::class, 'store'])->name('tasks.store');

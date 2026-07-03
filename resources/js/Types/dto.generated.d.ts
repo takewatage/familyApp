@@ -159,6 +159,35 @@ defaultAmount?: string;
 sortOrder: number;
 usageCount: number;
 };
+export type RecurringExpenseData = {
+id: string;
+familyId: string;
+memberType?: string;
+memberId?: string;
+memberName?: string;
+categoryId: string;
+categoryName: string;
+categoryColor: string;
+categoryIcon?: string;
+paymentMethodId: string;
+paymentMethodName: string;
+shopId?: string;
+shopName?: string;
+name: string;
+amount: string;
+dayOfMonth: number;
+startDate: string;
+endDate?: string;
+isActive: boolean;
+lastGeneratedDate?: string;
+};
+export type RecurringExpensesPageResult = {
+recurringExpenses: Array<RecurringExpenseData>;
+categories: Array<CategoryData>;
+paymentMethods: Array<PaymentMethodData>;
+shops: Array<ShopData>;
+memberOptions: Array<MemberOptionData>;
+};
 export type RegisterPageResult = {
 familyName: string;
 };
@@ -228,6 +257,18 @@ categoryId: string;
 paymentMethodId: string;
 shopId?: string;
 defaultAmount?: string;
+};
+export type StoreRecurringExpenseRequest = {
+name: string;
+amount: string;
+categoryId: string;
+paymentMethodId: string;
+dayOfMonth: number;
+startDate: string;
+endDate?: string;
+shopId?: string;
+memberType?: string;
+memberId?: string;
 };
 export type StoreShopRequest = {
 name: string;

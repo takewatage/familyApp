@@ -6,13 +6,14 @@ use App\Models\Category;
 use App\Models\Expense;
 use App\Models\PaymentMethod;
 use App\Models\Shop;
-use App\Models\User;
-use App\Models\VirtualUser;
+use App\Services\Concerns\ValidatesFamilyMember;
 use Illuminate\Support\Carbon;
 use Illuminate\Validation\ValidationException;
 
 class ExpenseService
 {
+    use ValidatesFamilyMember;
+
     /**
      * 月の支出一覧を関連込みで取得する（日付降順 → 作成日時降順）。
      */
@@ -131,29 +132,7 @@ class ExpenseService
             throw ValidationException::withMessages(['payment_method_id' => '支払い方法が選択できません。']);
         }
 
-        $memberType = $attributes['member_type'] ?? null;
-        $memberId = $attributes['member_id'] ?? null;
-
-        if ($memberType !== null && $memberId !== null
-            && ! $this->memberBelongsToFamily($familyId, $memberType, $memberId)) {
-            throw ValidationException::withMessages(['member_id' => '担当者が選択できません。']);
-        }
-    }
-
-    /**
-     * 担当者（実ユーザー / 仮想ユーザー）が当該家族に所属しているか。
-     */
-    private function memberBelongsToFamily(string $familyId, string $memberType, string $memberId): bool
-    {
-        return match ($memberType) {
-            User::class => User::whereKey($memberId)
-                ->whereHas('families', fn ($q) => $q->whereKey($familyId))
-                ->exists(),
-            VirtualUser::class => VirtualUser::whereKey($memberId)
-                ->where('family_id', $familyId)
-                ->exists(),
-            default => false,
-        };
+        $this->assertMemberInFamilyScope($familyId, $attributes);
     }
 
     /**

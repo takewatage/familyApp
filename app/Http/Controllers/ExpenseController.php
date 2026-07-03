@@ -3,15 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Dtos\Budget\ExpensePageResult;
-use App\Dtos\Budget\MemberOptionData;
 use App\Dtos\Budget\StoreExpenseRequest;
 use App\Dtos\Budget\UpdateExpenseRequest;
 use App\Dtos\Model\ExpenseData;
 use App\Http\Controllers\Concerns\AuthorizesFamilyOwnership;
 use App\Http\Controllers\Concerns\ProvidesBudgetOptions;
 use App\Models\Expense;
-use App\Models\User;
-use App\Models\VirtualUser;
 use App\Services\CurrentFamilyService;
 use App\Services\ExpenseService;
 use Illuminate\Http\RedirectResponse;
@@ -46,7 +43,7 @@ class ExpenseController extends Controller
             'payment_methods' => $this->budgetPaymentMethodOptions($familyId),
             'shops' => $this->budgetShopOptions($familyId),
             'quick_entries' => $this->budgetQuickEntryOptions($familyId),
-            'member_options' => $this->memberOptions($familyId),
+            'member_options' => $this->budgetMemberOptions($familyId),
             'year_month' => $yearMonth,
             'total_amount' => $totalAmount,
         ]));
@@ -89,45 +86,5 @@ class ExpenseController extends Controller
         }
 
         return now()->format('Y-m');
-    }
-
-    /**
-     * 担当者の選択肢（実ユーザー + 仮想ユーザー）。
-     *
-     * @return MemberOptionData[]
-     */
-    private function memberOptions(?string $familyId): array
-    {
-        if (! $familyId) {
-            return [];
-        }
-
-        $family = $this->currentFamilyService->getCurrentFamily();
-
-        if (! $family) {
-            return [];
-        }
-
-        $options = [];
-
-        foreach ($family->members as $user) {
-            $options[] = new MemberOptionData(
-                key: User::class.'|'.$user->id,
-                member_type: User::class,
-                member_id: $user->id,
-                name: $user->name,
-            );
-        }
-
-        foreach ($family->virtualUsers as $vu) {
-            $options[] = new MemberOptionData(
-                key: VirtualUser::class.'|'.$vu->id,
-                member_type: VirtualUser::class,
-                member_id: $vu->id,
-                name: $vu->name,
-            );
-        }
-
-        return $options;
     }
 }

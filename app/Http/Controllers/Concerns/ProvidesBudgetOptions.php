@@ -2,17 +2,21 @@
 
 namespace App\Http\Controllers\Concerns;
 
+use App\Dtos\Budget\MemberOptionData;
 use App\Dtos\Model\CategoryData;
 use App\Dtos\Model\PaymentMethodData;
 use App\Dtos\Model\QuickEntryData;
 use App\Dtos\Model\ShopData;
 use App\Models\Category;
+use App\Models\Family;
 use App\Models\PaymentMethod;
 use App\Models\QuickEntry;
 use App\Models\Shop;
+use App\Models\User;
+use App\Models\VirtualUser;
 
 /**
- * 家計簿の各画面で共通利用する選択肢ロード（カテゴリー / 支払い方法 / 店舗 / クイック入力）。
+ * 家計簿の各画面で共通利用する選択肢ロード（カテゴリー / 支払い方法 / 店舗 / クイック入力 / 担当者）。
  * 支出フォーム・クイック入力フォーム等で同一のスコープ・整形を保証するため 1 箇所に集約する。
  */
 trait ProvidesBudgetOptions
@@ -78,5 +82,46 @@ trait ProvidesBudgetOptions
             ->get()
             ->map(fn (QuickEntry $q) => QuickEntryData::fromModel($q))
             ->all();
+    }
+
+    /**
+     * 支出の担当者選択肢（実ユーザー + 仮想ユーザー）。key = "{member_type}|{member_id}"。
+     *
+     * @return MemberOptionData[]
+     */
+    protected function budgetMemberOptions(?string $familyId): array
+    {
+        if (! $familyId) {
+            return [];
+        }
+
+        // 呼び出し側が解決済みの familyId をそのまま使う（CurrentFamilyService への再問い合わせを避ける）。
+        $family = Family::with(['members', 'virtualUsers'])->find($familyId);
+
+        if (! $family) {
+            return [];
+        }
+
+        $options = [];
+
+        foreach ($family->members as $user) {
+            $options[] = new MemberOptionData(
+                key: User::class.'|'.$user->id,
+                member_type: User::class,
+                member_id: $user->id,
+                name: $user->name,
+            );
+        }
+
+        foreach ($family->virtualUsers as $vu) {
+            $options[] = new MemberOptionData(
+                key: VirtualUser::class.'|'.$vu->id,
+                member_type: VirtualUser::class,
+                member_id: $vu->id,
+                name: $vu->name,
+            );
+        }
+
+        return $options;
     }
 }

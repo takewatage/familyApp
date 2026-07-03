@@ -11,8 +11,10 @@ family-app/
 │   │   ├── Model/                    # モデル対応DTO（UserData, FamilyData, ExpenseData, QuickEntryData等）
 │   │   ├── Family/                   # 家族設定・メンバー管理・切り替え関連DTO
 │   │   ├── Task/                     # タスク関連リクエスト・レスポンスDTO
-│   │   ├── Budget/                   # 家計簿関連DTO（Expense/Category/Shop/PaymentMethod/QuickEntry のRequest・Result）
+│   │   ├── Budget/                   # 家計簿関連DTO（Expense/Category/Shop/PaymentMethod/QuickEntry/RecurringExpense のRequest・Result）
 │   │   └── MyPage/                   # マイページ関連DTO
+│   ├── Console/
+│   │   └── Commands/                 # Artisanコマンド実装（GenerateRecurringExpenses等）
 │   ├── Events/                       # Laravelイベント（TaskUpdated, CategoryUpdated）
 │   ├── Http/
 │   │   └── Controllers/              # HTTPコントローラー
@@ -20,7 +22,8 @@ family-app/
 │   │       └── Concerns/             # コントローラー共通トレイト（AuthorizesFamilyOwnership, ProvidesBudgetOptions）
 │   ├── Models/                       # Eloquentモデル（User, Family, VirtualUser, Task等）
 │   ├── Policies/                     # Laravel認可ポリシー（FamilyPolicy等）
-│   └── Services/                     # ビジネスロジック（ImageUploadService, CurrentFamilyService, InviteUrlService等）
+│   └── Services/                     # ビジネスロジック（ExpenseService, RecurringExpenseGenerator, RecurringExpenseService等）
+│       └── Concerns/                 # サービス共通トレイト（ValidatesFamilyMember）
 ├── database/
 │   ├── migrations/                   # DBマイグレーションファイル
 │   ├── factories/                    # テスト用モデルファクトリー
@@ -47,7 +50,7 @@ family-app/
 │   │   ├── Layouts/                  # Inertiaページレイアウト
 │   │   ├── Pages/                    # Inertiaページコンポーネント
 │   │   │   ├── Auth/                 # 認証ページ
-│   │   │   ├── Budget/               # 家計簿ページ（ExpenseIndex, Categories, Shops, PaymentMethods, QuickEntries）
+│   │   │   ├── Budget/               # 家計簿ページ（ExpenseIndex, Categories, Shops, PaymentMethods, QuickEntries, RecurringExpenses）
 │   │   │   ├── Dok/                  # Dokページ
 │   │   │   ├── MyPage/               # マイページ（家族設定・設定・フッター設定ページ含む）
 │   │   │   └── Task/                 # タスクページ
