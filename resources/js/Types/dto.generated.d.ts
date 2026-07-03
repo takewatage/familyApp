@@ -1,3 +1,30 @@
+export type BudgetAlertData = {
+id: string;
+categoryId?: string;
+thresholdPercent: number;
+isEnabled: boolean;
+};
+export type BudgetAlertInputData = {
+thresholdPercent: number;
+isEnabled: boolean;
+categoryId?: string;
+};
+export type BudgetCategoryData = {
+categoryId: string;
+amount: string;
+};
+export type BudgetCategoryInputData = {
+categoryId: string;
+amount: string;
+};
+export type BudgetSettingsPageResult = {
+yearMonth: string;
+totalIncome: string;
+savingTarget: string;
+categoryBudgets: Array<BudgetCategoryData>;
+alerts: Array<BudgetAlertData>;
+categories: Array<CategoryData>;
+};
 export type CategoriesPageResult = {
 categories: Array<CategoryData>;
 };
@@ -229,6 +256,18 @@ sort: number;
 };
 export type SortTaskCategoryRequest = {
 categories: Array<SortItemData>;
+};
+export type StoreBudgetAlertsRequest = {
+alerts: Array<BudgetAlertInputData>;
+};
+export type StoreBudgetCategoriesRequest = {
+yearMonth: string;
+categoryBudgets: Array<BudgetCategoryInputData>;
+};
+export type StoreBudgetRequest = {
+yearMonth: string;
+totalIncome: string;
+savingTarget: string;
 };
 export type StoreCategoryRequest = {
 name: string;

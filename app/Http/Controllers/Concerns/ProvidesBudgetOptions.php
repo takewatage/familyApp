@@ -124,4 +124,19 @@ trait ProvidesBudgetOptions
 
         return $options;
     }
+
+    /**
+     * クエリ `month`（YYYY-MM）を対象年月に解決する。月切替を伴う家計簿画面で共通利用する。
+     *
+     * 月は 01-12 のみ許可する。範囲外（00・13-99）を通すと Carbon が別月/別年へ桁上がりし、
+     * ヘッダー表示と実際の集計月がずれるため正規表現で弾き、不正時は当月へフォールバックする。
+     */
+    protected function resolveYearMonth(?string $month): string
+    {
+        if ($month && preg_match('/^\d{4}-(0[1-9]|1[0-2])$/', $month)) {
+            return $month;
+        }
+
+        return now()->format('Y-m');
+    }
 }

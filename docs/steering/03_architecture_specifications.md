@@ -155,6 +155,10 @@ sail yarn build
 | `/budget/recurring-expenses`        | POST    | 繰り返し支出作成（`StoreRecurringExpenseRequest`。FK は family/システム既定スコープ検証、担当者は family スコープ、支払日1-31） | ✅完了 |
 | `/budget/recurring-expenses/{recurringExpense}` | PATCH | 繰り返し支出更新（family 越境は404、FK は family スコープ検証） | ✅完了 |
 | `/budget/recurring-expenses/{recurringExpense}` | DELETE | 繰り返し支出の無効化（`is_active=false`。物理削除せず生成済み支出の参照を保つ。family 越境は404） | ✅完了 |
+| `/budget/budgets`                   | GET     | 予算設定画面（`BudgetSettingsPageResult`: 当月の月収入・貯金目標・カテゴリー別予算・アラート・カテゴリー選択肢。`?month=YYYY-MM` で月切替） | ✅完了 |
+| `/budget/budgets`                   | POST    | 月収入・貯金目標の保存（`StoreBudgetRequest`。`family_id + year_month` で upsert） | ✅完了 |
+| `/budget/budgets/categories`        | POST    | カテゴリー別予算の一括保存（`StoreBudgetCategoriesRequest`。予算行が無ければ自動生成、`budget_id + category_id` で upsert、カテゴリーは family/システム既定スコープ検証） | ✅完了 |
+| `/budget/budgets/alerts`            | POST    | 予算アラート設定の同期保存（`StoreBudgetAlertsRequest`。`family_id + category_id` で upsert し送信外を削除。`alert_notifications` を温存するため replace-all は不採用。category は family スコープ、閾値1-100） | ✅完了 |
 
 ### コンソールコマンド（スケジュール）
 

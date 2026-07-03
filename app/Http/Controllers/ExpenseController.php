@@ -76,15 +76,4 @@ class ExpenseController extends Controller
 
         return back();
     }
-
-    private function resolveYearMonth(?string $month): string
-    {
-        // 月は 01-12 のみ許可する。範囲外（00・13-99）を通すと Carbon が別月/別年へ桁上がりし、
-        // ヘッダー表示（$yearMonth）と実際の集計月がずれるため正規表現で弾く。
-        if ($month && preg_match('/^\d{4}-(0[1-9]|1[0-2])$/', $month)) {
-            return $month;
-        }
-
-        return now()->format('Y-m');
-    }
 }
