@@ -51,20 +51,15 @@ class RecurringExpenseGenerator
      */
     private function generateFor(RecurringExpense $recurring, CarbonInterface $asOf): bool
     {
-        $paymentDate = $this->paymentDateForMonth($recurring, $asOf);
+        $paymentDate = $recurring->paymentDateForMonth($asOf);
 
         // 当月の支払日がまだ到来していない
         if ($paymentDate->greaterThan($asOf)) {
             return false;
         }
 
-        // 開始日より前（当月の支払日が開始日を跨いでいない）
-        if ($paymentDate->lessThan($recurring->start_date)) {
-            return false;
-        }
-
-        // 終了日を過ぎている
-        if ($recurring->end_date !== null && $paymentDate->greaterThan($recurring->end_date)) {
+        // 開始日より前 / 終了日を過ぎている（期間外）
+        if (! $recurring->isDueInMonth($asOf)) {
             return false;
         }
 
@@ -117,17 +112,5 @@ class RecurringExpenseGenerator
         });
 
         return true;
-    }
-
-    /**
-     * 基準日の月における支払日を返す。day_of_month が当月の日数を超える場合は月末に丸める
-     * （例: 31 日指定 & 2 月 → 28/29 日）。
-     */
-    private function paymentDateForMonth(RecurringExpense $recurring, CarbonInterface $asOf): Carbon
-    {
-        $month = Carbon::parse($asOf)->startOfMonth();
-        $day = min($recurring->day_of_month, $month->daysInMonth);
-
-        return $month->day($day)->startOfDay();
     }
 }

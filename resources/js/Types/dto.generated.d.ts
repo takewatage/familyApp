@@ -9,6 +9,18 @@ thresholdPercent: number;
 isEnabled: boolean;
 categoryId?: string;
 };
+export type BudgetCalculationResult = {
+yearMonth: string;
+totalIncome: string;
+totalExpense: string;
+fixedCostTotal: string;
+categoryBudgetTotal: string;
+savingTarget: string;
+discretionary: string;
+possibleSaving: string;
+overallUsagePercent?: string;
+categories: Array<CategoryUsageData>;
+};
 export type BudgetCategoryData = {
 categoryId: string;
 amount: string;
@@ -38,6 +50,13 @@ color: string;
 sortOrder: number;
 isSystem: boolean;
 isActive: boolean;
+};
+export type CategoryUsageData = {
+categoryId: string;
+budgetAmount: string;
+actualAmount: string;
+remaining: string;
+usagePercent?: string;
 };
 export type DeleteCompletedTasksRequest = {
 categoryId: string;
@@ -214,6 +233,15 @@ categories: Array<CategoryData>;
 paymentMethods: Array<PaymentMethodData>;
 shops: Array<ShopData>;
 memberOptions: Array<MemberOptionData>;
+};
+export type RecurringReminderData = {
+id: string;
+name: string;
+amount: string;
+paymentDate: string;
+isPaid: boolean;
+isUpcoming: boolean;
+isOverdue: boolean;
 };
 export type RegisterPageResult = {
 familyName: string;

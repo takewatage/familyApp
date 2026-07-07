@@ -165,6 +165,7 @@ sail yarn build
 | コマンド | スケジュール | 説明 | 状態 |
 |---------|------------|------|------|
 | `budget:generate-recurring-expenses` | 日次 01:00（`routes/console.php`） | 支払日が到来した繰り返し支出から `expenses` を生成（`is_recurring=true`・`recurring_expense_id` 紐付け）。冪等性は「当月に同一 recurring から生成済みの支出が存在するか」の存在チェックで担保（`last_generated_date` は fast-path の目安）。生成・店舗 usage_count 加算・marker 更新は `DB::transaction` で原子的。`--date=Y-m-d` で任意月を安全に補完可能（未実行月の自動キャッチアップは非対応・手動補完前提） | ✅完了 |
+| `budget:check-budget-alerts` | 日次 02:00（`routes/console.php`） | 有効な予算アラートを持つ家族ごとに消化率を判定し、閾値到達分を `alert_notifications` へ記録（F-12）。固定費生成（01:00）後に走らせ生成済み固定費を実支出に含める。冪等性は `alert_id + year_month` UNIQUE + `firstOrCreate`（`wasRecentlyCreated`）で担保し同月・同一アラートは 1 通のみ。スケジュール実行は当月を判定し、月初（1 日）は前月末 02:00 以降の閾値到達を取りこぼさないよう前月も併せて判定する。消化率は小数第 2 位で切り捨て（閾値の未達誤発火を防止）。家族単位で `try/catch` 隔離し 1 家族の失敗で全体を止めない。`--month=Y-m`（対象年月・不正形式はエラー終了）/ `--date=Y-m-d`（通知発生日時）で任意指定可 | ✅完了 |
 
 ### API Routes（Axios）
 
