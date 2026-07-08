@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\BudgetController;
+use App\Http\Controllers\BudgetDashboardController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\DokController;
 use App\Http\Controllers\ExpenseController;
@@ -91,6 +92,9 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/budget/recurring-expenses', [RecurringExpenseController::class, 'store'])->name('budget.recurring-expenses.store');
     Route::patch('/budget/recurring-expenses/{recurringExpense}', [RecurringExpenseController::class, 'update'])->name('budget.recurring-expenses.update');
     Route::delete('/budget/recurring-expenses/{recurringExpense}', [RecurringExpenseController::class, 'destroy'])->name('budget.recurring-expenses.destroy');
+
+    // 家計簿: ダッシュボード（残高・消化率・固定費リマインダー）
+    Route::get('/budget/dashboard', [BudgetDashboardController::class, 'index'])->name('budget.dashboard');
 
     // 家計簿: 予算設定（月収入・貯金目標・カテゴリー別予算・アラート）
     Route::get('/budget/budgets', [BudgetController::class, 'show'])->name('budget.budgets.show');

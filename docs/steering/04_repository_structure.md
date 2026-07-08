@@ -14,7 +14,7 @@ family-app/
 │   │   ├── Budget/                   # 家計簿関連DTO（Expense/Category/Shop/PaymentMethod/QuickEntry/RecurringExpense/Budget設定 のRequest・Result）
 │   │   └── MyPage/                   # マイページ関連DTO
 │   ├── Console/
-│   │   └── Commands/                 # Artisanコマンド実装（GenerateRecurringExpenses等）
+│   │   └── Commands/                 # Artisanコマンド実装（GenerateRecurringExpenses, CheckBudgetAlerts等）
 │   ├── Events/                       # Laravelイベント（TaskUpdated, CategoryUpdated）
 │   ├── Http/
 │   │   └── Controllers/              # HTTPコントローラー
@@ -22,7 +22,7 @@ family-app/
 │   │       └── Concerns/             # コントローラー共通トレイト（AuthorizesFamilyOwnership, ProvidesBudgetOptions）
 │   ├── Models/                       # Eloquentモデル（User, Family, VirtualUser, Task等）
 │   ├── Policies/                     # Laravel認可ポリシー（FamilyPolicy等）
-│   ├── Services/                     # ビジネスロジック（ExpenseService, RecurringExpenseGenerator, RecurringExpenseService, BudgetService等）
+│   ├── Services/                     # ビジネスロジック（ExpenseService, RecurringExpenseGenerator, RecurringExpenseService, BudgetService, BudgetCalculationService, BudgetAlertService, RecurringExpenseReminderService等）
 │   │   └── Concerns/                 # サービス共通トレイト（ValidatesFamilyMember）
 │   └── Support/                      # 共通ヘルパー（BudgetScopeRules: カテゴリー family スコープ validation）
 ├── database/
@@ -45,13 +45,14 @@ family-app/
 │   │   │   └── MyPage/               # マイページコンポーネント
 │   │   ├── Composables/              # Vue3 Composition API（useXxx形式）
 │   │   │   ├── Common/               # 共通Composables（useAppTheme, useSnackbar等）
+│   │   │   ├── Budget/               # 家計簿関連Composables（useMonthNavigation: 月切替共通ロジック）
 │   │   │   ├── Dok/                  # Dok関連Composables
 │   │   │   └── Task/                 # タスク関連Composables
 │   │   ├── Constants/                # 定数定義（footerApps.ts: フッターアプリ定義）
 │   │   ├── Layouts/                  # Inertiaページレイアウト
 │   │   ├── Pages/                    # Inertiaページコンポーネント
 │   │   │   ├── Auth/                 # 認証ページ
-│   │   │   ├── Budget/               # 家計簿ページ（ExpenseIndex, Categories, Shops, PaymentMethods, QuickEntries, RecurringExpenses, BudgetSettings）
+│   │   │   ├── Budget/               # 家計簿ページ（ExpenseIndex, Categories, Shops, PaymentMethods, QuickEntries, RecurringExpenses, BudgetSettings, Dashboard）
 │   │   │   ├── Dok/                  # Dokページ
 │   │   │   ├── MyPage/               # マイページ（家族設定・設定・フッター設定ページ含む）
 │   │   │   └── Task/                 # タスクページ

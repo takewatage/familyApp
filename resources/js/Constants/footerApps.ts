@@ -10,6 +10,7 @@ export const FOOTER_APPS: FooterApp[] = [
     { key: 'home', title: 'ホーム', icon: 'mdi-home', route: '/home' },
     { key: 'dok', title: 'どっちがお得カネ', shortTitle: 'どっち?', icon: 'mdi-currency-usd', route: '/dok' },
     { key: 'tasks', title: 'TODOリスト', icon: 'mdi-format-list-checks', route: '/tasks' },
+    { key: 'budget', title: '家計簿', icon: 'mdi-wallet', route: '/budget/dashboard' },
 ]
 
 export const DEFAULT_FOOTER_ITEMS = ['home', 'dok', 'tasks']

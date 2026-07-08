@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
-import { router, usePage } from '@inertiajs/vue3'
+import { usePage } from '@inertiajs/vue3'
 import { useNavigation } from '@/Composables/Common/useNavigation'
 import { computed } from 'vue'
 import { useTheme } from 'vuetify'
@@ -51,6 +51,7 @@ const allMembers = computed<AvatarMember[]>(() => {
 const APP_ACTIONS: Record<string, () => void> = {
     dok: navigateToDok,
     tasks: () => navigateTo('tasks'),
+    budget: () => navigateTo('budget.dashboard'),
 }
 
 const apps = FOOTER_APPS.filter((app) => app.key !== 'home' && APP_ACTIONS[app.key]).map((app) => ({
@@ -63,7 +64,9 @@ const apps = FOOTER_APPS.filter((app) => app.key !== 'home' && APP_ACTIONS[app.k
 <template>
     <div>
         <!-- ヒーローセクション -->
-        <div class="home-hero" :style="{ background: heroGradient }">
+        <div
+            class="home-hero"
+            :style="{ background: heroGradient }">
             <div class="home-hero__content">
                 <p class="home-hero__date">{{ todayLabel }}</p>
                 <h1

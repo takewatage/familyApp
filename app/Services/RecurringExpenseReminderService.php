@@ -29,6 +29,10 @@ class RecurringExpenseReminderService
         $monthStart = Carbon::parse($yearMonth.'-01')->startOfMonth();
         $monthEnd = $monthStart->copy()->endOfMonth();
 
+        // 期日接近・遅延は「今まさに進行中の月」を見ているときだけ意味を持つ。
+        // 過去月/未来月を閲覧中（asOf が対象月外）は緊急フラグを立てず、支払予定と支払済みのみ示す。
+        $isActionableMonth = $asOf->betweenIncluded($monthStart, $monthEnd);
+
         // 当月に支払済み（生成済み支出がある）繰り返し支出 ID の集合。
         $paidRecurringIds = Expense::where('family_id', $familyId)
             ->whereNotNull('recurring_expense_id')
@@ -40,7 +44,7 @@ class RecurringExpenseReminderService
 
         RecurringExpense::activeForFamily($familyId)
             ->get()
-            ->each(function (RecurringExpense $recurring) use (&$reminders, $paidRecurringIds, $monthStart, $asOf) {
+            ->each(function (RecurringExpense $recurring) use (&$reminders, $paidRecurringIds, $monthStart, $asOf, $isActionableMonth) {
                 if (! $recurring->isDueInMonth($monthStart)) {
                     return;
                 }
@@ -48,13 +52,14 @@ class RecurringExpenseReminderService
                 $paymentDate = $recurring->paymentDateForMonth($monthStart);
                 $isPaid = $paidRecurringIds->has($recurring->id);
 
-                // 未払いかつ支払日が基準日〜基準日+N日の範囲にあれば期日接近。
-                $isUpcoming = ! $isPaid
+                // 未払いかつ支払日が基準日〜基準日+N日の範囲にあれば期日接近（進行中の月のみ）。
+                $isUpcoming = $isActionableMonth
+                    && ! $isPaid
                     && $paymentDate->greaterThanOrEqualTo($asOf)
                     && $paymentDate->lessThanOrEqualTo($asOf->copy()->addDays(self::UPCOMING_DAYS));
 
-                // 未払いかつ支払日が基準日より前なら支払い遅延（埋もれさせず強調する）。
-                $isOverdue = ! $isPaid && $paymentDate->lessThan($asOf);
+                // 未払いかつ支払日が基準日より前なら支払い遅延（進行中の月のみ強調する）。
+                $isOverdue = $isActionableMonth && ! $isPaid && $paymentDate->lessThan($asOf);
 
                 $reminders[] = new RecurringReminderData(
                     id: $recurring->id,

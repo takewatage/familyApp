@@ -36,4 +36,24 @@ class BudgetCalculationResult extends Data
         /** @var CategoryUsageData[] */
         public array $categories,
     ) {}
+
+    /**
+     * 収入・支出・固定費が無い月のゼロ計算結果。家族未選択時などに設定月と shape を揃える。
+     * （Spatie `Data::empty()` と衝突するため名称は `zero`）
+     */
+    public static function zero(string $yearMonth): self
+    {
+        return new self(
+            year_month: $yearMonth,
+            total_income: '0.00',
+            total_expense: '0.00',
+            fixed_cost_total: '0.00',
+            category_budget_total: '0.00',
+            saving_target: '0.00',
+            discretionary: '0.00',
+            possible_saving: '0.00',
+            overall_usage_percent: null,
+            categories: [],
+        );
+    }
 }

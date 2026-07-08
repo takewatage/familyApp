@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { router } from '@inertiajs/vue3'
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
 import { usePageProps } from '@/Composables/Common/usePageProps'
 import { useInertiaForm } from '@/Composables/Common/useInertiaForm'
 import { useSnackbar } from '@/Composables/Common/useSnackbar'
+import { useMonthNavigation } from '@/Composables/Budget/useMonthNavigation'
 import type {
     BudgetSettingsPageResult,
     StoreBudgetRequest,
@@ -18,26 +18,7 @@ const props = usePageProps<BudgetSettingsPageResult>()
 const snackbar = useSnackbar()
 
 // ----- 月切替 -----
-const monthLabel = computed(() => {
-    const [y, m] = props.value.yearMonth.split('-')
-
-    return `${y}年${Number(m)}月`
-})
-
-function shiftMonth(ym: string, delta: number): string {
-    const [y, m] = ym.split('-').map(Number)
-    const d = new Date(y, m - 1 + delta, 1)
-
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
-}
-
-function goMonth(delta: number) {
-    router.get(
-        route('budget.budgets.show'),
-        { month: shiftMonth(props.value.yearMonth, delta) },
-        { preserveScroll: true, preserveState: false },
-    )
-}
+const { monthLabel, goMonth } = useMonthNavigation(() => props.value.yearMonth, 'budget.budgets.show')
 
 // カテゴリー参照（名前・色・親子表示用）
 const categoryById = computed(() => {

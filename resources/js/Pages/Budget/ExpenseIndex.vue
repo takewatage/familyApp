@@ -5,6 +5,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
 import { usePageProps } from '@/Composables/Common/usePageProps'
 import { useConfirmDialog } from '@/Composables/Common/useConfirmDialogService'
 import { useSnackbar } from '@/Composables/Common/useSnackbar'
+import { useMonthNavigation } from '@/Composables/Budget/useMonthNavigation'
 import ExpenseForm from '@/Components/Budget/ExpenseForm.vue'
 import { budgetQuickEntryApi } from '@/Api/budgetQuickEntryApi'
 import { formatDateShort } from '@/Utils/dateFormatter'
@@ -24,28 +25,9 @@ const presetQuick = ref<QuickEntryData | null>(null)
 // ダイアログ内 ExpenseForm を開くたびに再マウントして初期値をリセットする
 const formKey = ref(0)
 
-const monthLabel = computed(() => {
-    const [y, m] = props.value.yearMonth.split('-')
-
-    return `${y}年${Number(m)}月`
-})
+const { monthLabel, goMonth } = useMonthNavigation(() => props.value.yearMonth, 'budget.expenses.index')
 
 const totalLabel = computed(() => formatYen(props.value.totalAmount))
-
-function shiftMonth(ym: string, delta: number): string {
-    const [y, m] = ym.split('-').map(Number)
-    const d = new Date(y, m - 1 + delta, 1)
-
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
-}
-
-function goMonth(delta: number) {
-    router.get(
-        route('budget.expenses.index'),
-        { month: shiftMonth(props.value.yearMonth, delta) },
-        { preserveScroll: true, preserveState: false },
-    )
-}
 
 function openCreate() {
     editing.value = null

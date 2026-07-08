@@ -29,6 +29,12 @@ export type BudgetCategoryInputData = {
 categoryId: string;
 amount: string;
 };
+export type BudgetDashboardPageResult = {
+yearMonth: string;
+calculation: BudgetCalculationResult;
+reminders: Array<RecurringReminderData>;
+categories: Array<CategoryData>;
+};
 export type BudgetSettingsPageResult = {
 yearMonth: string;
 totalIncome: string;

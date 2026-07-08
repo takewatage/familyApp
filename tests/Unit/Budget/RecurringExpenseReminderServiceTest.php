@@ -83,6 +83,19 @@ class RecurringExpenseReminderServiceTest extends TestCase
         $this->assertFalse($reminders[0]->is_paid);
     }
 
+    public function test_suppresses_overdue_upcoming_when_viewing_non_current_month(): void
+    {
+        $this->makeRecurring(['day_of_month' => 5]); // 支払日 2026-07-05
+
+        // 8 月に居る状態で 7 月（過去月）を閲覧: 支払予定は出すが緊急フラグは立てない
+        $reminders = $this->service->forMonth($this->family->id, '2026-07', '2026-08-10');
+
+        $this->assertCount(1, $reminders);
+        $this->assertFalse($reminders[0]->is_overdue);
+        $this->assertFalse($reminders[0]->is_upcoming);
+        $this->assertFalse($reminders[0]->is_paid);
+    }
+
     public function test_marks_paid_when_expense_generated(): void
     {
         $recurring = $this->makeRecurring(['day_of_month' => 25]);
