@@ -168,6 +168,11 @@ isFull: boolean;
 error?: string;
 inviteRole: string;
 };
+export type LoginPageResult = {
+canResetPassword: boolean;
+googleEnabled: boolean;
+status?: string;
+};
 export type MemberOptionData = {
 key: string;
 memberType: string;
@@ -250,7 +255,8 @@ isUpcoming: boolean;
 isOverdue: boolean;
 };
 export type RegisterPageResult = {
-familyName: string;
+familyName?: string;
+googleEnabled: boolean;
 };
 export type ReorderCategoriesRequest = {
 categories: Array<SortItemData>;

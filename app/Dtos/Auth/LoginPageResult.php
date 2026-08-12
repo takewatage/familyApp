@@ -9,11 +9,11 @@ use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 
 #[TypeScript]
 #[MapOutputName(CamelCaseMapper::class)]
-class RegisterPageResult extends Data
+class LoginPageResult extends Data
 {
     public function __construct(
-        /** 招待経由の場合は招待先の家族名、招待なしの新規登録では null */
-        public readonly ?string $family_name,
-        public readonly bool $google_enabled = false,
+        public readonly bool $can_reset_password,
+        public readonly bool $google_enabled,
+        public readonly ?string $status = null,
     ) {}
 }

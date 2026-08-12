@@ -22,6 +22,7 @@
 | Spatie Laravel TypeScript Transformer | -     | PHPのDTO定義からTypeScript型を自動生成         |
 | Intervention Image Laravel         | 1.5      | 画像処理（リサイズ・WebP変換）                 |
 | Laravel Sanctum                    | 4.0      | APIトークン認証                               |
+| Laravel Socialite                  | 5.29     | Google OAuth（ソーシャルログイン）             |
 | Pusher / Laravel Broadcasting      | -        | WebSocketリアルタイム通信                      |
 | Ziggy                              | -        | JavaScriptでLaravelルートを使用               |
 | Axios                              | 1.11     | HTTPクライアント                               |
@@ -101,6 +102,12 @@ sail yarn build
 
 | エンドポイント                        | メソッド | 説明                          | 状態    |
 |-------------------------------------|---------|------------------------------|---------|
+| `/login`                            | GET     | ログイン画面（`LoginPageResult`） | ✅完了  |
+| `/login`                            | POST    | ログイン（email + password。家族コードは不要） | ✅完了  |
+| `/register`                         | GET     | 新規登録画面（`RegisterPageResult`。招待なしでもアクセス可） | ✅完了  |
+| `/register`                         | POST    | 新規登録（招待あり: 参加 / 招待なし: 家族を自動作成） | ✅完了  |
+| `/auth/google/redirect`             | GET     | Googleの認可画面へリダイレクト   | ✅完了  |
+| `/auth/google/callback`             | GET     | Googleコールバック（ログイン・新規登録） | ✅完了  |
 | `/join/{code}`                      | GET     | 招待確認ページ（guest/auth共通） | ✅完了  |
 | `/join/{code}`                      | POST    | ログイン済みユーザーの家族参加    | ✅完了  |
 | `/home`                             | GET     | ホーム画面（`HomeResult`: メンバー・仮想ユーザーをアバター込みで返却） | ✅完了  |

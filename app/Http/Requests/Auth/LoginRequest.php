@@ -2,12 +2,10 @@
 
 namespace App\Http\Requests\Auth;
 
-use App\Models\Family;
-use App\Services\CurrentFamilyService;
+use App\Models\User;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -32,7 +30,6 @@ class LoginRequest extends FormRequest
         return [
             'email' => ['required', 'string', 'email'],
             'password' => ['required', 'string'],
-            'family_code' => ['required', 'string'],
         ];
     }
 
@@ -45,18 +42,17 @@ class LoginRequest extends FormRequest
     {
         $this->ensureIsNotRateLimited();
 
-        // family_codeで家族を検索
-        $family = Family::where('code', $this->input('family_code'))->first();
+        // Googleのみで登録されたユーザー（パスワード未設定）はパスワード認証を許可しない
+        $user = User::where('email', $this->input('email'))->first();
 
-        if (!$family) {
+        if ($user && $user->password === null) {
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([
-                'family_code' => '家族コードが正しくありません。',
+                'email' => 'このアカウントはGoogleログインで登録されています。「Googleでログイン」からログインしてください。',
             ]);
         }
 
-        // email/passwordで認証
         if (!Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
             RateLimiter::hit($this->throttleKey());
 
@@ -64,23 +60,6 @@ class LoginRequest extends FormRequest
                 'email' => trans('auth.failed'),
             ]);
         }
-
-        // 認証成功後、ユーザーが該当の家族に所属しているか確認
-        $user = Auth::user();
-        $isMember = DB::table('family_user')->where('family_id', $family->id)->where('user_id', $user->id)->exists();
-
-        if (!$isMember) {
-            Auth::logout();
-            RateLimiter::hit($this->throttleKey());
-
-            throw ValidationException::withMessages([
-                'family_code' => 'この家族に所属していません。',
-            ]);
-        }
-
-        // 認証成功後、ログインした家族IDをセッションに保存
-        $currentFamilyService = app(CurrentFamilyService::class);
-        $currentFamilyService->setCurrentFamily($family->id);
 
         RateLimiter::clear($this->throttleKey());
     }

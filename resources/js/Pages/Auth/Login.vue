@@ -1,15 +1,14 @@
 <script setup lang="ts">
 import GuestLayout from '@/Layouts/GuestLayout.vue'
 import InputError from '@/Components/InputError.vue'
-import { Head, usePage } from '@inertiajs/vue3'
+import { Head, Link, usePage } from '@inertiajs/vue3'
 import { ref } from 'vue'
 import AuthCard from '@/Components/Auth/AuthCard.vue'
+import SocialLoginButtons from '@/Components/Auth/SocialLoginButtons.vue'
 import { useInertiaForm } from '@/Composables/Common/useInertiaForm'
+import type { LoginPageResult } from '@/Types/dto.generated'
 
-defineProps<{
-    canResetPassword?: boolean
-    status?: string
-}>()
+defineProps<LoginPageResult>()
 
 defineOptions({ layout: GuestLayout })
 
@@ -20,7 +19,6 @@ const appName: string = page.props.appName
 const form = useInertiaForm({
     email: '',
     password: '',
-    familyCode: '',
 })
 
 const submit = () => {
@@ -69,10 +67,19 @@ const submit = () => {
                 <div class="welcome-text">
                     <p class="welcome-subtitle">ログインして家族とつながろう</p>
                 </div>
+                <v-alert
+                    v-if="status"
+                    type="success"
+                    variant="tonal"
+                    density="compact"
+                    class="mb-4">
+                    {{ status }}
+                </v-alert>
+
                 <form @submit.prevent="submit">
                     <InputError
                         class="mt-2 mb-4"
-                        :message="form.errors.email || form.errors.password || form.errors.familyCode" />
+                        :message="form.errors.email || form.errors.password" />
 
                     <v-text-field
                         v-model="form.email"
@@ -83,16 +90,6 @@ const submit = () => {
                         placeholder="メールアドレス"
                         prepend-inner-icon="mdi-email-outline"
                         variant="outlined"></v-text-field>
-
-                    <v-text-field
-                        v-model="form.familyCode"
-                        color="primary"
-                        density="comfortable"
-                        prepend-inner-icon="mdi-home-outline"
-                        variant="outlined"
-                        label="家族コード"
-                        :error="form.errors.hasOwnProperty('familyCode')"
-                        @click:append-inner="visible = !visible"></v-text-field>
 
                     <v-text-field
                         v-model="form.password"
@@ -117,16 +114,23 @@ const submit = () => {
                         <v-icon start>mdi-login</v-icon>
                         ログイン
                     </v-btn>
-
-                    <!--            <v-card-text class="text-center">-->
-                    <!--                <Link-->
-                    <!--                    class="text-primary"-->
-                    <!--                    :href="route('register')">-->
-                    <!--                    アカウントをお持ちでない場合は登録-->
-                    <!--                    <v-icon icon="mdi-chevron-right"></v-icon>-->
-                    <!--                </Link>-->
-                    <!--            </v-card-text>-->
                 </form>
+
+                <SocialLoginButtons v-if="googleEnabled" />
+
+                <div class="bottom-links">
+                    <Link
+                        v-if="canResetPassword"
+                        class="d-block mb-2"
+                        :href="route('password.request')">
+                        パスワードをお忘れですか？
+                    </Link>
+
+                    <Link :href="route('register')">
+                        アカウントをお持ちでない方は新規登録
+                        <v-icon icon="mdi-chevron-right" />
+                    </Link>
+                </div>
             </AuthCard>
 
             <!-- フッター -->

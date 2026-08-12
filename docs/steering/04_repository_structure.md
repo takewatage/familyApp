@@ -16,13 +16,14 @@ family-app/
 │   ├── Console/
 │   │   └── Commands/                 # Artisanコマンド実装（GenerateRecurringExpenses, CheckBudgetAlerts等）
 │   ├── Events/                       # Laravelイベント（TaskUpdated, CategoryUpdated）
+│   ├── Exceptions/                   # 独自例外（SocialAuthException: Google認証の失敗）
 │   ├── Http/
 │   │   └── Controllers/              # HTTPコントローラー
-│   │       ├── Auth/                 # 認証関連コントローラー
+│   │       ├── Auth/                 # 認証関連コントローラー（AuthenticatedSession, RegisteredUser, GoogleAuth等）
 │   │       └── Concerns/             # コントローラー共通トレイト（AuthorizesFamilyOwnership, ProvidesBudgetOptions）
 │   ├── Models/                       # Eloquentモデル（User, Family, VirtualUser, Task等）
 │   ├── Policies/                     # Laravel認可ポリシー（FamilyPolicy等）
-│   ├── Services/                     # ビジネスロジック（ExpenseService, RecurringExpenseGenerator, RecurringExpenseService, BudgetService, BudgetCalculationService, BudgetAlertService, RecurringExpenseReminderService等）
+│   ├── Services/                     # ビジネスロジック（CurrentFamilyService, FamilyProvisionService, SocialAuthService, ExpenseService, RecurringExpenseGenerator, RecurringExpenseService, BudgetService, BudgetCalculationService, BudgetAlertService, RecurringExpenseReminderService等）
 │   │   └── Concerns/                 # サービス共通トレイト（ValidatesFamilyMember）
 │   └── Support/                      # 共通ヘルパー（BudgetScopeRules: カテゴリー family スコープ validation）
 ├── database/

@@ -13,7 +13,9 @@
 |-------------------|----------------|-----------------------------------|------------------------------------------|
 | ユーザー              | User           | Family App を利用する個人。メールアドレスで識別される  | `User` モデル、`UserData` DTO                |
 | 家族                | Family         | 複数のユーザーが共有する家族グループ。ユニークなコードで識別される | `Family` モデル、`FamilyData` DTO            |
-| 家族コード             | Family Code    | 家族グループへの招待に使う8文字のユニークコード          | `Family.code`                            |
+| 家族コード             | Family Code    | 家族グループへの**招待**に使う8文字のユニークコード。有効期限付きで再生成できる。**ログイン時の入力は不要**（認証条件ではない） | `Family.code`                            |
+| 現在の家族             | Current Family | セッションで選択中の家族。ログイン時に `users.last_family_id` → 参加日時が最も古い家族の順で自動決定される | `CurrentFamilyService`, `users.last_family_id` |
+| Google連携            | Google Account Link | Googleアカウントとアプリのユーザーの紐付け。Google側でメール確認済みの場合のみ既存アカウントへ自動連携する | `User.google_id`, `SocialAuthService`    |
 | オーナー              | Owner          | 家族グループを作成したユーザー（`family_user.role = 'owner'`）。家族設定の編集権限を持つ | `Family.owner_id`, `family_user.role` |
 | タスク               | Task           | 家族が管理するToDoアイテム                   | `Task` モデル、`TaskData` DTO                |
 | カテゴリー             | TaskCategory   | タスクを分類するグループ。例: 「家事」「買い物」         | `TaskCategory` モデル                       |

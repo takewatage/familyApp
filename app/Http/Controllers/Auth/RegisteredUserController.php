@@ -6,7 +6,7 @@ use App\Dtos\Auth\RegisterPageResult;
 use App\Http\Controllers\Controller;
 use App\Models\Family;
 use App\Models\User;
-use App\Services\CurrentFamilyService;
+use App\Services\FamilyProvisionService;
 use App\Services\ImageUploadService;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
@@ -21,33 +21,25 @@ class RegisteredUserController extends Controller
 {
     public function __construct(
         private readonly ImageUploadService $imageService,
-        private readonly CurrentFamilyService $currentFamilyService,
+        private readonly FamilyProvisionService $familyProvisionService,
     ) {}
 
     /**
-     * 登録ページ表示。招待コードがセッションにない場合はログインページへ。
+     * 登録ページ表示。
+     *
+     * 招待コードがセッションにある場合は招待先の家族名を表示し、
+     * ない場合は通常の新規登録として表示する（登録時に本人の家族を自動作成する）。
      */
-    public function create(): Response|RedirectResponse
+    public function create(): Response
     {
-        $code = session('invite_family_code');
-
-        if (!$code) {
-            return redirect()->route('login');
-        }
-
-        $family = Family::where('code', $code)->first();
-
-        if (!$family || ($family->code_expires_at && $family->code_expires_at->isPast())) {
-            return redirect()->route('login');
-        }
-
         return Inertia::render('Auth/Register', RegisterPageResult::from([
-            'family_name' => $family->name,
+            'family_name' => $this->inviteFamilyName(),
+            'google_enabled' => filled(config('services.google.client_id')),
         ]));
     }
 
     /**
-     * 登録処理。完了後に対象の家族へ自動参加する。
+     * 登録処理。完了後に招待先の家族へ参加、招待がなければ本人の家族を作成する。
      */
     public function store(Request $request): RedirectResponse
     {
@@ -59,10 +51,6 @@ class RegisteredUserController extends Controller
             'avatar_image' => ['nullable', 'image', 'max:10240'],
         ]);
 
-        $inviteCode = session('invite_family_code');
-        $inviteFamily = $inviteCode ? Family::where('code', $inviteCode)->first() : null;
-        $familyId = $inviteFamily?->id ?? 'unassigned';
-
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
@@ -70,8 +58,15 @@ class RegisteredUserController extends Controller
             'birthday' => $request->birthday,
         ]);
 
+        event(new Registered($user));
+
+        Auth::login($user);
+
+        // 招待があれば招待先へ参加、なければ本人の家族を作成する
+        $family = $this->familyProvisionService->provisionForNewUser($user);
+
         if ($request->hasFile('avatar_image')) {
-            $result = $this->imageService->upload($request->file('avatar_image'), 400, storagePath: "familyApp/{$familyId}/avatar");
+            $result = $this->imageService->upload($request->file('avatar_image'), 400, storagePath: "familyApp/{$family->id}/avatar");
 
             $user->files()->create([
                 'collection' => 'avatar',
@@ -83,22 +78,26 @@ class RegisteredUserController extends Controller
             ]);
         }
 
-        event(new Registered($user));
+        return redirect()->route('home');
+    }
 
-        Auth::login($user);
+    /**
+     * 招待セッションが有効な場合、招待先の家族名を返す
+     */
+    private function inviteFamilyName(): ?string
+    {
+        $code = session('invite_family_code');
 
-        // セッションのコードで家族に自動参加
-        if ($inviteFamily && !($inviteFamily->code_expires_at && $inviteFamily->code_expires_at->isPast())) {
-            $role = in_array(session('invite_role'), ['parent', 'child', 'guest'])
-                ? session('invite_role')
-                : 'guest';
-
-            $inviteFamily->members()->attach($user->id, ['role' => $role]);
-            $this->currentFamilyService->setCurrentFamily($inviteFamily->id);
+        if (!$code) {
+            return null;
         }
 
-        session()->forget(['invite_family_code', 'invite_role']);
+        $family = Family::where('code', $code)->first();
 
-        return redirect()->route('home');
+        if (!$family || ($family->code_expires_at && $family->code_expires_at->isPast())) {
+            return null;
+        }
+
+        return $family->name;
     }
 }
