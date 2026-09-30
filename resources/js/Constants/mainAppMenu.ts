@@ -6,6 +6,11 @@ export type MainAppMenuItem = {
 
 export const mainAppMenuItems: MainAppMenuItem[] = [
     {
+        title: 'ホーム',
+        icon: 'mdi-home',
+        route: '/home',
+    },
+    {
         title: 'どっちがお得カネ',
         icon: 'mdi-currency-usd',
         route: '/dok',

@@ -53,7 +53,7 @@
 - コンテンツの上にオーバーレイ表示（`temporary`）、横幅は画面の90%
 - 最上部: 家族アイコン + 現在の家族名（共有プロパティ `currentFamily` から取得）
 - 招待ボタン: `InviteBottomSheet` を開いてメンバー招待（共有プロパティ `inviteUrls` を使用）
-- アプリ一覧: どっちがお得カネ（`/dok`）・TODOリスト（`/tasks`）
+- アプリ一覧: ホーム（`/home`）・どっちがお得カネ（`/dok`）・TODOリスト（`/tasks`）（`Constants/mainAppMenu.ts` で管理）
 
 #### フッターナビゲーション
 

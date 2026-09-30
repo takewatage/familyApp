@@ -18,6 +18,7 @@ const heroGradient = computed(() => {
     const colors = vuetifyTheme.current.value.colors
     return `linear-gradient(135deg, ${colors.primary} 0%, ${colors.secondary} 100%)`
 })
+const appCardBackground = computed(() => (vuetifyTheme.current.value.dark ? 'rgb(35 39 48)' : '#FFFFFF'))
 
 const page = usePage()
 const currentFamily = computed(() => page.props.currentFamily as { id: string; name: string } | null)
@@ -159,24 +160,28 @@ const apps = FOOTER_APPS.filter((app) => app.key !== 'home' && APP_ACTIONS[app.k
 }
 
 .apps-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    display: flex;
+    flex-wrap: wrap;
     gap: 8px;
 }
 
 .app-item {
+    /* 3カラム（gap 8px × 2 を差し引いて3等分） */
+    flex: 0 0 calc((100% - 16px) / 3);
     display: flex;
     flex-direction: column;
     align-items: center;
     padding: 12px 8px;
     border-radius: 12px;
+    background-color: v-bind(appCardBackground);
     cursor: pointer;
     user-select: none;
     transition: background 0.15s;
 }
 
 .app-item:hover {
-    background: rgba(0, 0, 0, 0.05);
+    /* カードの背景色を残したまま薄く重ねる */
+    background-image: linear-gradient(rgba(var(--v-theme-on-surface), 0.05), rgba(var(--v-theme-on-surface), 0.05));
 }
 
 .app-item__icon {
@@ -188,7 +193,7 @@ const apps = FOOTER_APPS.filter((app) => app.key !== 'home' && APP_ACTIONS[app.k
     font-size: 11px;
     font-weight: 600;
     text-align: center;
-    color: rgba(0, 0, 0, 0.7);
+    color: rgba(var(--v-theme-on-surface), 0.7);
     word-break: keep-all;
 }
 </style>
