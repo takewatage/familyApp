@@ -27,6 +27,10 @@
 | 仮想ユーザー           | VirtualUser    | アプリにログインせずにタスク等の担当者として割り当てられる家族内の人物。`virtual_users` テーブルで管理 | `VirtualUser` モデル、`VirtualUserData` DTO |
 | アクティブ家族         | ActiveFamily   | ユーザーが現在操作対象としている家族グループ。`users.settings.activeFamilyId` に保存 | `User.settings['activeFamilyId']` |
 | ファイル              | File           | ポリモーフィックに各モデルに紐付けられるファイルリソース      | `File` モデル                               |
+| カレンダーイベント       | CalendarEvent  | カレンダーの1日に表示する1件の項目（タイトル・色・時刻・アイコン）。カレンダー自身は永続化せず、利用側が渡す | `CalendarEvent` 型、`Components/Calendar/` |
+| 日付キー              | DateKey        | イベントを日付ごとに引くためのキー。`YYYY-MM-DD` 形式の文字列 | `DateKey` 型、`toDateKey()` |
+| イベントマップ          | EventMap       | 日付キーごとにカレンダーイベント配列を引けるマップ（`{ '2026-08-01': [...] }`） | `EventMap` 型、`SwipeCalendar` の `events` prop |
+| 月グリッド             | MonthGrid      | 1ヶ月分の7列グリッド。前月・翌月の日付で前後を埋める（当月外セル） | `MonthGrid.vue`、`DayCellData.isOtherMonth` |
 | ソート順              | Sort           | タスク・カテゴリーの表示順を管理する整数値             | `Task.sort`, `TaskCategory.sort`         |
 
 ### 技術用語

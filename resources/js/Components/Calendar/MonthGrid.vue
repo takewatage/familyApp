@@ -1,0 +1,50 @@
+<script setup lang="ts">
+// 1ヶ月分の7×6グリッド。セルの描画は DayCell に委譲する。
+// DayCell のslotを上位へ中継する。
+
+import DayCell from '@/Components/Calendar/DayCell.vue'
+import type { DayCellData } from '@/Types/calendar'
+
+defineProps<{
+    cells: DayCellData[]
+    selectedKey: string
+    maxEvents?: number
+}>()
+
+const emit = defineEmits<{
+    (e: 'select', key: string): void
+}>()
+</script>
+
+<template>
+    <div class="month-grid">
+        <DayCell
+            v-for="cell in cells"
+            :key="cell.key"
+            :cell="cell"
+            :selected="cell.key === selectedKey"
+            :max-events="maxEvents"
+            @select="emit('select', $event)">
+            <!-- DayCellのslotを上位へ中継 -->
+            <template #day-number="slotProps">
+                <slot
+                    name="day-number"
+                    v-bind="slotProps" />
+            </template>
+            <template #events="slotProps">
+                <slot
+                    name="events"
+                    v-bind="slotProps" />
+            </template>
+        </DayCell>
+    </div>
+</template>
+
+<style scoped>
+.month-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    grid-auto-rows: minmax(70px, 1fr);
+    gap: 2px;
+}
+</style>

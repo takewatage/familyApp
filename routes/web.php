@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\BudgetController;
 use App\Http\Controllers\BudgetDashboardController;
+use App\Http\Controllers\CalendarDemoController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\DokController;
 use App\Http\Controllers\ExpenseController;
@@ -30,6 +31,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/mypage/footer-settings', [MyPageController::class, 'footerSettingsIndex'])->name('mypage.footer-settings.index');
     Route::post('/mypage/footer-settings', [MyPageController::class, 'updateFooterItems'])->name('mypage.footer-settings.update');
     Route::get('/dok', [DokController::class, 'index'])->name('dok');
+
+    // カレンダーコンポーネントの動作確認（メニュー非掲載・URL 直打ち）
+    Route::get('/calendar/demo', [CalendarDemoController::class, 'index'])->name('calendar.demo');
 
     // 家族設定
     Route::get('/family/settings', [FamilySettingsController::class, 'index'])->name('family.settings.index');

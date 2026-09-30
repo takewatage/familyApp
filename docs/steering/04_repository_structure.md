@@ -39,6 +39,7 @@ family-app/
 │   │   │   ├── App/                  # アプリケーション全体コンポーネント
 │   │   │   ├── Auth/                 # 認証関連コンポーネント
 │   │   │   ├── Budget/               # 家計簿コンポーネント（ExpenseForm等）
+│   │   │   ├── Calendar/             # スワイプカレンダー（SwipeCalendar, MonthGrid, DayCell, 各種Sheet）
 │   │   │   ├── Common/               # 共通コンポーネント（再利用可能）
 │   │   │   ├── Dok/                  # Dok機能コンポーネント
 │   │   │   ├── Family/               # 家族設定・メンバー管理・切り替えコンポーネント
@@ -47,6 +48,7 @@ family-app/
 │   │   ├── Composables/              # Vue3 Composition API（useXxx形式）
 │   │   │   ├── Common/               # 共通Composables（useAppTheme, useSnackbar等）
 │   │   │   ├── Budget/               # 家計簿関連Composables（useMonthNavigation: 月切替共通ロジック）
+│   │   │   ├── Calendar/             # カレンダー関連Composables（useCalendar: 月グリッド生成 / useSwipe: 横スワイプ）
 │   │   │   ├── Dok/                  # Dok関連Composables
 │   │   │   └── Task/                 # タスク関連Composables
 │   │   ├── Constants/                # 定数定義（footerApps.ts: フッターアプリ定義）
@@ -54,13 +56,15 @@ family-app/
 │   │   ├── Pages/                    # Inertiaページコンポーネント
 │   │   │   ├── Auth/                 # 認証ページ
 │   │   │   ├── Budget/               # 家計簿ページ（ExpenseIndex, Categories, Shops, PaymentMethods, QuickEntries, RecurringExpenses, BudgetSettings, Dashboard）
+│   │   │   ├── Calendar/             # カレンダー動作確認ページ（Demo・メニュー非掲載）
 │   │   │   ├── Dok/                  # Dokページ
 │   │   │   ├── MyPage/               # マイページ（家族設定・設定・フッター設定ページ含む）
 │   │   │   └── Task/                 # タスクページ
 │   │   ├── Plugins/                  # Vueプラグイン設定（Vuetify等）
 │   │   ├── Types/                    # TypeScript型定義
+│   │   │   ├── calendar.ts           # カレンダーの手書き型（CalendarEvent, EventMap, DayCellData等）
 │   │   │   └── dto.generated.d.ts    # 自動生成型（php artisan typescript:transform）
-│   │   └── Utils/                    # ユーティリティ関数
+│   │   └── Utils/                    # ユーティリティ関数（dateFormatter: 表示整形 / calendarDate: 日付計算）
 │   └── sass/
 │       └── app.scss                  # グローバルスタイル
 ├── routes/
@@ -138,10 +142,15 @@ family-app/
 - **命名**: `use` + 機能名（例: `useTask.ts`、`useSnackbar.ts`）
 - **主要ファイル**:
   - `Common/useAppTheme.ts`: Vuetify テーマ（ライト/ダーク/システム）とプライマリー・セカンダリーカラーを適用する。`THEMES` 定数（7プリセット）を export し、`AuthenticatedLayout.vue` から呼び出す。`$page.props.userSettings` を watch して即時反映
+  - `Calendar/useCalendar.ts`: カレンダーの表示年月・選択日の状態と月グリッド（前月埋め + 当月 + 翌月埋め）の生成。クライアント内で完結する月移動を担う
+  - `Calendar/useSwipe.ts`: 横スワイプの指追従（`transform: translateX`）としきい値によるページ送り判定。縦スクロールと競合しないよう最初の動きで軸をロックする
+  - **注意**: `Budget/useMonthNavigation.ts`（Inertia 遷移でサーバーから取り直す月切替）と `Calendar/useCalendar.ts`（クライアント内の月移動）は役割が異なるため統合しない
 
 ### resources/js/Types/
 
 - **役割**: TypeScript型定義
+- **主要ファイル**:
+  - `calendar.ts`: カレンダーコンポーネントの手書き型（`CalendarEvent` / `EventMap` / `DayCellData` / `YearMonth` 等）。サーバーとやり取りしないため DTO 自動生成の対象外
 - **注意**: `dto.generated.d.ts` は `php artisan typescript:transform` で自動生成される。Docker 未起動時は手動更新も可
 
 ### resources/js/Constants/
