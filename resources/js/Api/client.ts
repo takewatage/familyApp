@@ -1,4 +1,5 @@
 import axios, { type AxiosError, type AxiosResponse, type InternalAxiosRequestConfig } from 'axios'
+import { keysToSnake } from '@/Utils/caseConverter'
 
 declare module 'axios' {
     interface AxiosRequestConfig {
@@ -191,6 +192,15 @@ client.interceptors.request.use(
         // FormData の場合は Content-Type を削除して axios に自動設定させる
         if (config.data instanceof FormData) {
             delete config.headers['Content-Type']
+        }
+
+        // axios.create() のインスタンスには app.ts のグローバル interceptor が効かないため、ここで snake_case に変換する
+        if (config.data && typeof config.data === 'object') {
+            config.data = keysToSnake(config.data)
+        }
+
+        if (config.params && typeof config.params === 'object') {
+            config.params = keysToSnake(config.params)
         }
 
         return config

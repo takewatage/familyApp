@@ -135,6 +135,8 @@ family-app/
 - **役割**: Axiosを使ったバックエンドとのHTTP通信クラス
 - **配置するファイル**: `client.ts`（共通設定）、各機能のAPI関数（`familyTaskApi.ts`等）
 - **注意**: camelCase ↔ snake_case の自動変換は `client.ts` で処理済み
+  - `client` は `axios.create()` のインスタンスのため、`app.ts` でグローバル `axios` に登録した interceptor は**効かない**。変換は `client.ts` 自身の request / response interceptor で行っている
+  - API 関数は必ず `client` を使い、新たに `axios.create()` しないこと
 
 ### resources/js/Composables/
 

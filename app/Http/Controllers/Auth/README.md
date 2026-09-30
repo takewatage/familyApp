@@ -96,6 +96,7 @@ Google ログインを使う場合のみ必要。**未設定でもアプリは�
 ### 3. `.env` の設定
 
 ```dotenv
+# ポート指定でアクセスしている場合はポートまで含める（例: http://localhost:50080）
 APP_URL=http://localhost
 
 GOOGLE_CLIENT_ID=発行されたクライアントID
@@ -104,6 +105,8 @@ GOOGLE_REDIRECT_URI="${APP_URL}/auth/google/callback"
 ```
 
 `config/services.php` の `google` キーから参照される。`GOOGLE_REDIRECT_URI` は Google Cloud Console に登録した URI と**完全一致**させること。
+
+> **注意**: `GOOGLE_REDIRECT_URI` は `APP_URL` から組み立てるため、Sail の `APP_PORT`（例: `50080`）でアクセスしているのに `APP_URL` にポートが無いと、Google へ送る URI が `http://localhost/auth/google/callback` になり不一致になる。実際に送られる値は `sail artisan tinker --execute="echo config('services.google.redirect');"` で確認できる。
 
 設定後、キャッシュを使っている環境では反映のためにクリアする。
 
@@ -179,7 +182,7 @@ Socialite::fake('google', SocialiteUser::fake([
 | 症状 | 原因と対処 |
 |---|---|
 | Google ボタンが表示されない | `GOOGLE_CLIENT_ID` が未設定、または `config:clear` していない |
-| `redirect_uri_mismatch` | Google Cloud Console の承認済みリダイレクト URI と `GOOGLE_REDIRECT_URI` が不一致。ポート・スキーム・末尾スラッシュまで一致させる |
+| 「アクセスをブロック: このアプリのリクエストは無効です」（`redirect_uri_mismatch`） | Google Cloud Console の承認済みリダイレクト URI と `GOOGLE_REDIRECT_URI` が不一致。ポート・スキーム・末尾スラッシュまで一致させる。ポート指定でアクセスしている場合は `APP_URL` にポートが含まれているか確認する |
 | `access_blocked` / 「アプリは確認されていません」 | 公開ステータスが「テスト」でテストユーザー未登録。Google Auth Platform でテストユーザーに追加する |
 | 「メールアドレスが確認済みではないため…」 | Google 側でメール未確認のアカウント。既存アカウントへの自動紐付けは仕様上許可していない |
 | Google ログイン後に別ユーザーになる | 同じメールアドレスの既存ユーザーへ紐付いた可能性がある（仕様どおりの挙動） |
