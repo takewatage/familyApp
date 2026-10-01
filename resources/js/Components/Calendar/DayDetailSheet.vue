@@ -3,6 +3,7 @@
 // v-model で開閉を制御。
 
 import { computed } from 'vue'
+import { resolveEventColor } from '@/Utils/calendarColor'
 import type { CalendarEvent } from '@/Types/calendar'
 
 const props = defineProps<{
@@ -16,6 +17,8 @@ const props = defineProps<{
 const emit = defineEmits<{
     (e: 'update:modelValue', value: boolean): void
     (e: 'add'): void
+    /** 予定リストの項目をタップした */
+    (e: 'select-event', event: CalendarEvent): void
 }>()
 
 const isOpen = computed({
@@ -23,9 +26,6 @@ const isOpen = computed({
     set: (v: boolean) => emit('update:modelValue', v),
 })
 
-function resolveColor(ev: CalendarEvent): string {
-    return ev.color ?? 'primary'
-}
 </script>
 
 <template>
@@ -53,19 +53,10 @@ function resolveColor(ev: CalendarEvent): string {
                         v-for="ev in events"
                         :key="ev.id"
                         :title="ev.title"
-                        :subtitle="ev.time || '終日'">
-                        <template #prepend>
-                            <v-avatar
-                                :color="resolveColor(ev)"
-                                size="small">
-                                <v-icon
-                                    color="white"
-                                    size="small">
-                                    {{ ev.icon || 'mdi-calendar' }}
-                                </v-icon>
-                            </v-avatar>
-                        </template>
-                    </v-list-item>
+                        :subtitle="ev.time || '終日'"
+                        class="day-detail-sheet__event"
+                        :style="{ borderLeftColor: resolveEventColor(ev) }"
+                        @click="emit('select-event', ev)" />
                 </v-list>
                 <v-card-text
                     v-else
@@ -91,3 +82,12 @@ function resolveColor(ev: CalendarEvent): string {
         </v-card>
     </v-bottom-sheet>
 </template>
+
+<style scoped>
+/* 予定の色を左の縦線で示す */
+.day-detail-sheet__event {
+    border-left: 4px solid;
+    margin: 2px 8px;
+    border-radius: 4px;
+}
+</style>

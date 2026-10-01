@@ -39,7 +39,7 @@ family-app/
 │   │   │   ├── App/                  # アプリケーション全体コンポーネント
 │   │   │   ├── Auth/                 # 認証関連コンポーネント
 │   │   │   ├── Budget/               # 家計簿コンポーネント（ExpenseForm等）
-│   │   │   ├── Calendar/             # スワイプカレンダー（SwipeCalendar, MonthGrid, DayCell, 各種Sheet）
+│   │   │   ├── Calendar/             # スワイプカレンダー（SwipeCalendar, MonthGrid, DayCell, 各種Sheet, EventEditForm）
 │   │   │   ├── Common/               # 共通コンポーネント（再利用可能）
 │   │   │   ├── Dok/                  # Dok機能コンポーネント
 │   │   │   ├── Family/               # 家族設定・メンバー管理・切り替えコンポーネント
@@ -56,7 +56,7 @@ family-app/
 │   │   ├── Pages/                    # Inertiaページコンポーネント
 │   │   │   ├── Auth/                 # 認証ページ
 │   │   │   ├── Budget/               # 家計簿ページ（ExpenseIndex, Categories, Shops, PaymentMethods, QuickEntries, RecurringExpenses, BudgetSettings, Dashboard）
-│   │   │   ├── Calendar/             # カレンダー動作確認ページ（Demo・メニュー非掲載）
+│   │   │   ├── Calendar/             # カレンダー画面（Index: モックアップ）・動作確認ページ（Demo・メニュー非掲載）
 │   │   │   ├── Dok/                  # Dokページ
 │   │   │   ├── MyPage/               # マイページ（家族設定・設定・フッター設定ページ含む）
 │   │   │   └── Task/                 # タスクページ
@@ -64,7 +64,7 @@ family-app/
 │   │   ├── Types/                    # TypeScript型定義
 │   │   │   ├── calendar.ts           # カレンダーの手書き型（CalendarEvent, EventMap, DayCellData等）
 │   │   │   └── dto.generated.d.ts    # 自動生成型（php artisan typescript:transform）
-│   │   └── Utils/                    # ユーティリティ関数（dateFormatter: 表示整形 / calendarDate: 日付計算）
+│   │   └── Utils/                    # ユーティリティ関数（dateFormatter: 表示整形 / calendarDate: 日付計算 / calendarColor: 予定の色解決）
 │   └── sass/
 │       └── app.scss                  # グローバルスタイル
 ├── routes/

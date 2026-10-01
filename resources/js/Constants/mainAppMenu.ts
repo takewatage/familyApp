@@ -21,6 +21,11 @@ export const mainAppMenuItems: MainAppMenuItem[] = [
         route: '/tasks',
     },
     {
+        title: 'カレンダー',
+        icon: 'mdi-calendar-month',
+        route: '/calendar',
+    },
+    {
         title: 'マイページ',
         icon: 'mdi-account-circle',
         route: '/mypage',

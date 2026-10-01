@@ -19,6 +19,7 @@ import { useCalendar } from '@/Composables/Calendar/useCalendar'
 import { useSwipe } from '@/Composables/Calendar/useSwipe'
 import { fromDateKey } from '@/Utils/calendarDate'
 import type {
+    CalendarEvent,
     ColorOption,
     DateKey,
     EventFormModel,
@@ -78,6 +79,8 @@ const emit = defineEmits<{
     (e: 'select-date', key: DateKey): void
     (e: 'month-change', value: YearMonth): void
     (e: 'add-event', payload: { date: DateKey; event: EventFormModel }): void
+    /** 日付詳細シートで予定をタップした（編集画面を開くなどは利用側の責任） */
+    (e: 'event-click', payload: { date: DateKey; event: CalendarEvent }): void
 }>()
 
 // events を Ref 化して composable に渡す（props.events は常に存在＝デフォルト {}）
@@ -152,6 +155,11 @@ function openAddDirect(): void {
 
 function onSubmitEvent(form: EventFormModel): void {
     emit('add-event', { date: selectedKey.value, event: form })
+}
+
+function onSelectEvent(event: CalendarEvent): void {
+    detailOpen.value = false
+    emit('event-click', { date: selectedKey.value, event })
 }
 
 function openPicker(): void {
@@ -316,7 +324,8 @@ function onPickerSelect(value: { year: number; month: number }): void {
             :title="detailTitle"
             :events="selectedEvents"
             :enable-add="enableAdd"
-            @add="openAdd">
+            @add="openAdd"
+            @select-event="onSelectEvent">
             <template #event-list="sp">
                 <slot
                     name="event-list"

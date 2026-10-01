@@ -53,6 +53,7 @@ const APP_ACTIONS: Record<string, () => void> = {
     dok: navigateToDok,
     tasks: () => navigateTo('tasks'),
     budget: () => navigateTo('budget.dashboard'),
+    calendar: () => navigateTo('calendar'),
 }
 
 const apps = FOOTER_APPS.filter((app) => app.key !== 'home' && APP_ACTIONS[app.key]).map((app) => ({

@@ -9,6 +9,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
 import SwipeCalendar from '@/Components/Calendar/SwipeCalendar.vue'
 import { toDateKey } from '@/Utils/calendarDate'
 import type {
+    CalendarEvent,
     DateKey,
     EventFormModel,
     EventMap,
@@ -82,6 +83,10 @@ function onAddEvent(payload: { date: DateKey; event: EventFormModel }): void {
     )
 }
 
+function onEventClick(payload: { date: DateKey; event: CalendarEvent }): void {
+    addLog(`event-click: date=${payload.date}, id=${payload.event.id}, title=${payload.event.title}`)
+}
+
 function clearLogs(): void {
     logs.value = []
 }
@@ -119,7 +124,8 @@ function clearLogs(): void {
                 :enable-add="enableAdd"
                 @select-date="onSelectDate"
                 @month-change="onMonthChange"
-                @add-event="onAddEvent" />
+                @add-event="onAddEvent"
+                @event-click="onEventClick" />
         </v-card>
 
         <v-card

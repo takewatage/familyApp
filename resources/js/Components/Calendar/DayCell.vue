@@ -3,7 +3,8 @@
 // デフォルトの見た目を持ちつつ、slotで日付番号・イベント表示を差し替え可能。
 
 import { computed } from 'vue'
-import type { CalendarEvent, DayCellData } from '@/Types/calendar'
+import { resolveEventColor } from '@/Utils/calendarColor'
+import type { DayCellData } from '@/Types/calendar'
 
 const props = defineProps<{
     cell: DayCellData
@@ -31,26 +32,6 @@ function onClick(): void {
     }
 
     emit('select', props.cell.key)
-}
-
-/**
- * イベントの色をCSSの背景色に解決する。
- * Vuetifyテーマカラー名なら var(--v-theme-xxx) を、
- * それ以外（#xxxやrgb）はそのまま使う。
- */
-function resolveBg(ev: CalendarEvent): string {
-    const c = ev.color
-
-    if (!c) {
-        return 'rgb(var(--v-theme-primary))'
-    }
-
-    // テーマカラー名っぽい（英字のみ）ならCSS変数に変換
-    if (/^[a-z-]+$/i.test(c)) {
-        return `rgb(var(--v-theme-${c}))`
-    }
-
-    return c
 }
 </script>
 
@@ -90,7 +71,7 @@ function resolveBg(ev: CalendarEvent): string {
                     v-for="ev in visibleEvents"
                     :key="ev.id"
                     class="day-cell__event"
-                    :style="{ background: resolveBg(ev) }">
+                    :style="{ background: resolveEventColor(ev) }">
                     {{ ev.title }}
                 </div>
                 <div
@@ -130,24 +111,32 @@ function resolveBg(ev: CalendarEvent): string {
 .day-cell__num-wrap {
     display: flex;
     justify-content: center;
-    margin-bottom: 2px;
+    margin-bottom: 1px;
     flex-shrink: 0;
 }
 
+/* 予定を3件表示できるよう日付は小さめ */
 .day-cell__num {
-    font-size: 13px;
+    font-size: 11px;
     font-weight: 500;
-    width: 24px;
-    height: 24px;
+    width: 18px;
+    height: 18px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
+/* 今日: 背景と文字を反転（ダーク: 白地に黒文字 / ライト: 黒地に白文字） */
 .day-cell__num--today {
-    background: rgb(var(--v-theme-primary));
-    color: rgb(var(--v-theme-on-primary));
+    background: rgb(var(--v-theme-on-surface));
+    color: rgb(var(--v-theme-surface));
+}
+
+/* 当月外のセルが今日の場合（例: 9月表示中の10/1）。当月外の文字色に負けて丸と同色になるのを防ぎ、丸ごと薄くする */
+.day-cell--other .day-cell__num--today {
+    color: rgb(var(--v-theme-surface));
+    opacity: 0.4;
 }
 
 .day-cell--sun .day-cell__num:not(.day-cell__num--today) {
@@ -173,9 +162,11 @@ function resolveBg(ev: CalendarEvent): string {
     padding: 1px 3px;
     border-radius: 3px;
     color: #fff;
+    font-weight: bold;
     white-space: nowrap;
     overflow: hidden;
-    text-overflow: ellipsis;
+    /* 「…」を付けると数文字しか見えないため、はみ出た分は切り捨てる */
+    text-overflow: clip;
     line-height: 1.3;
     flex-shrink: 0;
 }

@@ -80,3 +80,23 @@ export interface ColorOption {
     title: string
     value: string
 }
+
+/**
+ * 予定の編集フォームの入力値（フルスクリーンの EventEditForm で使用）。
+ * 終日でない場合のみ startTime / endTime を使う。
+ */
+export interface EventEditModel {
+    title: string
+    /** 終日の予定か */
+    allDay: boolean
+    /** 開始日 'YYYY-MM-DD' */
+    startDate: DateKey
+    /** 終了日 'YYYY-MM-DD'（開始日以降） */
+    endDate: DateKey
+    /** 開始時刻 'HH:mm'（終日なら空文字） */
+    startTime: string
+    /** 終了時刻 'HH:mm'（任意。終日なら空文字） */
+    endTime: string
+    /** Vuetify のテーマカラー名 */
+    color: string
+}
