@@ -71,11 +71,16 @@ family-app/
 │   ├── web.php                       # Webルート（メイン）
 │   ├── auth.php                      # 認証ルート
 │   ├── channels.php                  # Broadcastチャネル定義
-│   └── console.php                   # Artisanコマンド
+│   ├── console.php                   # Artisanコマンド
+│   └── e2e.php                       # E2E 用テストデータ作成ルート（APP_ENV=e2e のときだけ /__e2e に登録）
 ├── tests/
 │   ├── Feature/                      # フィーチャーテスト（HTTP通信レベル）
 │   │   └── Pwa/                      # PWA（/sw.js・manifest・家族のアプリ設定・インストール案内）
 │   └── Unit/                         # ユニットテスト
+├── e2e/                              # E2E テスト（Playwright）
+│   ├── auth/                         # ログイン・招待経由の新規登録
+│   ├── support/                      # テストデータ作成（/__e2e）・ログイン等のヘルパー
+│   └── global-setup.ts               # 実行前に E2E 専用 DB（testing_e2e）を作り直す
 ├── docs/
 │   ├── steering/                     # 永続化ドキュメント（本ファイル群）
 │   ├── working/                      # 開発作業ドキュメント（{YYYYMMDD}_{要件名}/）
@@ -95,6 +100,7 @@ family-app/
 ├── composer.json                     # PHP依存管理
 ├── package.json                      # Node.js依存管理
 ├── phpunit.xml                       # PHPUnit設定
+├── playwright.config.ts              # Playwright（E2E）設定
 ├── tsconfig.json                     # TypeScript設定
 └── vite.config.js                    # Vite設定
 ```

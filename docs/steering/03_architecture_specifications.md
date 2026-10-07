@@ -108,6 +108,8 @@ sail yarn build
 | `sail yarn build`                  | 本番用フロントエンドビルド               |
 | `sail artisan migrate`             | DBマイグレーション実行                  |
 | `sail artisan test`                | PHPUnit テスト実行                     |
+| `sail yarn e2e`                    | E2E テスト実行（Playwright。コンテナ内で `APP_ENV=e2e` のサーバーを :8010 に起動し、E2E 専用 DB `testing_e2e` を作り直して実行。事前に `sail yarn build`） |
+| `sail yarn e2e:install`            | Playwright の Chromium をインストール（初回のみ。コンテナ再作成後は `sail exec laravel.test npx playwright install-deps chromium` も必要） |
 | `sail artisan typescript:transform`| DTO → TypeScript型定義ファイル自動生成  |
 | `sail artisan family:create {name} --email=` | 家族とオーナーを作成（新規登録は招待経由のみのため、最初の家族はこれで作る） |
 | `sail artisan pint`                | PHP コードフォーマット（Laravel Pint）  |

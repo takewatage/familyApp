@@ -27,3 +27,7 @@ _ide_helper.php
 _ide_helper_models.php
 .claude
 /docs/working
+
+# Playwright (E2E)
+/e2e/.report
+/e2e/.results
