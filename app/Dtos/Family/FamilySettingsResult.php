@@ -15,5 +15,6 @@ class FamilySettingsResult extends Data
     public function __construct(
         public FamilyData $family,
         public bool $is_owner,
+        public FamilyPwaSettingsData $pwa,
     ) {}
 }

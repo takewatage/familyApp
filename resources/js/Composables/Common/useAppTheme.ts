@@ -42,6 +42,21 @@ export function useAppTheme() {
         theme.themes.value['darkTheme'].colors.primary    = preset.primary
         theme.themes.value['lightTheme'].colors.secondary = preset.secondary
         theme.themes.value['darkTheme'].colors.secondary  = preset.secondary
+
+        updateThemeColorMeta(preset.primary)
+    }
+
+    // ブラウザ UI（アドレスバー・PWA のタイトルバー）の色をユーザーのテーマ色に合わせる
+    function updateThemeColorMeta(color: string) {
+        let meta = document.head.querySelector<HTMLMetaElement>('meta[name="theme-color"]')
+
+        if (!meta) {
+            meta = document.createElement('meta')
+            meta.name = 'theme-color'
+            document.head.appendChild(meta)
+        }
+
+        meta.content = color
     }
 
     watch(

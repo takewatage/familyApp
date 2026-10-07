@@ -7,10 +7,13 @@
         <title inertia>{{ config('app.name', 'Laravel') }}</title>
 
         <!-- PWA -->
-        <link rel="manifest" href="/manifest.webmanifest">
-        <meta name="theme-color" content="#ff45ce">
-        <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+        <link rel="manifest" href="/manifest.webmanifest?v={{ $pwa->manifest_hash }}" crossorigin="use-credentials">
+        {{-- 初期値。ログイン後は useAppTheme がユーザーのテーマ色に更新する --}}
+        <meta name="theme-color" content="{{ config('pwa.theme_color') }}">
+        <link rel="apple-touch-icon" href="{{ $pwa->icon_apple }}">
+        <meta name="apple-mobile-web-app-title" content="{{ $pwa->name }}">
         <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="mobile-web-app-capable" content="yes">
         <meta name="apple-mobile-web-app-status-bar-style" content="default">
 
         <!-- Fonts -->

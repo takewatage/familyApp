@@ -100,6 +100,41 @@ class ImageUploadService
     }
 
     /**
+     * PWA のアプリアイコン（apple-touch-icon / manifest icons）を生成してアップロード
+     *
+     * 中央を正方形にトリミングし PNG で保存する（apple-touch-icon は PNG が必要なため全サイズ PNG に統一）。
+     * maskable は端末側で円形等に切り抜かれても欠けないよう、安全領域（中央 80%）に収めて背景色で余白を付ける。
+     *
+     * @param string $storagePath 保存先パス（例: familyApp/{familyId}/pwa-icon）
+     * @return array{external_ids: list<string>, apple: string, 192: string, 512: string, maskable: string}
+     * @throws \Illuminate\Http\Client\ConnectionException
+     */
+    public function uploadAppIcon(UploadedFile $file, string $storagePath, string $maskableBackground = '#fdf8ee'): array
+    {
+        $variants = [
+            'apple' => fn () => Image::read($file)->cover(180, 180),
+            '192' => fn () => Image::read($file)->cover(192, 192),
+            '512' => fn () => Image::read($file)->cover(512, 512),
+            'maskable' => fn () => Image::read($file)->cover(410, 410)->pad(512, 512, $maskableBackground),
+        ];
+
+        $result = ['external_ids' => []];
+
+        foreach ($variants as $variant => $make) {
+            $uploaded = $this->client->upload(
+                fileContents: (string)$make()->toPng(),
+                filename: $storagePath . '/' . $variant . '_' . Str::ulid() . '.png',
+                contentType: 'image/png',
+            );
+
+            $result['external_ids'][] = $uploaded['external_id'];
+            $result[$variant] = $uploaded['direct_url'];
+        }
+
+        return $result;
+    }
+
+    /**
      * 画像を削除（単一 external_id または配列）
      */
     public function delete(string|array $externalIds): void

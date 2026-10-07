@@ -8,6 +8,8 @@ import '@mdi/font/css/materialdesignicons.css'
 import 'vuetify/styles'
 import '../sass/app.scss'
 import { vuetify } from '@/Plugins/vuetifly'
+// beforeinstallprompt を起動直後から捕捉するため先に読み込む（案内画面はページ遅延ロードのため）
+import '@/Composables/Common/usePwaInstall'
 import GuestLayout from '@/Layouts/GuestLayout.vue'
 import { keysToCamel, keysToSnake } from '@/Utils/caseConverter'
 import { setupDialogPlugin } from '@/Composables/Common/useDialogService'

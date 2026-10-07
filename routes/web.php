@@ -13,8 +13,10 @@ use App\Http\Controllers\FamilySwitchController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\MyPageController;
 use App\Http\Controllers\PaymentMethodController;
+use App\Http\Controllers\PwaManifestController;
 use App\Http\Controllers\QuickEntryController;
 use App\Http\Controllers\RecurringExpenseController;
+use App\Http\Controllers\ServiceWorkerController;
 use App\Http\Controllers\ShopController;
 use App\Http\Controllers\TaskCategoryController;
 use App\Http\Controllers\TaskController;
@@ -23,10 +25,19 @@ use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/home');
 
+// PWA: Service Worker（スコープ / にするためサイト直下から配信。セッション不要）
+Route::get('/sw.js', [ServiceWorkerController::class, 'show'])
+    ->withoutMiddleware('web')
+    ->name('pwa.service-worker');
+
+// PWA: Web App Manifest（auth 外。ログイン中は現在の家族の設定、未ログインは既定値）
+Route::get('/manifest.webmanifest', [PwaManifestController::class, 'show'])->name('pwa.manifest');
+
 Route::middleware(['auth'])->group(function () {
     Route::get('/home', [HomeController::class, 'index'])->name('home');
     Route::get('/mypage', [MyPageController::class, 'index'])->name('mypage.index');
     Route::post('/mypage', [MyPageController::class, 'updateProfile'])->name('mypage.update');
+    Route::get('/mypage/app-install', [MyPageController::class, 'appInstall'])->name('mypage.app-install');
     Route::get('/mypage/setting/theme-color', [MyPageController::class, 'settingsIndex'])->name('mypage.setting.theme-color.index');
     Route::post('/mypage/setting/theme-color', [MyPageController::class, 'updateSettings'])->name('mypage.setting.theme-color.update');
     Route::get('/mypage/footer-settings', [MyPageController::class, 'footerSettingsIndex'])->name('mypage.footer-settings.index');
@@ -42,6 +53,8 @@ Route::middleware(['auth'])->group(function () {
     // 家族設定
     Route::get('/family/settings', [FamilySettingsController::class, 'index'])->name('family.settings.index');
     Route::patch('/family/settings', [FamilySettingsController::class, 'update'])->name('family.settings.update');
+    Route::post('/family/settings/pwa', [FamilySettingsController::class, 'updatePwa'])->name('family.settings.pwa.update');
+    Route::delete('/family/settings/pwa/icon', [FamilySettingsController::class, 'destroyPwaIcon'])->name('family.settings.pwa.icon.destroy');
     Route::post('/family/code/regenerate', [FamilySettingsController::class, 'regenerateCode'])->name('family.code.regenerate');
 
     // メンバー管理

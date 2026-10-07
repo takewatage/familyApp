@@ -7,6 +7,10 @@ import { route as ziggyRoute, Config as ZiggyConfig } from 'ziggy-js'
 
 
 declare global {
+    // vite.config.js の define でビルド時に埋め込む
+    const __APP_VERSION__: string
+    const __APP_BUILD_ID__: string
+
     interface Window {
         axios: AxiosInstance
         Echo: Echo

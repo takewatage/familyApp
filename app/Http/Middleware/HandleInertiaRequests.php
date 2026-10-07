@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use App\Services\CurrentFamilyService;
 use App\Services\InviteUrlService;
+use App\Services\PwaManifestService;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -54,6 +55,11 @@ class HandleInertiaRequests extends Middleware
                     'id'   => $family->id,
                     'name' => $family->name,
                 ];
+            },
+            'pwa' => function () use ($request) {
+                $family = $request->user() ? app(CurrentFamilyService::class)->getCurrentFamily() : null;
+
+                return app(PwaManifestService::class)->resolve($family);
             },
             'inviteUrls' => function () {
                 $family = app(CurrentFamilyService::class)->getCurrentFamily();
