@@ -10,11 +10,14 @@
         "lint:files": "eslint",
         "fix": "yarn format && yarn lint",
         "format": "git diff --name-only --diff-filter=ACMR HEAD | grep -E '\\.(ts|vue)$' | xargs prettier --write",
-        "format:all": "prettier --config .prettierrc.yml --ignore-path .prettierignore --cache --cache-location node_modules/.cache/prettier-cache/ --cache-strategy content  --write '**/*.{js,json,html,vue,ts}'"
+        "format:all": "prettier --config .prettierrc.yml --ignore-path .prettierignore --cache --cache-location node_modules/.cache/prettier-cache/ --cache-strategy content  --write '**/*.{js,json,html,vue,ts}'",
+        "e2e": "playwright test",
+        "e2e:install": "playwright install chromium"
     },
     "devDependencies": {
         "@inertiajs/vue3": "^2.0.0",
         "@laravel/echo-vue": "^2.3.0",
+        "@playwright/test": "^1.63.0",
         "@prettier/plugin-php": "^0.22.2",
         "@typescript-eslint/eslint-plugin": "^7.0.0",
         "@typescript-eslint/parser": "^7.0.0",
