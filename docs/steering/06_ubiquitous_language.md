@@ -31,6 +31,9 @@
 | 日付キー              | DateKey        | イベントを日付ごとに引くためのキー。`YYYY-MM-DD` 形式の文字列 | `DateKey` 型、`toDateKey()` |
 | イベントマップ          | EventMap       | 日付キーごとにカレンダーイベント配列を引けるマップ（`{ '2026-08-01': [...] }`） | `EventMap` 型、`SwipeCalendar` の `events` prop |
 | 月グリッド             | MonthGrid      | 1ヶ月分の7列グリッド。前月・翌月の日付で前後を埋める（当月外セル） | `MonthGrid.vue`、`DayCellData.isOtherMonth` |
+| アプリ設定（ホーム画面） | Family PWA Settings | 家族ごとの PWA 外観（アプリ名・アプリ画像）。`families.settings.pwa` に保存。オーナーのみ変更可。未設定項目は既定値（アプリ名 `familyApp`・既定アイコン） | `FamilyPwaSettingsData` DTO, `UpdateFamilyPwaSettingsRequest`, `PwaManifestService` |
+| アプリ画像            | App Icon       | ホーム画面・スプラッシュに使うアイコン。アップロード画像から PNG 180（apple-touch-icon）/ 192 / 512 / maskable 512 を生成 | `families.settings.pwa.icon`, `ImageUploadService::uploadAppIcon()` |
+| アプリバージョン        | App Version    | 利用者向けのバージョン表記 `v{version} ({ビルドID})`。番号の SSoT は `package.json` の `version` | `__APP_VERSION__`, `__APP_BUILD_ID__`, `APP_VERSION_LABEL` |
 | ソート順              | Sort           | タスク・カテゴリーの表示順を管理する整数値             | `Task.sort`, `TaskCategory.sort`         |
 
 ### 技術用語
@@ -43,6 +46,10 @@
 | camelCase変換     | PHPのsnake_case ↔ TypeScriptのcamelCaseを自動変換する仕組み        | `CamelCaseMapper`、`client.ts`         |
 | Private Channel | Pusherの認証付きWebSocketチャネル。`family.{family_id}` で家族単位に分離 | `channels.php`                        |
 | Composable      | Vue3 Composition APIの再利用可能なロジック。`use` プレフィックス付き        | `useTask.ts`, `useSnackbar.ts`        |
+| PWA             | Progressive Web App。ホーム画面に追加して全画面で起動できる Web アプリ | `vite-plugin-pwa`, `/manifest.webmanifest` |
+| Service Worker（SW） | ブラウザがページとは別に動かすスクリプト。ビルド成果物のキャッシュと新バージョン検知に使う。`/sw.js` で配信 | `ServiceWorkerController`, `usePwaUpdate` |
+| Web App Manifest | アプリ名・アイコン・起動 URL 等を記述した JSON。家族設定から動的生成 | `PwaManifestController`, `PwaManifestService` |
+| manifest ハッシュ | manifest と apple-touch-icon の内容ハッシュ。`<link rel="manifest">` の `?v=` と家族切り替え時の差し替え判定に使う | `FamilyPwaSettingsData.manifest_hash` |
 
 ## 命名規則
 

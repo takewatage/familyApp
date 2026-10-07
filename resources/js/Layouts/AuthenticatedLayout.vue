@@ -4,6 +4,7 @@ import { usePage, router } from '@inertiajs/vue3'
 import { useAppTheme } from '@/Composables/Common/useAppTheme'
 import LoadingOverlay from '@/Components/App/LoadingOverlay.vue'
 import SnackbarNotification from '@/Components/App/SnackbarNotification.vue'
+import PwaUpdateNotifier from '@/Components/Common/PwaUpdateNotifier.vue'
 import InviteBottomSheet from '@/Components/Family/InviteBottomSheet.vue'
 import { mainAppMenuItems } from '@/Constants/mainAppMenu'
 import { FOOTER_APPS, DEFAULT_FOOTER_ITEMS, FOOTER_HIDDEN_ROUTES } from '@/Constants/footerApps'
@@ -63,6 +64,7 @@ const showFooter = computed(() =>
     <v-app>
         <LoadingOverlay/>
         <SnackbarNotification/>
+        <PwaUpdateNotifier/>
         <v-navigation-drawer
             v-model="drawer"
             temporary
@@ -90,6 +92,13 @@ const showFooter = computed(() =>
                     :prepend-icon="item.icon"
                     :title="item.title"
                     @click="handleMenuClick(item.route)"/>
+
+                <v-divider/>
+
+                <v-list-item
+                    prepend-icon="mdi-cellphone-arrow-down"
+                    title="アプリをインストール"
+                    @click="handleMenuClick(route('mypage.app-install'))"/>
             </v-list>
         </v-navigation-drawer>
 

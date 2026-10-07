@@ -93,7 +93,21 @@ function onClick(): void {
     display: flex;
     flex-direction: column;
     transition: background 0.15s;
-    overflow: hidden;
+    /* overflow: hidden だと角丸で上の区切り線の両端が切れるため使わない。
+       予定が多くても行が伸びないよう min-height: 0 にする（はみ出しは __events 側で隠す） */
+    min-height: 0;
+}
+
+/* セル上の区切り線。テーマの border 色（ライト: 黒 / ダーク: 白、不透明度 0.12）に追従。
+   角丸のセル背景と干渉しないよう疑似要素で引く（セルは overflow を隠さない） */
+.day-cell::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    border-top: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+    pointer-events: none;
 }
 
 .day-cell:active {

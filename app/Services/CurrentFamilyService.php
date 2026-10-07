@@ -11,6 +11,9 @@ class CurrentFamilyService
 {
     private const SESSION_KEY = 'current_family_id';
 
+    /** 1 リクエスト内で同じ家族を何度も DB から読まないためのキャッシュ（リクエスト属性に保持） */
+    private const REQUEST_CACHE_KEY = 'current_family';
+
     /**
      * 現在の家族IDを設定
      *
@@ -85,7 +88,16 @@ class CurrentFamilyService
             return null;
         }
 
-        return Family::find($familyId);
+        $cached = request()->attributes->get(self::REQUEST_CACHE_KEY);
+
+        if ($cached instanceof Family && $cached->id === $familyId) {
+            return $cached;
+        }
+
+        $family = Family::find($familyId);
+        request()->attributes->set(self::REQUEST_CACHE_KEY, $family);
+
+        return $family;
     }
 
     /**
@@ -94,6 +106,7 @@ class CurrentFamilyService
     public function clearCurrentFamily(): void
     {
         Session::forget(self::SESSION_KEY);
+        request()->attributes->remove(self::REQUEST_CACHE_KEY);
     }
 
     /**

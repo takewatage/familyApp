@@ -23,7 +23,7 @@ family-app/
 │   │       └── Concerns/             # コントローラー共通トレイト（AuthorizesFamilyOwnership, ProvidesBudgetOptions）
 │   ├── Models/                       # Eloquentモデル（User, Family, VirtualUser, Task等）
 │   ├── Policies/                     # Laravel認可ポリシー（FamilyPolicy等）
-│   ├── Services/                     # ビジネスロジック（CurrentFamilyService, FamilyProvisionService, SocialAuthService, ExpenseService, RecurringExpenseGenerator, RecurringExpenseService, BudgetService, BudgetCalculationService, BudgetAlertService, RecurringExpenseReminderService等）
+│   ├── Services/                     # ビジネスロジック（CurrentFamilyService, FamilyProvisionService, SocialAuthService, ExpenseService, RecurringExpenseGenerator, RecurringExpenseService, BudgetService, BudgetCalculationService, BudgetAlertService, RecurringExpenseReminderService, PwaManifestService等）
 │   │   └── Concerns/                 # サービス共通トレイト（ValidatesFamilyMember）
 │   └── Support/                      # 共通ヘルパー（BudgetScopeRules: カテゴリー family スコープ validation）
 ├── database/
@@ -40,9 +40,9 @@ family-app/
 │   │   │   ├── Auth/                 # 認証関連コンポーネント
 │   │   │   ├── Budget/               # 家計簿コンポーネント（ExpenseForm等）
 │   │   │   ├── Calendar/             # スワイプカレンダー（SwipeCalendar, MonthGrid, DayCell, 各種Sheet, EventEditForm）
-│   │   │   ├── Common/               # 共通コンポーネント（再利用可能）
+│   │   │   ├── Common/               # 共通コンポーネント（再利用可能。PwaUpdateNotifier 等）
 │   │   │   ├── Dok/                  # Dok機能コンポーネント
-│   │   │   ├── Family/               # 家族設定・メンバー管理・切り替えコンポーネント
+│   │   │   ├── Family/               # 家族設定・メンバー管理・切り替えコンポーネント（FamilyPwaSettingsForm 等）
 │   │   │   ├── FamilyTask/           # タスク関連コンポーネント
 │   │   │   └── MyPage/               # マイページコンポーネント
 │   │   ├── Composables/              # Vue3 Composition API（useXxx形式）
@@ -58,7 +58,7 @@ family-app/
 │   │   │   ├── Budget/               # 家計簿ページ（ExpenseIndex, Categories, Shops, PaymentMethods, QuickEntries, RecurringExpenses, BudgetSettings, Dashboard）
 │   │   │   ├── Calendar/             # カレンダー画面（Index: モックアップ）・動作確認ページ（Demo・メニュー非掲載）
 │   │   │   ├── Dok/                  # Dokページ
-│   │   │   ├── MyPage/               # マイページ（家族設定・設定・フッター設定ページ含む）
+│   │   │   ├── MyPage/               # マイページ（家族設定・設定・フッター設定・アプリインストール案内ページ含む）
 │   │   │   └── Task/                 # タスクページ
 │   │   ├── Plugins/                  # Vueプラグイン設定（Vuetify等）
 │   │   ├── Types/                    # TypeScript型定義
@@ -74,6 +74,7 @@ family-app/
 │   └── console.php                   # Artisanコマンド
 ├── tests/
 │   ├── Feature/                      # フィーチャーテスト（HTTP通信レベル）
+│   │   └── Pwa/                      # PWA（/sw.js・manifest・家族のアプリ設定・インストール案内）
 │   └── Unit/                         # ユニットテスト
 ├── docs/
 │   ├── steering/                     # 永続化ドキュメント（本ファイル群）
@@ -85,7 +86,9 @@ family-app/
 │   │   ├── backend-rule.md           # バックエンドルール
 │   │   └── front-rule.md             # フロントエンドルール
 │   └── skills/                       # Claude Codeスキル
-├── config/                           # Laravel設定ファイル
+├── config/                           # Laravel設定ファイル（pwa.php: SW パス・manifest 既定値）
+├── public/
+│   └── icons/                        # PWA の既定アイコン（apple-touch-icon / 192 / 512 / maskable 512）
 ├── storage/                          # ファイルストレージ
 ├── .eslintrc.yml                     # ESLint設定
 ├── .prettierrc.yml                   # Prettier設定
@@ -129,6 +132,16 @@ family-app/
 
 - **役割**: コントローラーから切り出したビジネスロジック
 - **配置するファイル**: 複数コントローラーで共通するロジック、外部API連携処理
+- **主要ファイル**:
+  - `PwaManifestService.php`: 家族設定 `families.settings.pwa` と `config/pwa.php` の既定値をマージし、`FamilyPwaSettingsData`（`resolve`）・Web App Manifest（`manifest`）を返す（内容ハッシュは `FamilyPwaSettingsData.manifest_hash` に含める）
+  - `ImageUploadService.php`: 画像のリサイズ・アップロード。`uploadAppIcon()` は PWA アプリ画像（PNG 180 / 192 / 512 / maskable 512）を生成。途中で失敗したらアップロード済みのサイズを削除する。`deleteQuietly()` は削除失敗をログに残すだけで例外を投げない（後片付け用）
+
+### app/Http/Controllers/（PWA 関連）
+
+- `ServiceWorkerController.php`: `GET /sw.js`。`public/build/sw.js` をサイト直下から配信（`web` ミドルウェア外）
+- `PwaManifestController.php`: `GET /manifest.webmanifest`。動的 manifest
+- `FamilySettingsController.php`: `updatePwa` / `destroyPwaIcon` で家族のアプリ名・アプリ画像を更新
+- `MyPageController.php`: `appInstall` でインストール案内ページ
 
 ### resources/js/Api/
 
@@ -143,7 +156,10 @@ family-app/
 - **役割**: Vue3 Composition APIを使った再利用可能なロジック
 - **命名**: `use` + 機能名（例: `useTask.ts`、`useSnackbar.ts`）
 - **主要ファイル**:
-  - `Common/useAppTheme.ts`: Vuetify テーマ（ライト/ダーク/システム）とプライマリー・セカンダリーカラーを適用する。`THEMES` 定数（7プリセット）を export し、`AuthenticatedLayout.vue` から呼び出す。`$page.props.userSettings` を watch して即時反映
+  - `Common/useAppTheme.ts`: Vuetify テーマ（ライト/ダーク/システム）とプライマリー・セカンダリーカラーを適用する。`THEMES` 定数（7プリセット）を export し、`AuthenticatedLayout.vue` から呼び出す。`$page.props.userSettings` を watch して即時反映。`<meta name="theme-color">` もプライマリーカラーに更新する
+  - `Common/usePwaMeta.ts`: `setupPwaMeta()` を `app.ts` で一度だけ呼ぶ。Inertia の `navigate` イベントで共有プロパティ `pwa` を見て `<head>` の manifest / apple-touch-icon / `apple-mobile-web-app-title` を差し替える（家族切り替え・ログアウト対応。レイアウト非依存）
+  - `Common/usePwaUpdate.ts`: `startPwaUpdate()` を `app.ts` で一度だけ呼び、Service Worker（`/sw.js`）の登録と新バージョン検知（1 時間ごと・`visibilitychange` で更新チェック）を行う。本番ビルドのみ登録。`usePwaUpdate()` は検知状態（モジュール共有の `needRefresh`）と操作を返す
+  - `Common/usePwaInstall.ts`: `beforeinstallprompt` の捕捉（`app.ts` で先読み）、インストール済み判定、プラットフォーム判定（iPadOS 対応）
   - `Calendar/useCalendar.ts`: カレンダーの表示年月・選択日の状態と月グリッド（前月埋め + 当月 + 翌月埋め）の生成。クライアント内で完結する月移動を担う
   - `Calendar/useSwipe.ts`: 横スワイプの指追従（`transform: translateX`）としきい値によるページ送り判定。縦スクロールと競合しないよう最初の動きで軸をロックする
   - **注意**: `Budget/useMonthNavigation.ts`（Inertia 遷移でサーバーから取り直す月切替）と `Calendar/useCalendar.ts`（クライアント内の月移動）は役割が異なるため統合しない
@@ -152,6 +168,8 @@ family-app/
 
 - **役割**: TypeScript型定義
 - **主要ファイル**:
+  - `global.d.ts`: グローバル型。ビルド時定数 `__APP_VERSION__` / `__APP_BUILD_ID__` を宣言
+  - `vite-env.d.ts`: Vite / `vite-plugin-pwa/vue`（`virtual:pwa-register/vue`）の型参照
   - `calendar.ts`: カレンダーコンポーネントの手書き型（`CalendarEvent` / `EventMap` / `DayCellData` / `YearMonth` 等）。サーバーとやり取りしないため DTO 自動生成の対象外
 - **注意**: `dto.generated.d.ts` は `php artisan typescript:transform` で自動生成される。Docker 未起動時は手動更新も可
 
@@ -160,6 +178,7 @@ family-app/
 - **役割**: フロントエンド定数定義
 - **主要ファイル**:
   - `footerApps.ts`: フッターナビゲーションに表示できるアプリ一覧（`FOOTER_APPS`）、デフォルト項目（`DEFAULT_FOOTER_ITEMS`）、必須項目（`REQUIRED_FOOTER_ITEMS`）、非表示ルート（`FOOTER_HIDDEN_ROUTES`）を定義。新しいアプリを追加する際はここに追記する
+  - `appVersion.ts`: ビルド時に埋め込まれたバージョン（`APP_VERSION` / `APP_BUILD_ID` / 表示用 `APP_VERSION_LABEL`）
 
 ### docs/
 

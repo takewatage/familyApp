@@ -35,6 +35,14 @@ class MyPageController extends Controller
         ]));
     }
 
+    /**
+     * アプリ（PWA）のインストール案内
+     */
+    public function appInstall(): Response
+    {
+        return Inertia::render('MyPage/AppInstall');
+    }
+
     public function settingsIndex(Request $request): Response
     {
         $user = $request->user();

@@ -13,11 +13,11 @@
 | S-005 | タスク一覧画面              | カテゴリー別タスクの表示・操作                             | ✅完了      |
 | S-006 | カテゴリー管理ダイアログ     | カテゴリーの作成・編集・削除・並び替え                       | ✅完了      |
 | S-007 | タスク保存フォーム          | タスクの作成・編集フォーム                                 | ✅完了      |
-| S-008 | マイページ画面              | プロフィール（名前・アバター・誕生日）の確認・編集、設定・家族設定へのナビゲーション | ✅完了      |
+| S-008 | マイページ画面              | プロフィール（名前・アバター・誕生日）の確認・編集、設定・家族設定・アプリインストール案内へのナビゲーション、バージョン表示 | ✅完了      |
 | S-013 | 設定ページ                 | テーマ（ライト/ダーク/システム）・テーマカラーのユーザー個別設定                  | ✅完了      |
 | S-015 | アプリショートカット設定ページ | フッターに表示するアプリの追加・削除・並び替え                               | ✅完了      |
 | S-009 | Dok画面                   | 日用品価格管理・計算                                      | ⚠️一部完了  |
-| S-010 | 家族設定変更ページ          | 家族名・最大メンバー数・招待コード（有効期限付き再生成）管理    | ✅完了      |
+| S-010 | 家族設定変更ページ          | 家族名・最大メンバー数・招待コード（有効期限付き再生成）管理、アプリ設定（ホーム画面のアプリ名・アプリ画像） | ✅完了      |
 | S-011 | メンバー管理ページ          | 実ユーザー一覧・除名、仮想ユーザー管理、招待コード表示        | ✅完了      |
 | S-012 | 家族切り替えページ          | 所属家族一覧・アクティブ家族の切り替え                      | ✅完了      |
 | S-016 | 支出一覧・登録画面（家計簿）  | 月切替・支出の登録/編集/削除/再登録、店舗オートコンプリート     | ✅完了      |
@@ -30,6 +30,8 @@
 | S-023 | 家計簿ダッシュボード         | 月切替で当月の残高サマリー（収入・実支出・固定費・貯金目標・自由に使えるお金・貯金可能額）、全体/カテゴリー別消化率（プログレスバー）、固定費リマインダー（支払済み/期日接近/遅延の強調）を集約表示。支出登録・予算設定への導線。グラフ（棒/円）は T-10 で追加予定 | ✅完了      |
 | S-024 | カレンダー動作確認ページ     | 共通コンポーネント `SwipeCalendar` の動作確認用（メニュー非掲載・`/calendar/demo` 直打ち）。ダミーイベント表示・emit ログ・`enableAdd` 切替 | ✅完了      |
 | S-025 | カレンダー画面（モックアップ） | `SwipeCalendar` を使った家族カレンダーのモックアップ（`/calendar`）。ダミー予定の表示・これから7日間の予定一覧・＋ボタンからフルスクリーンの予定編集ダイアログで予定追加（タイトル・終日・開始日/終了日・時刻・カラー。ページ内のみ、保存なし）。ホーム・サイドバー・フッター設定から遷移 | ⚠️一部完了 |
+| S-026 | アプリインストール案内ページ | PWA のホーム画面追加案内（`/mypage/app-install`、ログインユーザーのみ）。家族のアプリ画像・アプリ名・バージョンを表示し、状態（インストール済み / 追加ボタン / iOS 手順 / その他）別に案内 | ✅完了 |
+| S-027 | 新バージョン更新通知 | Service Worker が新しいビルドを検知すると共通レイアウトにスナックバー「新しいバージョンがあります」（あとで / 更新）を表示 | ✅完了 |
 
 ## 2. 各画面・機能の詳細
 
@@ -43,6 +45,9 @@
 
 - **Layouts/AuthenticatedLayout.vue**: 認証済みページの統一レイアウト（旧 DokLayout を統合）
 - **Components/Family/InviteBottomSheet.vue**: サイドメニューから開く招待ボトムシート
+- **Components/Common/PwaUpdateNotifier.vue**: 新バージョン更新通知（S-027）
+- **Composables/Common/usePwaMeta.ts**: 家族切り替え・ログアウト時に `<head>` の manifest / apple-touch-icon / アプリ名を差し替え（`app.ts` で全ページ共通に登録）
+- **Composables/Common/useAppTheme.ts**: テーマ適用時に `<meta name="theme-color">` もユーザーのテーマカラーに更新
 
 #### ヘッダー
 
@@ -55,6 +60,7 @@
 - 最上部: 家族アイコン + 現在の家族名（共有プロパティ `currentFamily` から取得）
 - 招待ボタン: `InviteBottomSheet` を開いてメンバー招待（共有プロパティ `inviteUrls` を使用）
 - アプリ一覧: ホーム（`/home`）・どっちがお得カネ（`/dok`）・TODOリスト（`/tasks`）・カレンダー（`/calendar`）（`Constants/mainAppMenu.ts` で管理）
+- 最下部: 「アプリをインストール」→ アプリインストール案内ページ（S-026）
 
 #### フッターナビゲーション
 
@@ -72,6 +78,7 @@
 | `userSettings` | `{ theme, themeName, footerItems }` | テーマ・テーマカラープリセット・フッター設定 |
 | `currentFamily` | `{ id, name } \| null` | アクティブ家族情報 |
 | `inviteUrls` | `Record<string, string>` | ロール別署名付き招待URL（`InviteUrlService` 経由） |
+| `pwa` | `FamilyPwaSettingsData` | 現在の家族の PWA 外観（アプリ名・アイコン URL・manifest ハッシュ）。未ログイン・未設定は既定値（`PwaManifestService`） |
 
 ---
 
@@ -236,6 +243,7 @@
 - **EditProfileForm.vue**: 名前・誕生日・アバター画像の編集フォーム
 - **ImageUploadField.vue**: 画像アップロードUI（プレビュー付き）
 - **DatePickerDialog.vue**: 誕生日選択用日付ピッカーダイアログ
+- 「アプリ」カード: 「アプリをインストール」（S-026 へ遷移）・バージョン表示（`v{package.json の version} ({ビルドID})`、`Constants/appVersion.ts`）
 
 #### ユーザー操作フロー（誕生日変更）
 
@@ -325,6 +333,7 @@
 
 - **Pages/MyPage/FamilySettings.vue**: ページコンポーネント（インラインフォーム）
 - **Components/Family/RegenerateFamilyCodeDialog.vue**: 家族コード再生成ダイアログ（有効期限選択付き）
+- **Components/Family/FamilyPwaSettingsForm.vue**: アプリ設定（ホーム画面）カード。アプリ名・アプリ画像・ホーム画面風プレビュー・反映タイミングの注意書き
 
 #### ユーザー操作フロー
 
@@ -339,6 +348,52 @@
 
 - オーナー: 編集可
 - 一般メンバー: 閲覧のみ（フォーム `readonly`、保存ボタン・再生成ボタン非表示）
+
+#### アプリ設定（ホーム画面）
+
+- アプリ名（必須・30 文字以内）。`manifest` の `name` / `short_name` の両方に使う（ホーム画面では 12 文字程度で省略される旨を hint 表示）
+- アプリ画像（任意・png/jpg/jpeg/webp・5MB 以内）。中央正方形トリミングで PNG 180 / 192 / 512 / maskable 512 を生成し HStorage（`familyApp/{familyId}/pwa-icon/`）に保存。512×512 未満は警告のみ
+- 「既定のアイコンに戻す」で画像を削除し既定アイコンに戻す（確認ダイアログあり）。差し替え・削除時は旧画像を削除
+- 保存先は `families.settings.pwa`（`name` / `icon`（`external_ids`・各サイズ URL）/ `updated_at`）
+- 注意書き: インストール済みアプリへの反映は Android で最大 1 日程度。iOS は再追加が必要。PC Chrome はアイコン変更が反映されない
+- 権限はオーナーのみ（`FamilyPolicy::update`）。一般メンバーはアプリ名を閲覧のみ・画像変更 UI 非表示
+
+---
+
+### S-026: アプリインストール案内ページ
+
+#### 概要
+
+PWA をホーム画面に追加する方法を案内するページ（`/mypage/app-install`、auth 内）。マイページ「アプリ」カード・サイドメニューから遷移。
+
+#### 構成要素
+
+- **Pages/MyPage/AppInstall.vue**: ページコンポーネント。上部に家族のアプリ画像・アプリ名（共有プロパティ `pwa`）とバージョン
+- **Composables/Common/usePwaInstall.ts**: `beforeinstallprompt` / `appinstalled` をモジュール読み込み時に捕捉（`app.ts` で先読み）し、`canPrompt` / `prompt()` / `isStandalone` / `platform` を提供。iPadOS の Mac UA は `maxTouchPoints` で判定
+
+#### 状態別の表示
+
+| 状態 | 表示 |
+|---|---|
+| ホーム画面から起動中（`display-mode: standalone` / `navigator.standalone`） | 「インストール済みです」 |
+| `beforeinstallprompt` 受信済み（Android / PC Chrome 等） | 「ホーム画面に追加」ボタン → ブラウザのインストールダイアログ |
+| iOS / iPadOS | Safari の共有 → 「ホーム画面に追加」の手順 |
+| その他 | ブラウザメニューから追加する一般的な案内 |
+
+---
+
+### S-027: 新バージョン更新通知
+
+#### 概要
+
+新しいビルドがデプロイされたとき、利用中の画面に通知して最新版へ切り替えてもらう。
+
+#### 仕組み
+
+- **Composables/Common/usePwaUpdate.ts**: `app.ts` から `startPwaUpdate()` を一度だけ呼び、`virtual:pwa-register/vue` の `useRegisterSW` で `/sw.js` を登録（本番ビルドのみ。`sail yarn dev` では登録しない）。1 時間ごと・画面が前面に戻ったとき（`visibilitychange`）に SW の更新をチェック
+- 新しい SW を検知（`needRefresh`）すると `PwaUpdateNotifier.vue` がスナックバー（`timeout: -1`、フッターと重ならない位置）を表示
+- 「更新」: 新しい SW を有効化してページを再読み込み / 「あとで」: 通知を閉じる（次回チェックで再通知）
+- 安全網: Inertia のアセットバージョニング（Vite manifest ハッシュ不一致時に 409 → フルリロード）
 
 ---
 

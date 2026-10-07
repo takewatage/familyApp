@@ -6,6 +6,7 @@ import type { MyPageData } from '@/Types/dto.generated'
 import EditProfileForm from '@/Components/MyPage/EditProfileForm.vue'
 import { formatDate } from '@/Utils/dateFormatter'
 import { router } from '@inertiajs/vue3'
+import { APP_VERSION_LABEL } from '@/Constants/appVersion'
 
 defineOptions({ layout: AuthenticatedLayout })
 
@@ -123,6 +124,23 @@ const onEdit = async () => {
                             title="家族切り替え"
                             append-icon="mdi-chevron-right"
                             @click="router.visit(route('family.switch.index'))"/>
+                    </v-list>
+                </v-card>
+
+                <v-card class="mt-4">
+                    <v-card-title>アプリ</v-card-title>
+                    <v-list>
+                        <v-list-item
+                            prepend-icon="mdi-cellphone-arrow-down"
+                            title="アプリをインストール"
+                            subtitle="ホーム画面に追加して使う"
+                            append-icon="mdi-chevron-right"
+                            @click="router.visit(route('mypage.app-install'))"/>
+                        <v-divider/>
+                        <v-list-item
+                            prepend-icon="mdi-information-outline"
+                            title="バージョン"
+                            :subtitle="APP_VERSION_LABEL"/>
                     </v-list>
                 </v-card>
             </v-col>

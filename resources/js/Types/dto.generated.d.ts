@@ -131,9 +131,19 @@ virtualUsers: Array<VirtualUserData>;
 isOwner: boolean;
 inviteUrls: { [key: string]: string };
 };
+export type FamilyPwaSettingsData = {
+name: string;
+iconApple: string;
+icon192: string;
+icon512: string;
+iconMaskable: string;
+isCustomIcon: boolean;
+manifestHash: string;
+};
 export type FamilySettingsResult = {
 family: FamilyData;
 isOwner: boolean;
+pwa: FamilyPwaSettingsData;
 };
 export type FamilySwitchResult = {
 families: Array<FamilyForSwitchData>;
@@ -406,6 +416,10 @@ shopName?: string;
 memberType?: string;
 memberId?: string;
 memo?: string;
+};
+export type UpdateFamilyPwaSettingsRequest = {
+name: string;
+icon?: any;
 };
 export type UpdateShopRequest = {
 name: string;

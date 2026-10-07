@@ -7,6 +7,7 @@ import { useSnackbar } from '@/Composables/Common/useSnackbar'
 import { router } from '@inertiajs/vue3'
 import type { FamilySettingsResult, UpdateFamilySettingsRequest } from '@/Types/dto.generated'
 import RegenerateFamilyCodeDialog from '@/Components/Family/RegenerateFamilyCodeDialog.vue'
+import FamilyPwaSettingsForm from '@/Components/Family/FamilyPwaSettingsForm.vue'
 
 defineOptions({ layout: AuthenticatedLayout })
 
@@ -92,6 +93,12 @@ function formatExpiry(expiresAt: string | null | undefined): string {
                         </v-btn>
                     </v-card-actions>
                 </v-card>
+
+                <FamilyPwaSettingsForm
+                    :key="props.pwa.manifestHash"
+                    :pwa="props.pwa"
+                    :is-owner="props.isOwner"
+                    class="mt-4"/>
 
                 <v-card class="mt-4">
                     <v-card-title>招待コード</v-card-title>
