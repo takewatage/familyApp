@@ -2,9 +2,16 @@
 
 namespace App\Services;
 
+use App\Exceptions\InvalidInviteException;
 use App\Models\Family;
 use App\Models\User;
 
+/**
+ * 新規ユーザーの家族への所属を扱う
+ *
+ * 新規登録は招待経由に限定する（知らない人がアカウントを作れないようにするため）。
+ * 招待URL（/join/{code}）アクセス時にセッションへ保存された招待情報を元に判定する。
+ */
 class FamilyProvisionService
 {
     public function __construct(
@@ -12,52 +19,55 @@ class FamilyProvisionService
     ) {}
 
     /**
-     * 新規ユーザーを家族に所属させる
+     * セッションの招待情報から、新規登録で参加できる家族を取得する
      *
-     * 招待セッションがあれば招待先の家族へ参加させ、なければ本人の家族を新規作成する。
-     * 家族未所属のユーザーを作らないことで、既存機能（ホーム・タスク・家計簿）がそのまま利用できる。
+     * 招待が無効・期限切れ・定員到達の場合は、招待情報をセッションから破棄したうえで例外を投げる。
+     *
+     * @throws InvalidInviteException
      */
-    public function provisionForNewUser(User $user): Family
-    {
-        $inviteFamily = $this->pullValidInviteFamily();
-
-        if ($inviteFamily) {
-            $family = $this->joinInvitedFamily($user, $inviteFamily);
-        } else {
-            $family = $this->createOwnFamily($user);
-        }
-
-        $this->currentFamilyService->setCurrentFamily($family->id);
-
-        return $family;
-    }
-
-    /**
-     * 招待セッションから有効な家族を取得する（取得できたかに関わらずセッションは破棄する）
-     */
-    private function pullValidInviteFamily(): ?Family
+    public function requireValidInviteFamily(): Family
     {
         $code = session('invite_family_code');
 
         if (!$code) {
-            return null;
+            throw new InvalidInviteException('新規登録は家族からの招待リンクからのみ行えます。');
         }
 
         $family = Family::where('code', $code)->first();
 
         if (!$family || ($family->code_expires_at && $family->code_expires_at->isPast())) {
-            session()->forget(['invite_family_code', 'invite_role']);
+            $this->forgetInvite();
 
-            return null;
+            throw new InvalidInviteException('招待リンクが無効または期限切れです。家族に新しい招待リンクを発行してもらってください。');
+        }
+
+        if ($family->members()->count() >= $family->max_members) {
+            $this->forgetInvite();
+
+            throw new InvalidInviteException('招待先の家族が定員に達しているため登録できません。');
         }
 
         return $family;
     }
 
     /**
-     * 招待先の家族へ参加させる
+     * 新規登録できる有効な招待がセッションにあるか
      */
-    private function joinInvitedFamily(User $user, Family $family): Family
+    public function hasValidInvite(): bool
+    {
+        try {
+            $this->requireValidInviteFamily();
+
+            return true;
+        } catch (InvalidInviteException) {
+            return false;
+        }
+    }
+
+    /**
+     * 新規ユーザーを招待先の家族へ参加させ、現在の家族に設定する
+     */
+    public function joinInvitedFamily(User $user, Family $family): Family
     {
         $role = in_array(session('invite_role'), ['parent', 'child', 'guest'], true)
             ? session('invite_role')
@@ -67,24 +77,15 @@ class FamilyProvisionService
             $family->members()->attach($user->id, ['role' => $role]);
         }
 
-        session()->forget(['invite_family_code', 'invite_role']);
+        $this->forgetInvite();
+
+        $this->currentFamilyService->setCurrentFamily($family->id);
 
         return $family;
     }
 
-    /**
-     * 本人をオーナーとする家族を新規作成する
-     */
-    private function createOwnFamily(User $user): Family
+    private function forgetInvite(): void
     {
-        // 家族コード（code）は Family::creating フックで自動採番される
-        $family = Family::create([
-            'name' => "{$user->name}の家族",
-            'owner_id' => $user->id,
-        ]);
-
-        $family->members()->attach($user->id, ['role' => 'owner']);
-
-        return $family;
+        session()->forget(['invite_family_code', 'invite_role']);
     }
 }
