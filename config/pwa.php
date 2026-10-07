@@ -27,7 +27,7 @@ return [
         'apple' => '/icons/apple-touch-icon.png',
         '192' => '/icons/icon-192x192.png',
         '512' => '/icons/icon-512x512.png',
-        'maskable' => '/icons/icon-512x512.png',
+        'maskable' => '/icons/icon-maskable-512x512.png',
     ],
 
     'theme_color' => '#FF45CE',
