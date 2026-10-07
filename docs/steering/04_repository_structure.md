@@ -16,7 +16,7 @@ family-app/
 │   ├── Console/
 │   │   └── Commands/                 # Artisanコマンド実装（GenerateRecurringExpenses, CheckBudgetAlerts, CreateFamily等）
 │   ├── Events/                       # Laravelイベント（TaskUpdated, CategoryUpdated）
-│   ├── Exceptions/                   # 独自例外（SocialAuthException: Google認証の失敗）
+│   ├── Exceptions/                   # 独自例外（SocialAuthException: Google認証の失敗 / InvalidInviteException: 招待経由の新規登録不可）
 │   ├── Http/
 │   │   └── Controllers/              # HTTPコントローラー
 │   │       ├── Auth/                 # 認証関連コントローラー（AuthenticatedSession, RegisteredUser, GoogleAuth等）
