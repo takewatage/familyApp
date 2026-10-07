@@ -45,6 +45,9 @@ const emit = defineEmits<{
     display: grid;
     grid-template-columns: repeat(7, 1fr);
     grid-auto-rows: minmax(70px, 1fr);
-    gap: 2px;
+    /* 列の隙間をなくし、セル上下の区切り線を横一列につなげる */
+    gap: 2px 0;
+    /* 最終行の下線（各行の上線は DayCell 側） */
+    border-bottom: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
 }
 </style>

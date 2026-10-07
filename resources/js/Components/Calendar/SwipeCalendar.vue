@@ -182,7 +182,7 @@ function onPickerSelect(value: { year: number; month: number }): void {
             :open-add="openAddDirect"
             :go-today="goToday">
             <v-toolbar
-                color="primary"
+                color="transparent"
                 density="compact"
                 flat>
                 <v-toolbar-title>{{ viewYear }}年</v-toolbar-title>
