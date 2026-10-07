@@ -10,6 +10,9 @@ import '../sass/app.scss'
 import { vuetify } from '@/Plugins/vuetifly'
 // beforeinstallprompt を起動直後から捕捉するため先に読み込む（案内画面はページ遅延ロードのため）
 import '@/Composables/Common/usePwaInstall'
+import { setupPwaMeta } from '@/Composables/Common/usePwaMeta'
+import { startPwaUpdate } from '@/Composables/Common/usePwaUpdate'
+import type { FamilyPwaSettingsData } from '@/Types/dto.generated'
 import GuestLayout from '@/Layouts/GuestLayout.vue'
 import { keysToCamel, keysToSnake } from '@/Utils/caseConverter'
 import { setupDialogPlugin } from '@/Composables/Common/useDialogService'
@@ -58,6 +61,11 @@ createInertiaApp({
         // ダイアログプラグインのセットアップ
         setupDialogPlugin(app, vuetify)
         setupOverlayPlugin(app, vuetify)
+
+        // PWA: head の manifest 等の差し替えと SW 登録（レイアウトに依存せずアプリ全体で一度だけ）
+        setupPwaMeta(props.initialPage.props.pwa as FamilyPwaSettingsData | undefined)
+        startPwaUpdate()
+
         app.mount(el)
     },
     progress: {

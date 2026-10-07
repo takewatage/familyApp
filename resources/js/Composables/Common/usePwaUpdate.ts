@@ -1,24 +1,26 @@
-import { onUnmounted, ref } from 'vue'
+import { ref } from 'vue'
 import { useRegisterSW } from 'virtual:pwa-register/vue'
 
 // 公式の Periodic Service Worker Updates パターン（1 時間ごと）
 const UPDATE_CHECK_INTERVAL_MS = 60 * 60 * 1000
 
+// コンポーネントが先に参照しても同じ ref を共有するよう、差し替えずに値だけ更新する
+const needRefresh = ref(false)
+let updateServiceWorker: (reloadPage?: boolean) => Promise<void> = async () => {}
+let started = false
+
 /**
- * Service Worker（/sw.js）を登録し、新しいビルドの検知（needRefresh）を公開する。
- * 開発サーバー（sail yarn dev）では SW を登録しない。
+ * Service Worker（/sw.js）を登録し、新しいビルドの検知を開始する。
+ * アプリ全体で一度だけ（app.ts から）呼ぶ。開発サーバー（sail yarn dev）では SW を登録しない。
  */
-export function usePwaUpdate() {
-    if (!import.meta.env.PROD) {
-        return {
-            needRefresh: ref(false),
-            update: async () => {},
-            dismiss: () => {},
-        }
+export function startPwaUpdate() {
+    if (started || !import.meta.env.PROD) {
+        return
     }
 
+    started = true
+
     let registration: ServiceWorkerRegistration | undefined
-    let intervalId: ReturnType<typeof setInterval> | undefined
 
     const checkForUpdate = () => {
         if (!registration || registration.installing || !navigator.onLine) {
@@ -28,29 +30,29 @@ export function usePwaUpdate() {
         registration.update().catch(() => {})
     }
 
-    const onVisibilityChange = () => {
-        if (document.visibilityState === 'visible') {
-            checkForUpdate()
-        }
-    }
-
-    const { needRefresh, updateServiceWorker } = useRegisterSW({
+    const sw = useRegisterSW({
         immediate: true,
+        onNeedRefresh() {
+            needRefresh.value = true
+        },
         onRegisteredSW(_swUrl, r) {
             registration = r
-            intervalId = setInterval(checkForUpdate, UPDATE_CHECK_INTERVAL_MS)
-            document.addEventListener('visibilitychange', onVisibilityChange)
+            setInterval(checkForUpdate, UPDATE_CHECK_INTERVAL_MS)
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'visible') {
+                    checkForUpdate()
+                }
+            })
         },
     })
 
-    onUnmounted(() => {
-        if (intervalId) {
-            clearInterval(intervalId)
-        }
+    updateServiceWorker = sw.updateServiceWorker
+}
 
-        document.removeEventListener('visibilitychange', onVisibilityChange)
-    })
-
+/**
+ * 新しいビルドの検知状態（needRefresh）と操作を返す。登録は startPwaUpdate で済ませておくこと。
+ */
+export function usePwaUpdate() {
     // 新しい SW を有効化し、controlling イベントでページを再読み込みする
     const update = () => updateServiceWorker(true)
 

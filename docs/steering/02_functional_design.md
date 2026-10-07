@@ -46,7 +46,7 @@
 - **Layouts/AuthenticatedLayout.vue**: 認証済みページの統一レイアウト（旧 DokLayout を統合）
 - **Components/Family/InviteBottomSheet.vue**: サイドメニューから開く招待ボトムシート
 - **Components/Common/PwaUpdateNotifier.vue**: 新バージョン更新通知（S-027）
-- **Composables/Common/usePwaMeta.ts**: 家族切り替え時に `<head>` の manifest / apple-touch-icon / アプリ名を差し替え
+- **Composables/Common/usePwaMeta.ts**: 家族切り替え・ログアウト時に `<head>` の manifest / apple-touch-icon / アプリ名を差し替え（`app.ts` で全ページ共通に登録）
 - **Composables/Common/useAppTheme.ts**: テーマ適用時に `<meta name="theme-color">` もユーザーのテーマカラーに更新
 
 #### ヘッダー
@@ -390,7 +390,7 @@ PWA をホーム画面に追加する方法を案内するページ（`/mypage/a
 
 #### 仕組み
 
-- **Composables/Common/usePwaUpdate.ts**: `virtual:pwa-register/vue` の `useRegisterSW` で `/sw.js` を登録（本番ビルドのみ。`sail yarn dev` では登録しない）。1 時間ごと・画面が前面に戻ったとき（`visibilitychange`）に SW の更新をチェック
+- **Composables/Common/usePwaUpdate.ts**: `app.ts` から `startPwaUpdate()` を一度だけ呼び、`virtual:pwa-register/vue` の `useRegisterSW` で `/sw.js` を登録（本番ビルドのみ。`sail yarn dev` では登録しない）。1 時間ごと・画面が前面に戻ったとき（`visibilitychange`）に SW の更新をチェック
 - 新しい SW を検知（`needRefresh`）すると `PwaUpdateNotifier.vue` がスナックバー（`timeout: -1`、フッターと重ならない位置）を表示
 - 「更新」: 新しい SW を有効化してページを再読み込み / 「あとで」: 通知を閉じる（次回チェックで再通知）
 - 安全網: Inertia のアセットバージョニング（Vite manifest ハッシュ不一致時に 409 → フルリロード）

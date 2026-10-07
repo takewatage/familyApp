@@ -39,10 +39,12 @@
 - **Service Worker**: `sail npm run build` で `public/build/sw.js` に出力（`inlineWorkboxRuntime` で 1 ファイル）。Laravel ルート `GET /sw.js`（`ServiceWorkerController`、`web` ミドルウェア外・セッション不要）で配信し、スコープ `/` を得る。Sail の `php artisan serve` でも本番でも同じ挙動
   - プリキャッシュは `public/build/assets/**`（`modifyURLPrefix` で `/build/assets/...` に補正）。HTML（ナビゲーション）はキャッシュしない（`navigateFallback: null`）。`/api/` はキャッシュしない
   - ランタイムキャッシュは画像・フォントの CacheFirst のみ
-  - 開発サーバー（`sail yarn dev`）では SW を登録しない（`usePwaUpdate` が `import.meta.env.PROD` で判定）
+  - 登録は `app.ts` で一度だけ（`startPwaUpdate`、全ページ共通）。開発サーバー（`sail yarn dev`）では SW を登録しない（`import.meta.env.PROD` で判定）
 - **Web App Manifest**: `GET /manifest.webmanifest`（`PwaManifestController` → `PwaManifestService`）で家族設定 `families.settings.pwa` から動的生成。未ログイン・未設定は `config/pwa.php` の既定値（アプリ名 `familyApp`・`public/icons/*`）
   - `id: '/'` 固定（設定変更・家族切り替えで別アプリ扱いにしない）、`theme_color` は `#FF45CE` 固定（ユーザーごとの色は `<meta name="theme-color">` をクライアントで更新）
-  - `<link rel="manifest" href="/manifest.webmanifest?v={hash}" crossorigin="use-credentials">`（セッション Cookie で家族を判定）。`app.blade.php` の head は View Composer（`AppServiceProvider`）で出力し、SPA 遷移時は `usePwaMeta` が共有プロパティ `pwa.manifestHash` の変化で差し替える
+  - `<link rel="manifest" href="/manifest.webmanifest?v={hash}" crossorigin="use-credentials">`（セッション Cookie で家族を判定）。`app.blade.php` の head は View Composer（`AppServiceProvider`）で出力し、SPA 遷移時は `setupPwaMeta`（`app.ts` で登録、Inertia の `navigate` イベント）が共有プロパティ `pwa.manifestHash` の変化で差し替える（ログアウト後のゲスト画面でも既定値に戻る）
+  - 既定の maskable アイコンは安全領域（中央 80%）に収めた `public/icons/icon-maskable-512x512.png`
+- **現在の家族の取得**: `CurrentFamilyService::getCurrentFamily()` はリクエスト属性に家族をキャッシュし、1 リクエスト内の重複クエリを避ける（View Composer・共有プロパティ・コントローラーから呼ばれるため）
 - **バージョン**: SSoT は `package.json` の `version`（SemVer）。`vite.config.js` の `define` で `__APP_VERSION__` / `__APP_BUILD_ID__`（`APP_BUILD_ID` 環境変数 > `git rev-parse --short HEAD` > `unknown`）を埋め込む。リリース時は `sail npm version patch|minor|major --no-git-tag-version`
 - **更新検知**: SW の更新（`needRefresh`）を一次手段とする（バージョン番号の上げ忘れに影響されない）。Inertia のアセットバージョニング（409 → フルリロード）が安全網
 
@@ -254,7 +256,7 @@ familyApp/{family_uuid}/{collection}/{ULID}.webp
 | `{ULID}.webp` | `01JXXXXXXXXXXXXXXXXXXXXXXX.webp` | ULID + WebP固定 |
 
 - `family_uuid` が確定していない場合（登録フロー等）は `unassigned` を使用
-- 例外: PWA のアプリ画像は `familyApp/{family_uuid}/pwa-icon/{variant}_{ULID}.png`（`variant` = `apple` / `192` / `512` / `maskable`、apple-touch-icon が PNG 必須のため PNG）。`files` テーブルではなく `families.settings.pwa.icon.external_ids` で管理する（`ImageUploadService::uploadAppIcon()`）
+- 例外: PWA のアプリ画像は `familyApp/{family_uuid}/pwa-icon/{variant}_{ULID}.png`（`variant` = `apple` / `192` / `512` / `maskable`、apple-touch-icon が PNG 必須のため PNG）。`files` テーブルではなく `families.settings.pwa.icon.external_ids` で管理する（`ImageUploadService::uploadAppIcon()`）。旧画像の削除失敗は保存結果に影響させずログに残す
 - `ImageUploadService::upload()` の `storagePath` 引数でパスを指定する
 - ファイルの論理的な管理は `files` テーブル（`fileable_type`, `fileable_id`, `collection`）で行い、HStorage はキーバリューストアとして割り切る
 

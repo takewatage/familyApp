@@ -36,14 +36,6 @@ class PwaManifestService
     }
 
     /**
-     * manifest と <head> の PWA 関連要素の内容ハッシュ（<link rel="manifest"> の ?v= に使う）
-     */
-    public function hash(?Family $family): string
-    {
-        return $this->hashOf($this->settings($family));
-    }
-
-    /**
      * @return array{name: string, icons: array{apple: string, 192: string, 512: string, maskable: string}, is_custom_icon: bool}
      */
     private function settings(?Family $family): array

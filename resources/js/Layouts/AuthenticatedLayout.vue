@@ -2,7 +2,6 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { usePage, router } from '@inertiajs/vue3'
 import { useAppTheme } from '@/Composables/Common/useAppTheme'
-import { usePwaMeta } from '@/Composables/Common/usePwaMeta'
 import LoadingOverlay from '@/Components/App/LoadingOverlay.vue'
 import SnackbarNotification from '@/Components/App/SnackbarNotification.vue'
 import PwaUpdateNotifier from '@/Components/Common/PwaUpdateNotifier.vue'
@@ -12,7 +11,6 @@ import { FOOTER_APPS, DEFAULT_FOOTER_ITEMS, FOOTER_HIDDEN_ROUTES } from '@/Const
 import type { UserData } from '@/Types/dto.generated'
 
 useAppTheme()
-usePwaMeta()
 
 const page = usePage()
 

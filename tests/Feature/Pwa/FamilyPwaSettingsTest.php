@@ -8,6 +8,7 @@ use App\Services\HStorageClient;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Mockery\MockInterface;
+use RuntimeException;
 use Tests\TestCase;
 
 class FamilyPwaSettingsTest extends TestCase
@@ -156,6 +157,71 @@ class FamilyPwaSettingsTest extends TestCase
             ->withSession(['current_family_id' => $family->id])
             ->get('/manifest.webmanifest')
             ->assertJsonPath('icons.0.src', '/icons/icon-192x192.png');
+    }
+
+    public function test_old_icon_delete_failure_does_not_fail_the_update(): void
+    {
+        [$owner, $family] = $this->ownerWithFamily([
+            'pwa' => [
+                'name' => '旧',
+                'icon' => ['external_ids' => ['old-1'], 'apple' => 'a', '192' => 'b', '512' => 'c', 'maskable' => 'd'],
+            ],
+        ]);
+
+        $this->mock(HStorageClient::class, function (MockInterface $mock) {
+            $n = 0;
+            $mock->shouldReceive('upload')->times(4)->andReturnUsing(function () use (&$n) {
+                $n++;
+
+                return ['external_id' => "new-{$n}", 'direct_url' => "https://example.com/{$n}.png", 'share_url' => ''];
+            });
+            $mock->shouldReceive('delete')->once()->with('old-1')->andThrow(new RuntimeException('HStorage down'));
+        });
+
+        $this->actingAs($owner)
+            ->withSession(['current_family_id' => $family->id])
+            ->post(route('family.settings.pwa.update'), [
+                'name' => '山田家アプリ',
+                'icon' => UploadedFile::fake()->image('icon.png', 600, 600),
+            ])
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame(['new-1', 'new-2', 'new-3', 'new-4'], $family->fresh()->settings['pwa']['icon']['external_ids']);
+    }
+
+    public function test_upload_failure_cleans_up_uploaded_variants_and_keeps_settings(): void
+    {
+        [$owner, $family] = $this->ownerWithFamily(['pwa' => ['name' => '旧']]);
+
+        $this->mock(HStorageClient::class, function (MockInterface $mock) {
+            $n = 0;
+            $mock->shouldReceive('upload')->times(3)->andReturnUsing(function () use (&$n) {
+                $n++;
+
+                if ($n === 3) {
+                    throw new RuntimeException('upload failed');
+                }
+
+                return ['external_id' => "new-{$n}", 'direct_url' => "https://example.com/{$n}.png", 'share_url' => ''];
+            });
+            $mock->shouldReceive('delete')->once()->with('new-1');
+            $mock->shouldReceive('delete')->once()->with('new-2');
+        });
+
+        $this->withoutExceptionHandling();
+        $this->expectException(RuntimeException::class);
+
+        try {
+            $this->actingAs($owner)
+                ->withSession(['current_family_id' => $family->id])
+                ->post(route('family.settings.pwa.update'), [
+                    'name' => '新',
+                    'icon' => UploadedFile::fake()->image('icon.png', 600, 600),
+                ]);
+        } finally {
+            $this->assertSame(['name' => '旧'], $family->fresh()->settings['pwa']);
+        }
     }
 
     /**

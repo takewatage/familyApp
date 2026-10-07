@@ -104,11 +104,20 @@ class FamilySettingsController extends Controller
             );
         }
 
-        $this->savePwaSettings($family, $pwa);
+        try {
+            $this->savePwaSettings($family, $pwa);
+        } catch (\Throwable $e) {
+            // 保存に失敗したら今回アップロードした画像を残さない
+            if ($data->icon) {
+                $this->imageService->deleteQuietly($pwa['icon']['external_ids']);
+            }
 
-        // 保存が成功してから旧画像を削除する
+            throw $e;
+        }
+
+        // 保存が成功してから旧画像を削除する（削除に失敗しても保存結果は成功として返す）
         if ($oldIcon) {
-            $this->imageService->delete($oldIcon['external_ids'] ?? []);
+            $this->imageService->deleteQuietly($oldIcon['external_ids'] ?? []);
         }
 
         return back()->with('message', 'アプリ設定を更新しました');
@@ -133,7 +142,7 @@ class FamilySettingsController extends Controller
         if ($oldIcon) {
             unset($pwa['icon']);
             $this->savePwaSettings($family, $pwa);
-            $this->imageService->delete($oldIcon['external_ids'] ?? []);
+            $this->imageService->deleteQuietly($oldIcon['external_ids'] ?? []);
         }
 
         return back()->with('message', 'アプリ画像を削除しました');

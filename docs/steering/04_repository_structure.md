@@ -88,7 +88,7 @@ family-app/
 │   └── skills/                       # Claude Codeスキル
 ├── config/                           # Laravel設定ファイル（pwa.php: SW パス・manifest 既定値）
 ├── public/
-│   └── icons/                        # PWA の既定アイコン（apple-touch-icon / 192 / 512）
+│   └── icons/                        # PWA の既定アイコン（apple-touch-icon / 192 / 512 / maskable 512）
 ├── storage/                          # ファイルストレージ
 ├── .eslintrc.yml                     # ESLint設定
 ├── .prettierrc.yml                   # Prettier設定
@@ -133,8 +133,8 @@ family-app/
 - **役割**: コントローラーから切り出したビジネスロジック
 - **配置するファイル**: 複数コントローラーで共通するロジック、外部API連携処理
 - **主要ファイル**:
-  - `PwaManifestService.php`: 家族設定 `families.settings.pwa` と `config/pwa.php` の既定値をマージし、`FamilyPwaSettingsData`（`resolve`）・Web App Manifest（`manifest`）・内容ハッシュ（`hash`）を返す
-  - `ImageUploadService.php`: 画像のリサイズ・アップロード。`uploadAppIcon()` は PWA アプリ画像（PNG 180 / 192 / 512 / maskable 512）を生成
+  - `PwaManifestService.php`: 家族設定 `families.settings.pwa` と `config/pwa.php` の既定値をマージし、`FamilyPwaSettingsData`（`resolve`）・Web App Manifest（`manifest`）を返す（内容ハッシュは `FamilyPwaSettingsData.manifest_hash` に含める）
+  - `ImageUploadService.php`: 画像のリサイズ・アップロード。`uploadAppIcon()` は PWA アプリ画像（PNG 180 / 192 / 512 / maskable 512）を生成。途中で失敗したらアップロード済みのサイズを削除する。`deleteQuietly()` は削除失敗をログに残すだけで例外を投げない（後片付け用）
 
 ### app/Http/Controllers/（PWA 関連）
 
@@ -157,8 +157,8 @@ family-app/
 - **命名**: `use` + 機能名（例: `useTask.ts`、`useSnackbar.ts`）
 - **主要ファイル**:
   - `Common/useAppTheme.ts`: Vuetify テーマ（ライト/ダーク/システム）とプライマリー・セカンダリーカラーを適用する。`THEMES` 定数（7プリセット）を export し、`AuthenticatedLayout.vue` から呼び出す。`$page.props.userSettings` を watch して即時反映。`<meta name="theme-color">` もプライマリーカラーに更新する
-  - `Common/usePwaMeta.ts`: 共有プロパティ `pwa.manifestHash` を watch し、`<head>` の manifest / apple-touch-icon / `apple-mobile-web-app-title` を差し替える（家族切り替え対応）
-  - `Common/usePwaUpdate.ts`: Service Worker（`/sw.js`）の登録と新バージョン検知（1 時間ごと・`visibilitychange` で更新チェック）。本番ビルドのみ登録
+  - `Common/usePwaMeta.ts`: `setupPwaMeta()` を `app.ts` で一度だけ呼ぶ。Inertia の `navigate` イベントで共有プロパティ `pwa` を見て `<head>` の manifest / apple-touch-icon / `apple-mobile-web-app-title` を差し替える（家族切り替え・ログアウト対応。レイアウト非依存）
+  - `Common/usePwaUpdate.ts`: `startPwaUpdate()` を `app.ts` で一度だけ呼び、Service Worker（`/sw.js`）の登録と新バージョン検知（1 時間ごと・`visibilitychange` で更新チェック）を行う。本番ビルドのみ登録。`usePwaUpdate()` は検知状態（モジュール共有の `needRefresh`）と操作を返す
   - `Common/usePwaInstall.ts`: `beforeinstallprompt` の捕捉（`app.ts` で先読み）、インストール済み判定、プラットフォーム判定（iPadOS 対応）
   - `Calendar/useCalendar.ts`: カレンダーの表示年月・選択日の状態と月グリッド（前月埋め + 当月 + 翌月埋め）の生成。クライアント内で完結する月移動を担う
   - `Calendar/useSwipe.ts`: 横スワイプの指追従（`transform: translateX`）としきい値によるページ送り判定。縦スクロールと競合しないよう最初の動きで軸をロックする

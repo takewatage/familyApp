@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Intervention\Image\Laravel\Facades\Image;
 
@@ -104,6 +105,7 @@ class ImageUploadService
      *
      * 中央を正方形にトリミングし PNG で保存する（apple-touch-icon は PNG が必要なため全サイズ PNG に統一）。
      * maskable は端末側で円形等に切り抜かれても欠けないよう、安全領域（中央 80%）に収めて背景色で余白を付ける。
+     * 途中で失敗した場合はアップロード済みのサイズを削除してから例外を投げ直す（孤立ファイルを残さない）。
      *
      * @param string $storagePath 保存先パス（例: familyApp/{familyId}/pwa-icon）
      * @return array{external_ids: list<string>, apple: string, 192: string, 512: string, maskable: string}
@@ -111,27 +113,52 @@ class ImageUploadService
      */
     public function uploadAppIcon(UploadedFile $file, string $storagePath, string $maskableBackground = '#fdf8ee'): array
     {
+        // デコードは 1 回だけ行い、各サイズは複製から生成する
+        $source = Image::read($file);
+
         $variants = [
-            'apple' => fn () => Image::read($file)->cover(180, 180),
-            '192' => fn () => Image::read($file)->cover(192, 192),
-            '512' => fn () => Image::read($file)->cover(512, 512),
-            'maskable' => fn () => Image::read($file)->cover(410, 410)->pad(512, 512, $maskableBackground),
+            'apple' => fn () => (clone $source)->cover(180, 180),
+            '192' => fn () => (clone $source)->cover(192, 192),
+            '512' => fn () => (clone $source)->cover(512, 512),
+            'maskable' => fn () => (clone $source)->cover(410, 410)->pad(512, 512, $maskableBackground),
         ];
 
         $result = ['external_ids' => []];
 
-        foreach ($variants as $variant => $make) {
-            $uploaded = $this->client->upload(
-                fileContents: (string)$make()->toPng(),
-                filename: $storagePath . '/' . $variant . '_' . Str::ulid() . '.png',
-                contentType: 'image/png',
-            );
+        try {
+            foreach ($variants as $variant => $make) {
+                $uploaded = $this->client->upload(
+                    fileContents: (string)$make()->toPng(),
+                    filename: $storagePath . '/' . $variant . '_' . Str::ulid() . '.png',
+                    contentType: 'image/png',
+                );
 
-            $result['external_ids'][] = $uploaded['external_id'];
-            $result[$variant] = $uploaded['direct_url'];
+                $result['external_ids'][] = $uploaded['external_id'];
+                $result[$variant] = $uploaded['direct_url'];
+            }
+        } catch (\Throwable $e) {
+            $this->deleteQuietly($result['external_ids']);
+
+            throw $e;
         }
 
         return $result;
+    }
+
+    /**
+     * 画像を削除し、失敗しても例外を投げずにログへ残す（後片付け用。削除失敗で本処理を失敗させない）
+     *
+     * @param list<string> $externalIds
+     */
+    public function deleteQuietly(array $externalIds): void
+    {
+        foreach ($externalIds as $externalId) {
+            try {
+                $this->delete($externalId);
+            } catch (\Throwable $e) {
+                Log::warning('画像の削除に失敗しました', ['external_id' => $externalId, 'error' => $e->getMessage()]);
+            }
+        }
     }
 
     /**

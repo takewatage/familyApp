@@ -41,6 +41,11 @@ watch(
 
         const img = new Image()
         img.onload = () => {
+            // 読み込み中に別の画像へ選び直された場合は古い結果で上書きしない
+            if (form.icon !== file) {
+                return
+            }
+
             isSmallImage.value = img.naturalWidth < RECOMMENDED_MIN_SIZE || img.naturalHeight < RECOMMENDED_MIN_SIZE
         }
         img.src = selectedIconUrl.value
