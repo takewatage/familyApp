@@ -22,8 +22,15 @@ class GoogleAuthTest extends TestCase
         $response->assertRedirect();
     }
 
-    public function test_new_google_user_is_registered_with_own_family(): void
+    public function test_new_google_user_with_invite_joins_the_invited_family(): void
     {
+        $family = Family::factory()->create();
+
+        $this->withSession([
+            'invite_family_code' => $family->code,
+            'invite_role' => 'child',
+        ]);
+
         $this->fakeGoogleUser([
             'id' => 'google-123',
             'name' => 'グーグル太郎',
@@ -40,11 +47,26 @@ class GoogleAuthTest extends TestCase
         $this->assertSame('google-123', $user->google_id);
         $this->assertNull($user->password);
         $this->assertNotNull($user->email_verified_at);
-
-        $family = Family::where('owner_id', $user->id)->firstOrFail();
-
-        $this->assertSame('グーグル太郎の家族', $family->name);
+        $this->assertSame('child', $family->members()->where('users.id', $user->id)->firstOrFail()->pivot->role);
         $this->assertSame($family->id, session('current_family_id'));
+        $this->assertDatabaseMissing('families', ['owner_id' => $user->id]);
+    }
+
+    public function test_new_google_user_without_invite_is_rejected(): void
+    {
+        $this->fakeGoogleUser([
+            'id' => 'google-123',
+            'name' => 'しらない人',
+            'email' => 'stranger@example.com',
+        ]);
+
+        $response = $this->get(route('auth.google.callback'));
+
+        $this->assertGuest();
+        $response->assertRedirect(route('login', absolute: false));
+        $response->assertSessionHasErrors(['email' => 'このGoogleアカウントは登録されていません。新規登録は家族からの招待リンクからのみ行えます。']);
+        $this->assertDatabaseMissing('users', ['email' => 'stranger@example.com']);
+        $this->assertSame(0, Family::count());
     }
 
     public function test_google_login_links_to_an_existing_account_with_the_same_email(): void

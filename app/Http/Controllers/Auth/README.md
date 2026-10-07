@@ -9,7 +9,7 @@
 | メールアドレス + パスワード | `/login` | 家族コードの入力は不要 |
 | Google アカウント | `/login`・`/register` の「Googleでログイン」 | `GOOGLE_CLIENT_ID` 未設定時はボタン非表示 |
 
-新規登録（`/register`）は招待 URL がなくても可能。招待セッションがあれば招待先の家族へ参加し、なければ「{ユーザー名}の家族」を自動作成する。
+新規登録は**招待経由のみ**（個人利用のため、招待されていない人がアカウントを作れないようにしている）。招待 URL（`/join/{code}`）でセッションに招待情報が入っていない場合、`/register` はログイン画面へリダイレクトし、Google ログインでも新規アカウントは作成しない（既存アカウントのログイン・紐付けは可能）。
 
 > 家族コード（`families.code`）は招待機能（`/join/{code}`）専用に戻っており、**ログインの認証条件ではない**。
 
@@ -126,12 +126,12 @@ sail artisan config:clear
 
 ### Google ログインのユーザー特定順序
 
-`SocialAuthService::findOrCreateGoogleUser()`:
+`SocialAuthService::findOrLinkGoogleUser()`:
 
 1. `google_id` が一致するユーザーがいる → そのユーザーでログイン
 2. Google 側でメール未確認（`email_verified` が false）→ **エラー**（既存アカウントへの自動紐付けを許可しない）
 3. 同じメールアドレスのユーザーがいる → `google_id` を紐付けて連携（`email_verified_at` も未設定なら埋める）
-4. いずれも該当なし → 新規作成（`password` は `null`、`email_verified_at` は確認済み）
+4. いずれも該当なし → `null`。`GoogleAuthController` が有効な招待を確認できた場合のみ `createGoogleUser()` で新規作成する（`password` は `null`、`email_verified_at` は確認済み）。招待がなければアカウントを作らずログイン画面にエラーを表示する
 
 同意画面でキャンセルされた場合（`error` パラメータ付きで戻る）、および Google からのユーザー情報取得に失敗した場合は、ログイン画面にエラーメッセージを表示して戻す。
 
@@ -141,11 +141,22 @@ Google のみで登録したユーザーは `password` が `null`。`LoginReques
 
 ### 新規ユーザーの家族割り当て
 
-`FamilyProvisionService::provisionForNewUser()`（メール登録・Google 登録の両方から呼ばれる）:
+`FamilyProvisionService`（メール登録・Google 登録の両方から呼ばれる）:
 
-- 招待セッション（`invite_family_code`）が有効 → その家族へ参加（ロールは `invite_role`、不正値なら `guest`）
-- 招待なし → 「{ユーザー名}の家族」を作成し、本人を `owner` として所属させる
-- いずれの場合も、割り当てた家族を「現在の家族」としてセッションに保存する
+- `requireValidInviteFamily()`: 招待セッション（`invite_family_code`）から参加先の家族を取得。招待なし・コード無効／期限切れ・定員到達の場合は理由ごとのメッセージで `InvalidInviteException` を投げる（無効・期限切れ・定員到達のときは招待情報をセッションから破棄する）
+- `hasValidInvite()`: 上記の真偽版。ログイン画面で新規登録リンクを出すかの判定（`canRegister`）に使う
+- `joinInvitedFamily()`: その家族へ参加（ロールは `invite_role`、不正値なら `guest`）させ、「現在の家族」としてセッションに保存する
+
+### 家族の新規作成（管理者用）
+
+新規登録は招待経由のみのため、アプリ内に家族を作る導線はない。最初の家族や追加の家族は Artisan コマンドで作成する:
+
+```bash
+sail artisan family:create "家族名" --email=<OWNER_EMAIL>
+```
+
+- メールアドレスが既存ユーザーならそのユーザーを、未登録なら名前・パスワードを対話入力して新規ユーザーを作成し、オーナーとして所属させる
+- 作成後はオーナーがアプリから招待リンクを発行してメンバーを招待する
 
 ### 現在の家族の決定
 

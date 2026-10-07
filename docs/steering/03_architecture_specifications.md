@@ -93,6 +93,7 @@ cp .env.example .env
 sail up -d
 sail artisan key:generate
 sail artisan migrate
+sail artisan family:create "家族名" --email=<OWNER_EMAIL>  # 最初の家族とオーナー（新規登録は招待経由のみ）
 sail yarn install
 sail yarn build
 ```
@@ -108,6 +109,7 @@ sail yarn build
 | `sail artisan migrate`             | DBマイグレーション実行                  |
 | `sail artisan test`                | PHPUnit テスト実行                     |
 | `sail artisan typescript:transform`| DTO → TypeScript型定義ファイル自動生成  |
+| `sail artisan family:create {name} --email=` | 家族とオーナーを作成（新規登録は招待経由のみのため、最初の家族はこれで作る） |
 | `sail artisan pint`                | PHP コードフォーマット（Laravel Pint）  |
 | `sail yarn lint`                   | 変更ファイルのみ ESLint 実行            |
 | `sail yarn fix`                    | フォーマット + Lint 一括実行            |
@@ -120,10 +122,10 @@ sail yarn build
 |-------------------------------------|---------|------------------------------|---------|
 | `/login`                            | GET     | ログイン画面（`LoginPageResult`） | ✅完了  |
 | `/login`                            | POST    | ログイン（email + password。家族コードは不要） | ✅完了  |
-| `/register`                         | GET     | 新規登録画面（`RegisterPageResult`。招待なしでもアクセス可） | ✅完了  |
-| `/register`                         | POST    | 新規登録（招待あり: 参加 / 招待なし: 家族を自動作成） | ✅完了  |
+| `/register`                         | GET     | 新規登録画面（`RegisterPageResult`。有効な招待がなければログインへリダイレクト） | ✅完了  |
+| `/register`                         | POST    | 新規登録（招待先の家族へ参加。招待なしは不可） | ✅完了  |
 | `/auth/google/redirect`             | GET     | Googleの認可画面へリダイレクト   | ✅完了  |
-| `/auth/google/callback`             | GET     | Googleコールバック（ログイン・新規登録） | ✅完了  |
+| `/auth/google/callback`             | GET     | Googleコールバック（ログイン・新規登録。新規登録は招待経由のみ） | ✅完了  |
 | `/join/{code}`                      | GET     | 招待確認ページ（guest/auth共通） | ✅完了  |
 | `/join/{code}`                      | POST    | ログイン済みユーザーの家族参加    | ✅完了  |
 | `/home`                             | GET     | ホーム画面（`HomeResult`: メンバー・仮想ユーザーをアバター込みで返却） | ✅完了  |

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Exceptions\InvalidInviteException;
 use App\Exceptions\SocialAuthException;
 use App\Http\Controllers\Controller;
 use App\Services\CurrentFamilyService;
@@ -52,9 +53,24 @@ class GoogleAuthController extends Controller
         }
 
         try {
-            [$user, $isNew] = $this->socialAuthService->findOrCreateGoogleUser($googleUser);
+            $user = $this->socialAuthService->findOrLinkGoogleUser($googleUser);
         } catch (SocialAuthException $e) {
             return redirect()->route('login')->withErrors(['email' => $e->getMessage()]);
+        }
+
+        $isNew = $user === null;
+
+        if ($isNew) {
+            // 新規登録は招待経由のみ許可する
+            try {
+                $inviteFamily = $this->familyProvisionService->requireValidInviteFamily();
+            } catch (InvalidInviteException $e) {
+                return redirect()
+                    ->route('login')
+                    ->withErrors(['email' => 'このGoogleアカウントは登録されていません。' . $e->getMessage()]);
+            }
+
+            $user = $this->socialAuthService->createGoogleUser($googleUser);
         }
 
         Auth::login($user, remember: true);
@@ -64,8 +80,7 @@ class GoogleAuthController extends Controller
         if ($isNew) {
             event(new Registered($user));
 
-            // 招待セッションがあれば招待先へ参加、なければ本人の家族を作成する
-            $this->familyProvisionService->provisionForNewUser($user);
+            $this->familyProvisionService->joinInvitedFamily($user, $inviteFamily);
         } else {
             $this->currentFamilyService->resolveAndSetForUser($user);
         }

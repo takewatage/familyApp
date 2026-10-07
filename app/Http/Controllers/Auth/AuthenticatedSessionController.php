@@ -6,6 +6,7 @@ use App\Dtos\Auth\LoginPageResult;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Services\CurrentFamilyService;
+use App\Services\FamilyProvisionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -17,6 +18,7 @@ class AuthenticatedSessionController extends Controller
 {
     public function __construct(
         private readonly CurrentFamilyService $currentFamilyService,
+        private readonly FamilyProvisionService $familyProvisionService,
     ) {}
 
     /**
@@ -28,6 +30,7 @@ class AuthenticatedSessionController extends Controller
             'can_reset_password' => Route::has('password.request'),
             'google_enabled' => filled(config('services.google.client_id')),
             'status' => session('status'),
+            'can_register' => $this->familyProvisionService->hasValidInvite(),
         ]);
 
         return Inertia::render('Auth/Login', $dto->toArray());

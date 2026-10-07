@@ -14,7 +14,7 @@ family-app/
 │   │   ├── Budget/                   # 家計簿関連DTO（Expense/Category/Shop/PaymentMethod/QuickEntry/RecurringExpense/Budget設定 のRequest・Result）
 │   │   └── MyPage/                   # マイページ関連DTO
 │   ├── Console/
-│   │   └── Commands/                 # Artisanコマンド実装（GenerateRecurringExpenses, CheckBudgetAlerts等）
+│   │   └── Commands/                 # Artisanコマンド実装（GenerateRecurringExpenses, CheckBudgetAlerts, CreateFamily等）
 │   ├── Events/                       # Laravelイベント（TaskUpdated, CategoryUpdated）
 │   ├── Exceptions/                   # 独自例外（SocialAuthException: Google認証の失敗）
 │   ├── Http/

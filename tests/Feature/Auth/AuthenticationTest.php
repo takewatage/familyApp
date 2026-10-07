@@ -135,4 +135,15 @@ class AuthenticationTest extends TestCase
         $this->assertGuest();
         $response->assertRedirect('/');
     }
+
+    public function test_login_screen_shows_register_link_only_with_valid_invite(): void
+    {
+        $this->get('/login')->assertInertia(fn ($page) => $page->where('canRegister', false));
+
+        $family = Family::factory()->create();
+
+        $this->withSession(['invite_family_code' => $family->code])
+            ->get('/login')
+            ->assertInertia(fn ($page) => $page->where('canRegister', true));
+    }
 }

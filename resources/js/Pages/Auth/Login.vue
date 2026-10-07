@@ -126,8 +126,11 @@ const submit = () => {
                         パスワードをお忘れですか？
                     </Link>
 
-                    <Link :href="route('register')">
-                        アカウントをお持ちでない方は新規登録
+                    <!-- 新規登録は招待経由のみ。有効な招待がある場合だけ導線を出す -->
+                    <Link
+                        v-if="canRegister"
+                        :href="route('register')">
+                        アカウントをお持ちでない方は新規登録して参加
                         <v-icon icon="mdi-chevron-right" />
                     </Link>
                 </div>

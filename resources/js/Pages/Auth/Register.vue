@@ -12,10 +12,8 @@ defineOptions({ layout: GuestLayout })
 
 const props = defineProps<RegisterPageResult>()
 
-// 招待経由の場合は招待先の家族名、招待なしの場合は通常の新規登録として表示する
-const cardTitle = computed(() =>
-    props.familyName ? `${props.familyName} への参加登録` : 'アカウントを作成',
-)
+// 新規登録は招待経由のみのため、招待先の家族名を表示する
+const cardTitle = computed(() => `${props.familyName} への参加登録`)
 
 const form = useForm({
     name: '',
@@ -39,12 +37,6 @@ const submit = () => {
     <Head title="Register"/>
 
     <AuthCard :card-title="cardTitle">
-        <p
-            v-if="!props.familyName"
-            class="text-medium-emphasis text-body-2 mb-4">
-            登録すると、あなたの家族が新しく作成されます。あとから家族名の変更やメンバーの招待ができます。
-        </p>
-
         <form @submit.prevent="submit">
             <div class="d-flex justify-center mb-4">
                 <ImageUploadField v-model="form.avatar_image"/>
@@ -116,7 +108,7 @@ const submit = () => {
                 variant="flat"
                 :disabled="form.processing"
                 :loading="form.processing">
-                {{ props.familyName ? '登録して参加する' : '登録する' }}
+                登録して参加する
             </v-btn>
 
             <SocialLoginButtons
