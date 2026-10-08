@@ -70,7 +70,7 @@ function save(): void {
         <v-card class="event-form-sheet">
             <v-toolbar
                 :title="dateLabel ? `${dateLabel} の予定` : '新しい予定'"
-                color="primary"
+                color="surface"
                 density="comfortable">
                 <template #append>
                     <v-btn

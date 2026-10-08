@@ -28,7 +28,9 @@
 | 仮想ユーザー           | VirtualUser    | アプリにログインせずにタスク等の担当者として割り当てられる家族内の人物。`virtual_users` テーブルで管理 | `VirtualUser` モデル、`VirtualUserData` DTO |
 | アクティブ家族         | ActiveFamily   | ユーザーが現在操作対象としている家族グループ。`users.settings.activeFamilyId` に保存 | `User.settings['activeFamilyId']` |
 | ファイル              | File           | ポリモーフィックに各モデルに紐付けられるファイルリソース      | `File` モデル                               |
-| カレンダーイベント       | CalendarEvent  | カレンダーの1日に表示する1件の項目（タイトル・色・時刻・アイコン）。カレンダー自身は永続化せず、利用側が渡す | `CalendarEvent` 型、`Components/Calendar/` |
+| カレンダーイベント       | CalendarEvent  | カレンダーの1日に表示する1件の項目（タイトル・色・時刻・アイコン・参加者）。カレンダー自身は永続化せず、利用側が渡す | `CalendarEvent` 型、`Components/Calendar/` |
+| ラベル（予定）          | CalendarLabel  | 予定に付ける名前＋カラーの組。予定の色はラベルのカラーで決まる。名前・カラー・並び順を編集できる（カラーは固定パレットから選ぶ） | `CalendarLabel` 型、`EventEditModel.labelId`、`Constants/calendarColors.ts` |
+| 参加者（予定）          | Participant    | 予定に関係する家族メンバー（ログインユーザー・仮想ユーザー）。予定の右端にアイコンで表示する | `CalendarParticipant` 型、`EventEditModel.participantIds`、`CalendarParticipantResult` |
 | 日付キー              | DateKey        | イベントを日付ごとに引くためのキー。`YYYY-MM-DD` 形式の文字列 | `DateKey` 型、`toDateKey()` |
 | イベントマップ          | EventMap       | 日付キーごとにカレンダーイベント配列を引けるマップ（`{ '2026-08-01': [...] }`） | `EventMap` 型、`SwipeCalendar` の `events` prop |
 | 月グリッド             | MonthGrid      | 1ヶ月分の7列グリッド。前月・翌月の日付で前後を埋める（当月外セル） | `MonthGrid.vue`、`DayCellData.isOtherMonth` |

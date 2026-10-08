@@ -43,6 +43,15 @@ categoryBudgets: Array<BudgetCategoryData>;
 alerts: Array<BudgetAlertData>;
 categories: Array<CategoryData>;
 };
+export type CalendarPageResult = {
+participants: Array<CalendarParticipantResult>;
+};
+export type CalendarParticipantResult = {
+id: string;
+name: string;
+avatarUrl?: string;
+isVirtual: boolean;
+};
 export type CategoriesPageResult = {
 categories: Array<CategoryData>;
 };

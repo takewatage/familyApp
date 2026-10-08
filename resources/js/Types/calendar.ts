@@ -26,8 +26,30 @@ export interface CalendarEvent {
     time?: string
     /** リストやアバターに表示するアイコン名（mdi-xxx） */
     icon?: string
+    /** 予定に関係する人（リストの右端にアイコンを表示する） */
+    participants?: CalendarParticipant[]
     /** 任意の追加データ。利用側が自由に使ってよい。 */
     meta?: Record<string, unknown>
+}
+
+/**
+ * 予定のラベル（名前とカラー）。予定の色はラベルのカラーで表示する。
+ */
+export interface CalendarLabel {
+    id: string
+    name: string
+    /** CSS カラー（Constants/calendarColors のパレットから選ぶ） */
+    color: string
+}
+
+/**
+ * 予定の参加者（家族メンバー）。
+ * アバター画像がない場合は名前の頭文字を表示する。
+ */
+export interface CalendarParticipant {
+    id: string
+    name: string
+    avatarUrl?: string | null
 }
 
 /**
@@ -97,6 +119,8 @@ export interface EventEditModel {
     startTime: string
     /** 終了時刻 'HH:mm'（任意。終日なら空文字） */
     endTime: string
-    /** Vuetify のテーマカラー名 */
-    color: string
+    /** ラベルの ID */
+    labelId: string
+    /** 参加者の ID（複数選択） */
+    participantIds: string[]
 }

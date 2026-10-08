@@ -3,7 +3,7 @@
 // デフォルトの見た目を持ちつつ、slotで日付番号・イベント表示を差し替え可能。
 
 import { computed } from 'vue'
-import { resolveEventColor } from '@/Utils/calendarColor'
+import { eventTextColor, resolveEventColor } from '@/Utils/calendarColor'
 import type { DayCellData } from '@/Types/calendar'
 
 const props = defineProps<{
@@ -71,7 +71,7 @@ function onClick(): void {
                     v-for="ev in visibleEvents"
                     :key="ev.id"
                     class="day-cell__event"
-                    :style="{ background: resolveEventColor(ev) }">
+                    :style="{ background: resolveEventColor(ev), color: eventTextColor(ev) }">
                     {{ ev.title }}
                 </div>
                 <div

@@ -151,7 +151,7 @@ sail yarn build
 | `/task-categories/{taskCategory}`   | DELETE  | カテゴリー削除                  | ✅完了  |
 | `/task-categories/reorder`          | POST    | カテゴリー並び替え              | ✅完了  |
 | `/dok`                              | GET     | Dok画面                       | ⚠️一部完了 |
-| `/calendar`                         | GET     | カレンダー画面（モックアップ。データなし） | ⚠️一部完了 |
+| `/calendar`                         | GET     | カレンダー画面（モックアップ。予定データなし、参加者の選択肢として家族メンバーを返す `CalendarPageResult`） | ⚠️一部完了 |
 | `/calendar/demo`                    | GET     | カレンダー動作確認ページ（メニュー非掲載） | ✅完了  |
 | `/family/settings`                  | GET     | 家族設定変更ページ              | ✅完了     |
 | `/family/settings`                  | PATCH   | 家族基本情報の更新（オーナーのみ）| ✅完了     |

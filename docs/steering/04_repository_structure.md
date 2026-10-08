@@ -11,6 +11,7 @@ family-app/
 │   │   ├── Model/                    # モデル対応DTO（UserData, FamilyData, ExpenseData, QuickEntryData等）
 │   │   ├── Family/                   # 家族設定・メンバー管理・切り替え関連DTO
 │   │   ├── Task/                     # タスク関連リクエスト・レスポンスDTO
+│   │   ├── Calendar/                 # カレンダー関連DTO（CalendarPageResult, CalendarParticipantResult）
 │   │   ├── Budget/                   # 家計簿関連DTO（Expense/Category/Shop/PaymentMethod/QuickEntry/RecurringExpense/Budget設定 のRequest・Result）
 │   │   └── MyPage/                   # マイページ関連DTO
 │   ├── Console/
@@ -23,7 +24,7 @@ family-app/
 │   │       └── Concerns/             # コントローラー共通トレイト（AuthorizesFamilyOwnership, ProvidesBudgetOptions）
 │   ├── Models/                       # Eloquentモデル（User, Family, VirtualUser, Task等）
 │   ├── Policies/                     # Laravel認可ポリシー（FamilyPolicy等）
-│   ├── Services/                     # ビジネスロジック（CurrentFamilyService, FamilyProvisionService, SocialAuthService, ExpenseService, RecurringExpenseGenerator, RecurringExpenseService, BudgetService, BudgetCalculationService, BudgetAlertService, RecurringExpenseReminderService, PwaManifestService等）
+│   ├── Services/                     # ビジネスロジック（CurrentFamilyService, FamilyMemberService, FamilyProvisionService, SocialAuthService, ExpenseService, RecurringExpenseGenerator, RecurringExpenseService, BudgetService, BudgetCalculationService, BudgetAlertService, RecurringExpenseReminderService, PwaManifestService等）
 │   │   └── Concerns/                 # サービス共通トレイト（ValidatesFamilyMember）
 │   └── Support/                      # 共通ヘルパー（BudgetScopeRules: カテゴリー family スコープ validation）
 ├── database/
@@ -39,7 +40,7 @@ family-app/
 │   │   │   ├── App/                  # アプリケーション全体コンポーネント
 │   │   │   ├── Auth/                 # 認証関連コンポーネント
 │   │   │   ├── Budget/               # 家計簿コンポーネント（ExpenseForm等）
-│   │   │   ├── Calendar/             # スワイプカレンダー（SwipeCalendar, MonthGrid, DayCell, 各種Sheet, EventEditForm）
+│   │   │   ├── Calendar/             # スワイプカレンダー（SwipeCalendar, MonthGrid, DayCell, 各種Sheet, EventEditForm, ParticipantSelectSheet, ParticipantAvatars, LabelSelectSheet, LabelEditForm）
 │   │   │   ├── Common/               # 共通コンポーネント（再利用可能。PwaUpdateNotifier 等）
 │   │   │   ├── Dok/                  # Dok機能コンポーネント
 │   │   │   ├── Family/               # 家族設定・メンバー管理・切り替えコンポーネント（FamilyPwaSettingsForm 等）
@@ -51,7 +52,7 @@ family-app/
 │   │   │   ├── Calendar/             # カレンダー関連Composables（useCalendar: 月グリッド生成 / useSwipe: 横スワイプ）
 │   │   │   ├── Dok/                  # Dok関連Composables
 │   │   │   └── Task/                 # タスク関連Composables
-│   │   ├── Constants/                # 定数定義（footerApps.ts: フッターアプリ定義）
+│   │   ├── Constants/                # 定数定義（footerApps.ts: フッターアプリ定義 / calendarColors.ts: 予定のカラーパレット・初期ラベル）
 │   │   ├── Layouts/                  # Inertiaページレイアウト
 │   │   ├── Pages/                    # Inertiaページコンポーネント
 │   │   │   ├── Auth/                 # 認証ページ
@@ -139,6 +140,7 @@ family-app/
 - **役割**: コントローラーから切り出したビジネスロジック
 - **配置するファイル**: 複数コントローラーで共通するロジック、外部API連携処理
 - **主要ファイル**:
+  - `FamilyMemberService.php`: 家族のメンバー・仮想ユーザーをアバター付き DTO（`FamilyMemberData` / `VirtualUserData`）に変換する。並び順は参加順・作成順で固定。ホーム・メンバー管理・カレンダー（参加者）で共通利用
   - `PwaManifestService.php`: 家族設定 `families.settings.pwa` と `config/pwa.php` の既定値をマージし、`FamilyPwaSettingsData`（`resolve`）・Web App Manifest（`manifest`）を返す（内容ハッシュは `FamilyPwaSettingsData.manifest_hash` に含める）
   - `ImageUploadService.php`: 画像のリサイズ・アップロード。`uploadAppIcon()` は PWA アプリ画像（PNG 180 / 192 / 512 / maskable 512）を生成。途中で失敗したらアップロード済みのサイズを削除する。`deleteQuietly()` は削除失敗をログに残すだけで例外を投げない（後片付け用）
 
@@ -176,7 +178,7 @@ family-app/
 - **主要ファイル**:
   - `global.d.ts`: グローバル型。ビルド時定数 `__APP_VERSION__` / `__APP_BUILD_ID__` を宣言
   - `vite-env.d.ts`: Vite / `vite-plugin-pwa/vue`（`virtual:pwa-register/vue`）の型参照
-  - `calendar.ts`: カレンダーコンポーネントの手書き型（`CalendarEvent` / `EventMap` / `DayCellData` / `YearMonth` 等）。サーバーとやり取りしないため DTO 自動生成の対象外
+  - `calendar.ts`: カレンダーコンポーネントの手書き型（`CalendarEvent` / `CalendarParticipant` / `CalendarLabel` / `EventMap` / `DayCellData` / `YearMonth` 等）。予定はサーバーとやり取りしないため DTO 自動生成の対象外（参加者の選択肢は `CalendarParticipantResult` から変換する）
 - **注意**: `dto.generated.d.ts` は `php artisan typescript:transform` で自動生成される。Docker 未起動時は手動更新も可
 
 ### resources/js/Constants/

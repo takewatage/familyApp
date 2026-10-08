@@ -2,26 +2,61 @@
 // カレンダー画面（モックアップ）。
 // 機能が未確定のため、サーバーからはデータを受け取らず、ダミーの予定をこのページで保持する。
 // 予定の追加はページ内のメモリにだけ反映し、リロードすると消える。
+// 参加者の選択肢には、サーバーから受け取った現在の家族のメンバー（仮想ユーザー含む）を使う。
+// 予定の色はラベル（名前＋カラー）で決まる。ラベルの編集もページ内のみ（リロードで初期値に戻る）。
 
 import { computed, ref } from 'vue'
 import { Head } from '@inertiajs/vue3'
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
 import SwipeCalendar from '@/Components/Calendar/SwipeCalendar.vue'
 import EventEditForm from '@/Components/Calendar/EventEditForm.vue'
+import ParticipantAvatars from '@/Components/Calendar/ParticipantAvatars.vue'
 import { useDialogService } from '@/Composables/Common/useDialogService'
 import { fromDateKey, toDateKey, todayKey } from '@/Utils/calendarDate'
 import { resolveEventColor } from '@/Utils/calendarColor'
-import type { CalendarEvent, DateKey, EventEditModel, EventMap } from '@/Types/calendar'
+import { DEFAULT_CALENDAR_LABELS } from '@/Constants/calendarColors'
+import type {
+    CalendarEvent,
+    CalendarLabel,
+    CalendarParticipant,
+    DateKey,
+    EventEditModel,
+    EventMap,
+} from '@/Types/calendar'
+import type { CalendarPageResult } from '@/Types/dto.generated'
 
 defineOptions({ layout: AuthenticatedLayout })
+
+const props = defineProps<CalendarPageResult>()
+
+/** 参加者の選択肢（家族メンバー） */
+const participants = computed<CalendarParticipant[]>(() =>
+    props.participants.map((p) => ({ id: p.id, name: p.name, avatarUrl: p.avatarUrl ?? null })),
+)
+
+function resolveParticipants(ids: string[]): CalendarParticipant[] {
+    return participants.value.filter((p) => ids.includes(p.id))
+}
+
+// ラベル（並び順・名前・カラーは「ラベル名やカラーを変更」で編集できる）
+const labels = ref<CalendarLabel[]>(DEFAULT_CALENDAR_LABELS.map((l) => ({ ...l })))
+
+/** 初期ラベル名からラベル ID を引く（ダミー予定用） */
+function labelIdOf(name: string): string {
+    return DEFAULT_CALENDAR_LABELS.find((l) => l.name === name)?.id ?? DEFAULT_CALENDAR_LABELS[0].id
+}
+
+function onLabelsChange(next: CalendarLabel[]): void {
+    labels.value = next
+}
 
 /** 予定の種類（将来のデータ連携元を想定したモック上の分類） */
 type EventSource = 'family' | 'payment' | 'birthday'
 
-const SOURCE_STYLES: Record<EventSource, { icon: string; color: string }> = {
-    family: { icon: 'mdi-account-group', color: 'primary' },
-    payment: { icon: 'mdi-cash-clock', color: 'error' },
-    birthday: { icon: 'mdi-cake-variant', color: 'warning' },
+const SOURCE_STYLES: Record<EventSource, { icon: string; label: string }> = {
+    family: { icon: 'mdi-account-group', label: 'エメラルド・グリーン' },
+    payment: { icon: 'mdi-cash-clock', label: 'アップル・レッド' },
+    birthday: { icon: 'mdi-cake-variant', label: 'ブライト・オレンジ' },
 }
 
 /** 今日を基準に n 日ずらした日付キーを返す */
@@ -33,36 +68,69 @@ function keyFromToday(offsetDays: number): DateKey {
     return toDateKey(d)
 }
 
-function mockEvent(id: number, source: EventSource, title: string, time?: string): CalendarEvent {
-    return { id, title, time, ...SOURCE_STYLES[source], meta: { source } }
+/**
+ * ダミー予定を作る。memberIndexes は家族メンバーの並び順で参加者を指定する（メンバーが少なければ存在する分だけ）
+ */
+function mockEvent(
+    id: number,
+    source: EventSource,
+    title: string,
+    time?: string,
+    memberIndexes: number[] = [],
+    labelName?: string,
+): CalendarEvent {
+    const eventParticipants = memberIndexes
+        .map((i) => participants.value[i])
+        .filter((p): p is CalendarParticipant => !!p)
+
+    return {
+        id,
+        title,
+        time,
+        icon: SOURCE_STYLES[source].icon,
+        participants: eventParticipants,
+        meta: { source, labelId: labelIdOf(labelName ?? SOURCE_STYLES[source].label) },
+    }
 }
 
 // 表示確認用のダミー予定
 const events = ref<EventMap>({
     [keyFromToday(0)]: [
-        mockEvent(1, 'family', '買い出し', '10:00'),
-        mockEvent(2, 'family', '習い事の送迎', '16:30'),
+        mockEvent(1, 'family', '買い出し', '10:00', [0]),
+        mockEvent(2, 'family', '習い事の送迎', '16:30', [1, 2], 'ディープ・スカイブルー'),
     ],
-    [keyFromToday(2)]: [mockEvent(3, 'birthday', 'パパの誕生日')],
+    [keyFromToday(2)]: [mockEvent(3, 'birthday', 'パパの誕生日', undefined, [0, 1, 2, 3, 4])],
     [keyFromToday(4)]: [
         mockEvent(4, 'payment', '家賃'),
         mockEvent(5, 'payment', '電気代'),
-        mockEvent(6, 'family', '保育園の面談', '18:00'),
+        mockEvent(6, 'family', '保育園の面談', '18:00', [0, 1], 'ソフト・バイオレット'),
     ],
-    [keyFromToday(6)]: [mockEvent(7, 'family', '家族で外食', '19:00')],
+    [keyFromToday(6)]: [mockEvent(7, 'family', '家族で外食', '19:00', [0, 1, 2, 3], 'フレンチ・ローズ')],
     [keyFromToday(12)]: [mockEvent(8, 'payment', '動画サブスク')],
-    [keyFromToday(-3)]: [mockEvent(9, 'family', '大掃除')],
+    [keyFromToday(-3)]: [mockEvent(9, 'family', '大掃除', undefined, [0], 'モダーン・サイアン')],
 })
 
 let nextId = 100
+
+/** 表示用の予定（ラベルのカラーを反映する。ラベルを編集すると全予定の色が変わる） */
+const displayEvents = computed<EventMap>(() => {
+    const colorOf = new Map(labels.value.map((l) => [l.id, l.color]))
+    const result: EventMap = {}
+
+    for (const [key, list] of Object.entries(events.value)) {
+        result[key] = list.map((e) => ({ ...e, color: colorOf.get(e.meta?.labelId as string) }))
+    }
+
+    return result
+})
 
 // 今日から7日間の予定（一覧表示用）
 const upcomingEvents = computed(() => {
     const days = Array.from({ length: 7 }, (_, i) => keyFromToday(i))
 
     return days
-        .filter((key) => events.value[key]?.length)
-        .map((key) => ({ key, label: formatDayLabel(key), events: events.value[key] }))
+        .filter((key) => displayEvents.value[key]?.length)
+        .map((key) => ({ key, label: formatDayLabel(key), events: displayEvents.value[key] }))
 })
 
 function formatDayLabel(key: DateKey): string {
@@ -81,11 +149,20 @@ function onSelectDate(key: DateKey): void {
 
 const dialogService = useDialogService()
 
+// 日別の予定一覧の＋ボタン: その日を開始日にして追加画面を開く
+function onAddClick(payload: { date: DateKey }): void {
+    selectedDate.value = payload.date
+    openAddDialog()
+}
+
 async function openAddDialog(): Promise<void> {
     const dialog = dialogService.open<EventEditModel>({
         component: EventEditForm,
         props: {
             initial: { startDate: selectedDate.value, endDate: selectedDate.value },
+            participants: participants.value,
+            labels: labels.value,
+            onLabelsChange,
         },
         fullscreen: true,
         transition: 'dialog-bottom-transition',
@@ -105,6 +182,9 @@ async function onEventClick(payload: { date: DateKey; event: CalendarEvent }): P
         component: EventEditForm,
         props: {
             initial: toEditModel(payload.event, payload.date),
+            participants: participants.value,
+            labels: labels.value,
+            onLabelsChange,
         },
         fullscreen: true,
         transition: 'dialog-bottom-transition',
@@ -125,6 +205,8 @@ async function onEventClick(payload: { date: DateKey; event: CalendarEvent }): P
  */
 function toEditModel(event: CalendarEvent, date: DateKey): EventEditModel {
     const saved = event.meta as Partial<EventEditModel> | undefined
+    const participantIds = (event.participants ?? []).map((p) => p.id)
+    const labelId = (event.meta?.labelId as string | undefined) ?? labels.value[0].id
 
     if (saved?.startDate && saved.endDate) {
         return {
@@ -134,7 +216,8 @@ function toEditModel(event: CalendarEvent, date: DateKey): EventEditModel {
             endDate: saved.endDate,
             startTime: saved.startTime ?? '',
             endTime: saved.endTime ?? '',
-            color: event.color ?? 'primary',
+            labelId,
+            participantIds,
         }
     }
 
@@ -147,7 +230,8 @@ function toEditModel(event: CalendarEvent, date: DateKey): EventEditModel {
         endDate: date,
         startTime,
         endTime,
-        color: event.color ?? 'primary',
+        labelId,
+        participantIds,
     }
 }
 
@@ -182,8 +266,8 @@ function putEvent(form: EventEditModel, original?: CalendarEvent): void {
         id: original?.id ?? nextId++,
         title: form.title,
         time: formatTimeLabel(form),
-        color: form.color,
         icon: original?.icon ?? SOURCE_STYLES[source].icon,
+        participants: resolveParticipants(form.participantIds),
         meta: { source, ...form },
     }
 
@@ -210,10 +294,13 @@ function putEvent(form: EventEditModel, original?: CalendarEvent): void {
 
     <v-container class="pa-0">
         <SwipeCalendar
-            :events="events"
+            :events="displayEvents"
             :max-events-per-cell="3"
+            detail-fullscreen
+            detail-add-button
             @select-date="onSelectDate"
-            @event-click="onEventClick" />
+            @event-click="onEventClick"
+            @add-click="onAddClick" />
 
         <div class="d-flex justify-end pr-4 pt-2">
             <v-btn
@@ -240,7 +327,13 @@ function putEvent(form: EventEditModel, original?: CalendarEvent): void {
                             :title="event.title"
                             :subtitle="event.time ?? '終日'"
                             class="upcoming-event"
-                            :style="{ borderLeftColor: resolveEventColor(event) }" />
+                            :style="{ borderLeftColor: resolveEventColor(event) }">
+                            <template
+                                v-if="event.participants?.length"
+                                #append>
+                                <ParticipantAvatars :participants="event.participants" />
+                            </template>
+                        </v-list-item>
                     </template>
                 </v-list>
                 <v-card-text

@@ -5,18 +5,23 @@
 
 import { computed, reactive, ref } from 'vue'
 import DatePickerDialog from '@/Components/Common/DatePickerDialog.vue'
-import ColorChipSelect from '@/Components/Common/ColorChipSelect.vue'
+import LabelEditForm from '@/Components/Calendar/LabelEditForm.vue'
+import LabelSelectSheet from '@/Components/Calendar/LabelSelectSheet.vue'
+import ParticipantAvatars from '@/Components/Calendar/ParticipantAvatars.vue'
+import ParticipantSelectSheet from '@/Components/Calendar/ParticipantSelectSheet.vue'
 import { todayKey } from '@/Utils/calendarDate'
-import type { EventEditModel } from '@/Types/calendar'
-
-/** DayCell がテーマカラー名を CSS 変数に変換するため、テーマに存在する色名のみ使う */
-const DEFAULT_COLORS = ['primary', 'secondary', 'success', 'info', 'warning', 'error']
+import { useDialogService } from '@/Composables/Common/useDialogService'
+import type { CalendarLabel, CalendarParticipant, EventEditModel } from '@/Types/calendar'
 
 const props = defineProps<{
     /** 初期値（新規追加時は開始日・終了日などを渡す） */
     initial?: Partial<EventEditModel>
-    /** カラー選択肢（テーマカラー名） */
-    colors?: string[]
+    /** ラベルの選択肢 */
+    labels: CalendarLabel[]
+    /** ラベルを編集（名前・カラー・並び順）したときに呼ぶ。利用側でラベル一覧を更新する */
+    onLabelsChange?: (labels: CalendarLabel[]) => void
+    /** 参加者の選択肢（家族メンバー）。空なら参加者欄を出さない */
+    participants?: CalendarParticipant[]
     onClose?: (result?: EventEditModel) => void
 }>()
 
@@ -27,11 +32,49 @@ const form = reactive<EventEditModel>({
     endDate: todayKey(),
     startTime: '',
     endTime: '',
-    color: 'primary',
+    labelId: props.labels[0]?.id ?? '',
+    participantIds: [],
     ...props.initial,
 })
 
+const participantSheetOpen = ref(false)
+
+// ラベル（編集画面で変更したらこのフォームの表示にも反映する）
+const labelList = ref<CalendarLabel[]>([...props.labels])
+const labelSheetOpen = ref(false)
+const selectedLabel = computed(() => labelList.value.find((l) => l.id === form.labelId))
+
+const dialogService = useDialogService()
+
+async function openLabelEditor(): Promise<void> {
+    const dialog = dialogService.open<CalendarLabel[]>({
+        component: LabelEditForm,
+        props: { labels: labelList.value },
+        fullscreen: true,
+        transition: 'dialog-bottom-transition',
+        toolbar: { title: 'ラベルの編集' },
+    })
+
+    const result = await dialog.afterClosed()
+
+    if (!result) {
+        return
+    }
+
+    labelList.value = result
+    props.onLabelsChange?.(result)
+}
+
+const selectedParticipants = computed(() =>
+    (props.participants ?? []).filter((p) => form.participantIds.includes(p.id)),
+)
+
 const submitted = ref(false)
+
+// clearable の × で null が入るため、空文字に正規化する
+function onTitleChange(value: string | null): void {
+    form.title = value ?? ''
+}
 
 // 開始日を終了日より後にしたら、終了日を開始日に合わせる
 function onStartDateChange(value: string | null): void {
@@ -95,14 +138,15 @@ function errorOf(key: keyof EventEditModel): string | undefined {
         class="pa-4"
         elevation="0">
         <v-text-field
-            v-model="form.title"
+            :model-value="form.title"
             label="タイトル"
             placeholder="予定を入力..."
             variant="outlined"
             density="comfortable"
             autofocus
             clearable
-            :error-messages="errorOf('title')" />
+            :error-messages="errorOf('title')"
+            @update:model-value="onTitleChange" />
 
         <v-switch
             v-model="form.allDay"
@@ -144,10 +188,58 @@ function errorOf(key: keyof EventEditModel): string | undefined {
                 :error-messages="errorOf('endTime')" />
         </div>
 
-        <p class="text-caption text-medium-emphasis mb-2">カラー</p>
-        <ColorChipSelect
-            v-model="form.color"
-            :colors="colors ?? DEFAULT_COLORS" />
+        <template v-if="participants?.length">
+            <p class="text-caption text-medium-emphasis mb-1">参加者</p>
+            <v-card
+                variant="outlined"
+                class="event-edit-form__picker mb-4"
+                role="button"
+                aria-label="参加者を選択"
+                @click="participantSheetOpen = true">
+                <ParticipantAvatars
+                    v-if="selectedParticipants.length"
+                    :participants="selectedParticipants"
+                    :max="5"
+                    :size="28" />
+                <span class="event-edit-form__ellipsis">
+                    {{
+                        selectedParticipants.length
+                            ? selectedParticipants.map((p) => p.name).join('、')
+                            : '参加者を選択'
+                    }}
+                </span>
+                <v-icon
+                    icon="mdi-chevron-right"
+                    class="ml-auto" />
+            </v-card>
+
+            <ParticipantSelectSheet
+                v-model:open="participantSheetOpen"
+                v-model="form.participantIds"
+                :participants="participants" />
+        </template>
+
+        <p class="text-caption text-medium-emphasis mb-1">ラベル</p>
+        <v-card
+            variant="outlined"
+            class="event-edit-form__picker"
+            role="button"
+            aria-label="ラベルを選択"
+            @click="labelSheetOpen = true">
+            <span
+                class="event-edit-form__label-swatch"
+                :style="{ background: selectedLabel?.color ?? 'transparent' }" />
+            <span class="event-edit-form__ellipsis">{{ selectedLabel?.name ?? 'ラベルを選択' }}</span>
+            <v-icon
+                icon="mdi-chevron-right"
+                class="ml-auto" />
+        </v-card>
+
+        <LabelSelectSheet
+            v-model:open="labelSheetOpen"
+            v-model="form.labelId"
+            :labels="labelList"
+            @edit-labels="openLabelEditor" />
 
         <v-btn
             color="primary"
@@ -171,5 +263,26 @@ function errorOf(key: keyof EventEditModel): string | undefined {
 .event-edit-form__row > * {
     flex: 1;
     min-width: 0;
+}
+
+.event-edit-form__picker {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    min-height: 48px;
+}
+
+.event-edit-form__label-swatch {
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+}
+
+.event-edit-form__ellipsis {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 </style>

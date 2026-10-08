@@ -80,7 +80,7 @@ function goToday(): void {
     <v-bottom-sheet v-model="isOpen">
         <v-card>
             <v-toolbar
-                color="primary"
+                color="surface"
                 density="comfortable">
                 <v-btn
                     icon="mdi-chevron-left"

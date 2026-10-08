@@ -249,8 +249,7 @@ const close = () => {
             <!-- ヘッダー -->
             <v-toolbar
                 density="compact"
-                color="primary"
-                dark
+                color="surface"
                 flat>
                 <v-toolbar-title>電卓</v-toolbar-title>
                 <v-spacer />

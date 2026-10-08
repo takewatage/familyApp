@@ -49,6 +49,13 @@ const props = withDefaults(
         enableAdd?: boolean
         /** 予定追加フォームのカラー選択肢 */
         colorOptions?: ColorOption[]
+        /** 日付詳細（その日の予定一覧）を全画面で表示するか */
+        detailFullscreen?: boolean
+        /**
+         * 日付詳細の右下に予定追加ボタン（＋）を表示するか。
+         * enableAdd が false の場合は add-click を emit する（追加画面は利用側が開く）
+         */
+        detailAddButton?: boolean
     }>(),
     {
         events: () => ({}),
@@ -72,6 +79,8 @@ const props = withDefaults(
         maxEventsPerCell: 2,
         enableAdd: false,
         colorOptions: undefined,
+        detailFullscreen: false,
+        detailAddButton: false,
     },
 )
 
@@ -81,6 +90,8 @@ const emit = defineEmits<{
     (e: 'add-event', payload: { date: DateKey; event: EventFormModel }): void
     /** 日付詳細シートで予定をタップした（編集画面を開くなどは利用側の責任） */
     (e: 'event-click', payload: { date: DateKey; event: CalendarEvent }): void
+    /** 日付詳細の＋ボタンを押した（enableAdd が false のとき。追加画面は利用側が開く） */
+    (e: 'add-click', payload: { date: DateKey }): void
 }>()
 
 // events を Ref 化して composable に渡す（props.events は常に存在＝デフォルト {}）
@@ -147,6 +158,17 @@ function openAdd(): void {
     window.setTimeout(() => {
         addOpen.value = true
     }, 200)
+}
+
+function onDetailAdd(): void {
+    if (props.enableAdd) {
+        openAdd()
+
+        return
+    }
+
+    detailOpen.value = false
+    emit('add-click', { date: selectedKey.value })
 }
 
 function openAddDirect(): void {
@@ -324,7 +346,9 @@ function onPickerSelect(value: { year: number; month: number }): void {
             :title="detailTitle"
             :events="selectedEvents"
             :enable-add="enableAdd"
-            @add="openAdd"
+            :fullscreen="detailFullscreen"
+            :show-add-fab="detailAddButton"
+            @add="onDetailAdd"
             @select-event="onSelectEvent">
             <template #event-list="sp">
                 <slot

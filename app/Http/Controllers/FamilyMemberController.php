@@ -2,12 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Dtos\Family\FamilyMemberData;
 use App\Dtos\Family\FamilyMembersResult;
-use App\Dtos\Model\FileData;
-use App\Dtos\Model\VirtualUserData;
 use App\Models\User;
 use App\Services\CurrentFamilyService;
+use App\Services\FamilyMemberService;
 use App\Services\InviteUrlService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Gate;
@@ -18,6 +16,7 @@ class FamilyMemberController extends Controller
     public function __construct(
         private readonly CurrentFamilyService $currentFamilyService,
         private readonly InviteUrlService $inviteUrlService,
+        private readonly FamilyMemberService $familyMemberService,
     ) {}
 
     public function index(): Response|RedirectResponse
@@ -28,38 +27,12 @@ class FamilyMemberController extends Controller
             return redirect()->route('home');
         }
 
-        $family->load(['members.files', 'virtualUsers.files']);
-
-        $members = $family->members->map(function (User $user) {
-            $avatarFile = $user->files->firstWhere('collection', 'avatar');
-
-            return new FamilyMemberData(
-                id: $user->id,
-                name: $user->name,
-                role: $user->pivot->role,
-                avatar: $avatarFile ? FileData::from($avatarFile->toArray()) : null,
-            );
-        });
-
-        $virtualUsers = $family->virtualUsers->map(function ($vu) {
-            $avatarFile = $vu->files->firstWhere('collection', 'avatar');
-
-            return new VirtualUserData(
-                id: $vu->id,
-                family_id: $vu->family_id,
-                name: $vu->name,
-                created_at: $vu->created_at?->toIso8601String(),
-                updated_at: $vu->updated_at?->toIso8601String(),
-                avatar: $avatarFile ? FileData::from($avatarFile->toArray()) : null,
-            );
-        });
-
         $inviteUrls = $this->inviteUrlService->generateInviteUrls($family);
 
         return Inertia::render('MyPage/FamilyMembers', FamilyMembersResult::from([
             'family' => $family->toArray(),
-            'members' => $members->values(),
-            'virtual_users' => $virtualUsers->values(),
+            'members' => $this->familyMemberService->members($family),
+            'virtual_users' => $this->familyMemberService->virtualUsers($family),
             'is_owner' => $family->owner_id === auth()->id(),
             'invite_urls' => $inviteUrls,
         ]));
