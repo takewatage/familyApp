@@ -6,12 +6,21 @@ import type { MyPageData } from '@/Types/dto.generated'
 import EditProfileForm from '@/Components/MyPage/EditProfileForm.vue'
 import { formatDate } from '@/Utils/dateFormatter'
 import { router } from '@inertiajs/vue3'
+import { computed } from 'vue'
 import { APP_VERSION_LABEL } from '@/Constants/appVersion'
 
 defineOptions({ layout: AuthenticatedLayout })
 
 const props = usePageProps<MyPageData>()
 const { open } = useDialogService()
+
+/** プロフィールの表示項目（左にラベル、右に値） */
+const profileRows = computed(() => [
+    { label: 'ユーザー名', value: props.value.user.name },
+    { label: 'メールアドレス', value: props.value.user.email },
+    { label: '生年月日', value: formatDate(props.value.user.birthday) || '未設定' },
+    { label: '登録日', value: formatDate(props.value.user.createdAt) },
+])
 
 const onEdit = async () => {
     open<MyPageData>({
@@ -63,26 +72,18 @@ const onEdit = async () => {
                             </v-avatar>
                         </div>
 
-                        <v-list lines="two">
-                            <v-list-item
-                                prepend-icon="mdi-account"
-                                title="ユーザー名"
-                                :subtitle="props.user.name"/>
-                            <v-divider/>
-                            <v-list-item
-                                prepend-icon="mdi-email"
-                                title="メールアドレス"
-                                :subtitle="props.user.email"/>
-                            <v-divider/>
-                            <v-list-item
-                                prepend-icon="mdi-cake-variant"
-                                title="生年月日"
-                                :subtitle="formatDate(props.user.birthday) || '未設定'"/>
-                            <v-divider/>
-                            <v-list-item
-                                prepend-icon="mdi-calendar"
-                                title="登録日"
-                                :subtitle="formatDate(props.user.createdAt)"/>
+                        <v-list>
+                            <template
+                                v-for="(row, i) in profileRows"
+                                :key="row.label">
+                                <v-divider v-if="i > 0"/>
+                                <v-list-item>
+                                    <div class="profile-row">
+                                        <span class="profile-row__label">{{ row.label }}</span>
+                                        <span class="profile-row__value">{{ row.value }}</span>
+                                    </div>
+                                </v-list-item>
+                            </template>
                         </v-list>
                     </v-card-text>
                 </v-card>
@@ -147,3 +148,26 @@ const onEdit = async () => {
         </v-row>
     </v-container>
 </template>
+
+<style scoped>
+/* プロフィール: 左にラベル、右に値（長いメールアドレスは省略表示） */
+.profile-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.profile-row__label {
+    flex-shrink: 0;
+    color: rgba(var(--v-theme-on-surface), var(--v-medium-emphasis-opacity));
+}
+
+.profile-row__value {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-align: right;
+}
+</style>
