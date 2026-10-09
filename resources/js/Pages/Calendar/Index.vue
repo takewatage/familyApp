@@ -17,7 +17,7 @@ import { useDialogService } from '@/Composables/Common/useDialogService'
 import { useConfirmDialog } from '@/Composables/Common/useConfirmDialogService'
 import { fromDateKey, toDateKey, todayKey } from '@/Utils/calendarDate'
 import { resolveEventColor } from '@/Utils/calendarColor'
-import { BIRTHDAY_COLOR, DEFAULT_CALENDAR_COLOR } from '@/Constants/calendarColors'
+import { BIRTHDAY_COLOR, BIRTHDAY_ICON, DEFAULT_CALENDAR_COLOR } from '@/Constants/calendarColors'
 import type {
     CalendarEvent,
     CalendarLabel,
@@ -81,17 +81,14 @@ async function openLabelEditorFromSettings(): Promise<void> {
     }
 }
 
-async function onBirthdayLabelChange(labelId: string | null): Promise<void> {
+async function onBirthdayColorChange(color: string | null): Promise<void> {
     try {
-        const res = await calendarApi.updateSettings({ birthdayLabelId: labelId })
+        const res = await calendarApi.updateSettings({ birthdayColor: color })
 
         settings.value = res.data.settings
     } catch {
         // エラーは client が表示する
-        return
     }
-
-    await fetchEvents()
 }
 
 // ---------------------------------------------------------------- 予定の取得
@@ -178,9 +175,12 @@ function toCalendarEvent(r: CalendarEventResult): CalendarEvent {
         id: `${r.id}:${r.occurrenceDate}`,
         title: r.title,
         time: formatTime(r),
-        // 誕生日はカレンダー設定の「誕生日のラベル」の色（未設定なら既定の色）
-        color: labelColor.value.get(r.labelId ?? '') ?? (r.isBirthday ? BIRTHDAY_COLOR : DEFAULT_CALENDAR_COLOR),
+        // 誕生日はカレンダー設定の「誕生日のカラー」（未設定なら既定の色）
+        color: r.isBirthday
+            ? (settings.value.birthdayColor ?? BIRTHDAY_COLOR)
+            : (labelColor.value.get(r.labelId ?? '') ?? DEFAULT_CALENDAR_COLOR),
         icon: r.isBirthday ? 'mdi-cake-variant' : r.isRecurring ? 'mdi-repeat' : undefined,
+        iconImage: r.isBirthday ? BIRTHDAY_ICON : undefined,
         participants: participants.value.filter((p) => r.participantIds.includes(p.id)),
         meta: { result: r },
     }
@@ -458,10 +458,9 @@ function toEditModel(r: CalendarEventResult): EventEditModel {
 
         <CalendarSettingsSheet
             v-model:open="settingsOpen"
-            :labels="labels"
             :settings="settings"
             @edit-labels="openLabelEditorFromSettings"
-            @update-birthday-label="onBirthdayLabelChange" />
+            @update-birthday-color="onBirthdayColorChange" />
 
         <div class="d-flex justify-end pr-4 pt-2">
             <v-btn
@@ -490,9 +489,19 @@ function toEditModel(r: CalendarEventResult): EventEditModel {
                             class="upcoming-event"
                             :style="{ borderLeftColor: resolveEventColor(event) }">
                             <template
+                                v-if="event.iconImage"
+                                #prepend>
+                                <img
+                                    :src="event.iconImage"
+                                    alt=""
+                                    class="upcoming-event__icon">
+                            </template>
+                            <template
                                 v-if="event.participants?.length"
                                 #append>
-                                <ParticipantAvatars :participants="event.participants" />
+                                <ParticipantAvatars
+                                    :participants="event.participants"
+                                    :size="32" />
                             </template>
                         </v-list-item>
                     </template>
@@ -508,6 +517,14 @@ function toEditModel(r: CalendarEventResult): EventEditModel {
 </template>
 
 <style scoped>
+/* タイトルの前の画像アイコン（誕生日のケーキ等） */
+.upcoming-event__icon {
+    width: 28px;
+    height: 28px;
+    object-fit: contain;
+    margin-right: 12px;
+}
+
 /* 予定の色を左の縦線で示す */
 .upcoming-event {
     border-left: 4px solid;

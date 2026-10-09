@@ -2,8 +2,6 @@
 
 namespace App\Dtos\Calendar;
 
-use App\Services\CurrentFamilyService;
-use Illuminate\Validation\Rule;
 use Spatie\LaravelData\Data;
 use Spatie\TypeScriptTransformer\Attributes\Optional;
 use Spatie\TypeScriptTransformer\Attributes\TypeScript;
@@ -15,23 +13,22 @@ use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 class UpdateCalendarSettingsRequest extends Data
 {
     public function __construct(
+        /** 誕生日の予定の色（#rrggbb。null で既定の色に戻す） */
         #[Optional]
-        public ?string $birthday_label_id = null,
+        public ?string $birthday_color = null,
     ) {}
 
     public static function rules(): array
     {
-        $familyId = app(CurrentFamilyService::class)->getCurrentFamilyId();
-
         return [
-            'birthday_label_id' => ['nullable', 'string', Rule::exists('calendar_labels', 'id')->where('family_id', $familyId)],
+            'birthday_color' => ['nullable', 'string', 'regex:/^#[0-9a-fA-F]{6}$/'],
         ];
     }
 
     public static function attributes(): array
     {
         return [
-            'birthday_label_id' => '誕生日のラベル',
+            'birthday_color' => '誕生日のカラー',
         ];
     }
 }

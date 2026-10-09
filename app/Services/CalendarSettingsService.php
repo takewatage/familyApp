@@ -16,7 +16,7 @@ class CalendarSettingsService
         $calendar = $family->settings['calendar'] ?? [];
 
         return new CalendarSettingsResult(
-            birthday_label_id: $calendar['birthday_label_id'] ?? null,
+            birthday_color: $calendar['birthday_color'] ?? null,
         );
     }
 

@@ -158,6 +158,10 @@ sail yarn build
 | `/family/settings`                  | PATCH   | 家族基本情報の更新（オーナーのみ）| ✅完了     |
 | `/family/settings/pwa`              | POST    | PWA 外観（アプリ名・アプリ画像）の更新（オーナーのみ、multipart。`UpdateFamilyPwaSettingsRequest`） | ✅完了     |
 | `/family/settings/pwa/icon`         | DELETE  | アプリ画像を削除し既定アイコンに戻す（オーナーのみ） | ✅完了     |
+| `/family/settings/banner`           | POST    | ホームのバナー画像の登録・変更（オーナーのみ、multipart。`UpdateFamilyBannerRequest`。横幅 1200px の WebP に変換して HStorage に保存し、保存後に旧画像を削除） | ✅完了     |
+| `/family/settings/banner`           | DELETE  | バナー画像を削除（オーナーのみ） | ✅完了     |
+| `/family/settings/icon`             | POST    | 家族のアイコンの登録・変更（オーナーのみ、multipart。`UpdateFamilyIconRequest`。横幅 256px の WebP に変換して HStorage に保存し、保存後に旧画像を削除） | ✅完了     |
+| `/family/settings/icon`             | DELETE  | 家族のアイコンを削除（オーナーのみ） | ✅完了     |
 | `/family/code/regenerate`           | POST    | 家族コード再生成（オーナーのみ）  | ✅完了     |
 | `/family/members`                   | GET     | メンバー管理ページ              | ✅完了     |
 | `/family/members/{user}`            | DELETE  | メンバー除名（オーナーのみ）     | ✅完了     |
@@ -215,7 +219,7 @@ sail yarn build
 | `/calendar/events/{calendarEvent}` | PUT | 予定の更新。繰り返し予定は `scope`（this / following / all）と `occurrence_date` で範囲を指定。family 越境は404 | ✅完了 |
 | `/calendar/events/{calendarEvent}` | DELETE | 予定の削除（範囲指定は更新と同じ）。family 越境は404 | ✅完了 |
 | `/calendar/labels` | PUT | 家族のラベルの一括更新（名前・カラー・並び順。全件そろっている必要がある） | ✅完了 |
-| `/calendar/settings` | PUT | 家族のカレンダー設定の更新（送った項目だけ更新。`birthday_label_id`: 誕生日のラベル、null で未設定に戻す。`families.settings.calendar` に保存） | ✅完了 |
+| `/calendar/settings` | PUT | 家族のカレンダー設定の更新（送った項目だけ更新。`birthday_color`: 誕生日の予定の色（#rrggbb）、null で既定の色に戻す。`families.settings.calendar` に保存） | ✅完了 |
 
 ## 5. データベース
 
@@ -224,7 +228,7 @@ sail yarn build
 | テーブル名             | 説明                                    |
 |----------------------|-----------------------------------------|
 | `users`              | ユーザー基本情報（UUID, name, email, birthday nullable, settings JSON nullable）settings スキーマ: `{ theme: 'light'\|'dark'\|'system', theme_name: 'pink'\|'sunset'\|'ocean'\|'forest'\|'lavender'\|'autumn'\|'midnight', footer_items: string[] }` |
-| `families`           | 家族グループ情報（UUID, name, code, code_expires_at nullable, owner_id, settings JSON nullable）settings スキーマ: `{ pwa: {...}, calendar: { birthday_label_id: string\|null } }` |
+| `families`           | 家族グループ情報（UUID, name, code, code_expires_at nullable, owner_id, settings JSON nullable）settings スキーマ: `{ pwa: {...}, banner: { external_id, url, updated_at }, icon: { external_id, url, updated_at }, calendar: { birthday_color: string\|null } }` |
 | `family_user`        | ユーザーと家族グループの中間テーブル（role付き）|
 | `task_categories`    | タスクカテゴリー（family_id, name, sort）  |
 | `tasks`              | タスク（family_id, category_id, content, color, memo, is_completed, sort）|

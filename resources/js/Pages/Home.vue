@@ -18,6 +18,16 @@ const heroGradient = computed(() => {
     const colors = vuetifyTheme.current.value.colors
     return `linear-gradient(135deg, ${colors.primary} 0%, ${colors.secondary} 100%)`
 })
+
+/**
+ * ヒーローの背景。バナー画像があれば画像の上に日付・家族名・メンバーを重ねる
+ * （文字が読めるよう、下側を暗くするグラデーションを重ねる）。なければテーマカラーのグラデーション
+ */
+const heroBackground = computed(() =>
+    props.bannerUrl
+        ? `linear-gradient(to bottom, rgba(0, 0, 0, 0.05) 0%, rgba(0, 0, 0, 0.55) 100%), center / cover no-repeat url("${props.bannerUrl}")`
+        : heroGradient.value,
+)
 const appCardBackground = computed(() => (vuetifyTheme.current.value.dark ? 'rgb(35 39 48)' : '#FFFFFF'))
 
 const page = usePage()
@@ -65,10 +75,11 @@ const apps = FOOTER_APPS.filter((app) => app.key !== 'home' && APP_ACTIONS[app.k
 
 <template>
     <div>
-        <!-- ヒーローセクション -->
+        <!-- ヒーローセクション（家族のバナーがあれば背景にする） -->
         <div
             class="home-hero"
-            :style="{ background: heroGradient }">
+            :class="{ 'home-hero--banner': props.bannerUrl }"
+            :style="{ background: heroBackground }">
             <div class="home-hero__content">
                 <p class="home-hero__date">{{ todayLabel }}</p>
                 <h1
@@ -124,6 +135,16 @@ const apps = FOOTER_APPS.filter((app) => app.key !== 'home' && APP_ACTIONS[app.k
 .home-hero {
     color: white;
     padding: 20px 16px 24px;
+}
+
+/* バナー画像を背景にするときは 3:1（中身が収まらなければ伸びる）で、文字を下に寄せる */
+.home-hero--banner {
+    aspect-ratio: 3 / 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding-top: 16px;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
 }
 
 .home-hero__content {

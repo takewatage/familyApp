@@ -25,9 +25,6 @@ use Illuminate\Validation\ValidationException;
  */
 class CalendarEventService
 {
-    public function __construct(
-        private readonly CalendarSettingsService $calendarSettingsService,
-    ) {}
 
     /**
      * 期間内（両端を含む）の予定を、繰り返しを展開して返す（誕生日を含む）
@@ -399,8 +396,6 @@ class CalendarEventService
     {
         /** @var Collection<int, User> $members */
         $members = $family->members()->whereNotNull('birthday')->get(['users.id', 'users.name', 'users.birthday']);
-        // カレンダー設定の「誕生日のラベル」（未設定なら画面の既定色）
-        $labelId = $this->calendarSettingsService->get($family)->birthday_label_id;
         $results = [];
 
         foreach ($members as $member) {
@@ -425,7 +420,7 @@ class CalendarEventService
                     end_date: $date->toDateString(),
                     start_time: null,
                     end_time: null,
-                    label_id: $labelId,
+                    label_id: null,
                     participant_ids: [$member->id],
                     rrule: null,
                     is_recurring: false,

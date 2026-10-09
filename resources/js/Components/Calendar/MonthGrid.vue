@@ -43,7 +43,8 @@ const emit = defineEmits<{
 <style scoped>
 .month-grid {
     display: grid;
-    grid-template-columns: repeat(7, 1fr);
+    /* 1fr だと長い予定タイトル（折り返さない）の幅で列が広がるため、最小幅 0 で 7 列を等幅に固定する */
+    grid-template-columns: repeat(7, minmax(0, 1fr));
     grid-auto-rows: minmax(70px, 1fr);
     /* 列の隙間をなくし、セル上下の区切り線を横一列につなげる */
     gap: 2px 0;

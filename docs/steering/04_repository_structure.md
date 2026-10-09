@@ -43,7 +43,7 @@ family-app/
 │   │   │   ├── Calendar/             # スワイプカレンダー（SwipeCalendar, MonthGrid, DayCell, 各種Sheet, EventEditForm, RecurrenceField, RecurrenceScopeDialog, ParticipantSelectSheet, ParticipantAvatars, LabelSelectSheet, LabelEditForm, CalendarSettingsSheet）
 │   │   │   ├── Common/               # 共通コンポーネント（再利用可能。PwaUpdateNotifier, DatePickerDialog, TimePickerDialog, PickerField 等）
 │   │   │   ├── Dok/                  # Dok機能コンポーネント
-│   │   │   ├── Family/               # 家族設定・メンバー管理・切り替えコンポーネント（FamilyPwaSettingsForm 等）
+│   │   │   ├── Family/               # 家族設定・メンバー管理・切り替えコンポーネント（FamilyPwaSettingsForm, FamilyImageSettingsForm 等）
 │   │   │   ├── FamilyTask/           # タスク関連コンポーネント
 │   │   │   └── MyPage/               # マイページコンポーネント
 │   │   ├── Composables/              # Vue3 Composition API（useXxx形式）

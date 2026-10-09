@@ -3,7 +3,6 @@
 namespace App\Http\Middleware;
 
 use App\Services\CurrentFamilyService;
-use App\Services\InviteUrlService;
 use App\Services\PwaManifestService;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
@@ -52,23 +51,16 @@ class HandleInertiaRequests extends Middleware
                 }
 
                 return [
-                    'id'   => $family->id,
-                    'name' => $family->name,
+                    'id'      => $family->id,
+                    'name'    => $family->name,
+                    // 家族のアイコン（家族設定で登録した画像。サイドメニューの家族名の横に表示）
+                    'iconUrl' => $family->settings['icon']['url'] ?? null,
                 ];
             },
             'pwa' => function () use ($request) {
                 $family = $request->user() ? app(CurrentFamilyService::class)->getCurrentFamily() : null;
 
                 return app(PwaManifestService::class)->resolve($family);
-            },
-            'inviteUrls' => function () {
-                $family = app(CurrentFamilyService::class)->getCurrentFamily();
-
-                if (!$family) {
-                    return [];
-                }
-
-                return app(InviteUrlService::class)->generateInviteUrls($family);
             },
         ];
     }

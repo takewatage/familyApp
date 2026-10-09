@@ -64,6 +64,10 @@ Route::middleware(['auth'])->group(function () {
     Route::patch('/family/settings', [FamilySettingsController::class, 'update'])->name('family.settings.update');
     Route::post('/family/settings/pwa', [FamilySettingsController::class, 'updatePwa'])->name('family.settings.pwa.update');
     Route::delete('/family/settings/pwa/icon', [FamilySettingsController::class, 'destroyPwaIcon'])->name('family.settings.pwa.icon.destroy');
+    Route::post('/family/settings/banner', [FamilySettingsController::class, 'updateBanner'])->name('family.settings.banner.update');
+    Route::delete('/family/settings/banner', [FamilySettingsController::class, 'destroyBanner'])->name('family.settings.banner.destroy');
+    Route::post('/family/settings/icon', [FamilySettingsController::class, 'updateIcon'])->name('family.settings.icon.update');
+    Route::delete('/family/settings/icon', [FamilySettingsController::class, 'destroyIcon'])->name('family.settings.icon.destroy');
     Route::post('/family/code/regenerate', [FamilySettingsController::class, 'regenerateCode'])->name('family.code.regenerate');
 
     // メンバー管理
