@@ -15,7 +15,7 @@ use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 class CalendarSettingsResult extends Data
 {
     public function __construct(
-        /** 誕生日に使うラベル（未設定なら既定の色） */
-        public ?string $birthday_label_id = null,
+        /** 誕生日の予定の色（#rrggbb。未設定なら画面の既定色） */
+        public ?string $birthday_color = null,
     ) {}
 }

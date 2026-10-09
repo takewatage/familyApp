@@ -17,12 +17,18 @@ const props = withDefaults(
 const visible = computed(() => props.participants.slice(0, props.max))
 const rest = computed(() => props.participants.length - visible.value.length)
 const label = computed(() => props.participants.map((p) => p.name).join('、'))
+
+/** 頭文字・「+N」の文字はアイコンの大きさに合わせる */
+const fontSize = computed(() => `${Math.round(props.size * 0.42)}px`)
+/** 重なり幅もアイコンの大きさに合わせる */
+const overlap = computed(() => `-${Math.round(props.size * 0.25)}px`)
 </script>
 
 <template>
     <div
         v-if="participants.length"
         class="participant-avatars"
+        :style="{ '--participant-font-size': fontSize, '--participant-overlap': overlap }"
         role="img"
         :aria-label="`参加者: ${label}`">
         <v-avatar
@@ -59,7 +65,7 @@ const label = computed(() => props.participants.map((p) => p.name).join('、'))
 
 /* 少しずつ重ねて表示する */
 .participant-avatars__item + .participant-avatars__item {
-    margin-left: -6px;
+    margin-left: var(--participant-overlap);
 }
 
 .participant-avatars__item {
@@ -67,7 +73,7 @@ const label = computed(() => props.participants.map((p) => p.name).join('、'))
 }
 
 .participant-avatars__initial {
-    font-size: 11px;
+    font-size: var(--participant-font-size);
     font-weight: 600;
     color: white;
 }

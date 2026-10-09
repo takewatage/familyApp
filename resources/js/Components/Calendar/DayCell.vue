@@ -72,6 +72,11 @@ function onClick(): void {
                     :key="ev.id"
                     class="day-cell__event"
                     :style="{ background: resolveEventColor(ev), color: eventTextColor(ev) }">
+                    <img
+                        v-if="ev.iconImage"
+                        :src="ev.iconImage"
+                        alt=""
+                        class="day-cell__event-icon">
                     {{ ev.title }}
                 </div>
                 <div
@@ -96,6 +101,8 @@ function onClick(): void {
     /* overflow: hidden だと角丸で上の区切り線の両端が切れるため使わない。
        予定が多くても行が伸びないよう min-height: 0 にする（はみ出しは __events 側で隠す） */
     min-height: 0;
+    /* 長い予定タイトルでセルが横に広がらないようにする（文字は __event 側で切る） */
+    min-width: 0;
 }
 
 /* セル上の区切り線。テーマの border 色（ライト: 黒 / ダーク: 白、不透明度 0.12）に追従。
@@ -183,6 +190,13 @@ function onClick(): void {
     text-overflow: clip;
     line-height: 1.3;
     flex-shrink: 0;
+}
+
+.day-cell__event-icon {
+    height: 1.2em;
+    width: auto;
+    margin-right: 1px;
+    vertical-align: -0.25em;
 }
 
 .day-cell__more {

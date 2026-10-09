@@ -3,7 +3,7 @@ import { gotoCalendar, openCalendar } from '../support/calendar'
 
 // カレンダー設定（歯車 → ボトムシート）: 誕生日のラベル・ラベルの編集
 test.describe('カレンダー設定', () => {
-    test('誕生日のラベルを設定すると誕生日がその色になり、保存される', async ({ page, request }) => {
+    test('誕生日のカラーをカラーピッカーで選ぶと誕生日がその色になり、保存される', async ({ page, request }) => {
         const { owner } = await openCalendar(page, request, { ownerBirthdayToday: true })
         const birthday = page.locator('.upcoming-event', { hasText: `${owner.name}の誕生日` })
 
@@ -12,23 +12,28 @@ test.describe('カレンダー設定', () => {
 
         await page.getByRole('button', { name: 'カレンダー設定' }).click()
         await expect(page.getByText('カレンダー設定', { exact: true })).toBeVisible()
-        await expect(page.getByText('ラベルの編集')).toBeVisible()
-        await page.getByText('誕生日のラベル').click()
+        await page.getByText('誕生日のカラー').click()
+
+        // カラーピッカーの HEX 入力欄に色を入れて決定する
+        const sheet = page.locator('.birthday-color-sheet')
+        const hex = sheet.locator('.v-color-picker-edit input')
+        await hex.fill('#123ABC')
+        await hex.press('Enter')
 
         const saved = page.waitForResponse((res) => res.url().includes('/calendar/settings') && res.request().method() === 'PUT')
-        await page.getByRole('radio', { name: 'ディープ・スカイブルー' }).click()
+        await sheet.getByRole('button', { name: '決定' }).click()
         expect((await saved).ok()).toBe(true)
 
-        // 誕生日がラベルの色（#2E8FE0）になり、再読み込みしても残る
+        // 誕生日がその色になり、再読み込みしても残る
         await page.keyboard.press('Escape')
-        await expect(birthday).toHaveCSS('border-left-color', 'rgb(46, 143, 224)')
+        await expect(birthday).toHaveCSS('border-left-color', 'rgb(18, 58, 188)')
         await gotoCalendar(page)
-        await expect(birthday).toHaveCSS('border-left-color', 'rgb(46, 143, 224)')
+        await expect(birthday).toHaveCSS('border-left-color', 'rgb(18, 58, 188)')
 
-        // 「ラベルを使わない」に戻すと既定の色
+        // 「既定の色に戻す」で元の色
         await page.getByRole('button', { name: 'カレンダー設定' }).click()
-        await page.getByText('誕生日のラベル').click()
-        await page.getByRole('radio', { name: /ラベルを使わない/ }).click()
+        await page.getByText('誕生日のカラー').click()
+        await page.locator('.birthday-color-sheet').getByRole('button', { name: '既定の色に戻す' }).click()
         await page.keyboard.press('Escape')
         await expect(birthday).toHaveCSS('border-left-color', 'rgb(247, 154, 46)')
     })

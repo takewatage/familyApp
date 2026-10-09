@@ -18,5 +18,7 @@ class HomeResult extends Data
         public array $members,
         /** @var VirtualUserData[] */
         public array $virtual_users,
+        /** 家族のバナー画像（ホームの一番上に表示。未設定なら null） */
+        public ?string $banner_url = null,
     ) {}
 }

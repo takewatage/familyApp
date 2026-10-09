@@ -99,7 +99,7 @@ avatarUrl?: string;
 isVirtual: boolean;
 };
 export type CalendarSettingsResult = {
-birthdayLabelId?: string;
+birthdayColor?: string;
 };
 export type CategoriesPageResult = {
 categories: Array<CategoryData>;
@@ -206,6 +206,8 @@ export type FamilySettingsResult = {
 family: FamilyData;
 isOwner: boolean;
 pwa: FamilyPwaSettingsData;
+bannerUrl?: string;
+iconUrl?: string;
 };
 export type FamilySwitchResult = {
 families: Array<FamilyForSwitchData>;
@@ -230,6 +232,7 @@ footerItems: Array<string>;
 export type HomeResult = {
 members: Array<FamilyMemberData>;
 virtualUsers: Array<VirtualUserData>;
+bannerUrl?: string;
 };
 export type InviteConfirmResult = {
 familyName?: string;
@@ -467,7 +470,7 @@ export type UpdateCalendarLabelsRequest = {
 labels: Array<CalendarLabelInputData>;
 };
 export type UpdateCalendarSettingsRequest = {
-birthdayLabelId?: string;
+birthdayColor?: string;
 };
 export type UpdateCategoryRequest = {
 name: string;
@@ -485,6 +488,12 @@ shopName?: string;
 memberType?: string;
 memberId?: string;
 memo?: string;
+};
+export type UpdateFamilyBannerRequest = {
+banner: any;
+};
+export type UpdateFamilyIconRequest = {
+icon: any;
 };
 export type UpdateFamilyPwaSettingsRequest = {
 name: string;

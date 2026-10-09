@@ -13,11 +13,11 @@
 | S-005 | タスク一覧画面              | カテゴリー別タスクの表示・操作                             | ✅完了      |
 | S-006 | カテゴリー管理ダイアログ     | カテゴリーの作成・編集・削除・並び替え                       | ✅完了      |
 | S-007 | タスク保存フォーム          | タスクの作成・編集フォーム                                 | ✅完了      |
-| S-008 | マイページ画面              | プロフィール（名前・アバター・誕生日）の確認・編集、設定・家族設定・アプリインストール案内へのナビゲーション、バージョン表示 | ✅完了      |
+| S-008 | マイページ画面              | プロフィール（名前・アバター・誕生日）の確認・編集、設定・家族設定・アプリインストール案内へのナビゲーション、バージョン表示、ログアウト | ✅完了      |
 | S-013 | 設定ページ                 | テーマ（ライト/ダーク/システム）・テーマカラーのユーザー個別設定                  | ✅完了      |
 | S-015 | アプリショートカット設定ページ | フッターに表示するアプリの追加・削除・並び替え                               | ✅完了      |
 | S-009 | Dok画面                   | 日用品価格管理・計算                                      | ⚠️一部完了  |
-| S-010 | 家族設定変更ページ          | 家族名・最大メンバー数・招待コード（有効期限付き再生成）管理、アプリ設定（ホーム画面のアプリ名・アプリ画像） | ✅完了      |
+| S-010 | 家族設定変更ページ          | 家族名・最大メンバー数・招待コード（有効期限付き再生成）管理、家族のアイコン、ホームのバナー画像、アプリ設定（ホーム画面のアプリ名・アプリ画像） | ✅完了      |
 | S-011 | メンバー管理ページ          | 実ユーザー一覧・除名、仮想ユーザー管理、招待コード表示        | ✅完了      |
 | S-012 | 家族切り替えページ          | 所属家族一覧・アクティブ家族の切り替え                      | ✅完了      |
 | S-016 | 支出一覧・登録画面（家計簿）  | 月切替・支出の登録/編集/削除/再登録、店舗オートコンプリート     | ✅完了      |
@@ -44,7 +44,6 @@
 #### 構成要素
 
 - **Layouts/AuthenticatedLayout.vue**: 認証済みページの統一レイアウト（旧 DokLayout を統合）
-- **Components/Family/InviteBottomSheet.vue**: サイドメニューから開く招待ボトムシート
 - **Components/Common/PwaUpdateNotifier.vue**: 新バージョン更新通知（S-027）
 - **Composables/Common/usePwaMeta.ts**: 家族切り替え・ログアウト時に `<head>` の manifest / apple-touch-icon / アプリ名を差し替え（`app.ts` で全ページ共通に登録）
 - **Composables/Common/useAppTheme.ts**: テーマ適用時に `<meta name="theme-color">` もユーザーのテーマカラーに更新
@@ -57,8 +56,7 @@
 #### サイドメニュー（ドロワー）
 
 - コンテンツの上にオーバーレイ表示（`temporary`）、横幅は画面の90%
-- 最上部: 家族アイコン + 現在の家族名（共有プロパティ `currentFamily` から取得）
-- 招待ボタン: `InviteBottomSheet` を開いてメンバー招待（共有プロパティ `inviteUrls` を使用）
+- 最上部: 家族のアイコン（家族設定で登録した画像。未設定なら既定のアイコン）+ 現在の家族名（共有プロパティ `currentFamily` の `name` / `iconUrl`）
 - アプリ一覧: ホーム（`/home`）・どっちがお得カネ（`/dok`）・TODOリスト（`/tasks`）・カレンダー（`/calendar`）（`Constants/mainAppMenu.ts` で管理）
 - 最下部: 「アプリをインストール」→ アプリインストール案内ページ（S-026）
 
@@ -76,8 +74,7 @@
 |---|---|---|
 | `auth.user` | `UserData`（`avatar` アクセサ付き） | ログインユーザー情報（アバター画像URL含む） |
 | `userSettings` | `{ theme, themeName, footerItems }` | テーマ・テーマカラープリセット・フッター設定 |
-| `currentFamily` | `{ id, name } \| null` | アクティブ家族情報 |
-| `inviteUrls` | `Record<string, string>` | ロール別署名付き招待URL（`InviteUrlService` 経由） |
+| `currentFamily` | `{ id, name, iconUrl } \| null` | アクティブ家族情報（`iconUrl`: 家族のアイコン。未設定なら null） |
 | `pwa` | `FamilyPwaSettingsData` | 現在の家族の PWA 外観（アプリ名・アイコン URL・manifest ハッシュ）。未ログイン・未設定は既定値（`PwaManifestService`） |
 
 ---
@@ -156,17 +153,22 @@
 
 #### 概要
 
-ログイン後のトップ画面（`/home`）。ヒーローセクションで「今日の日付・家族名・メンバーアバター一覧」を表示し、その下に利用可能なアプリをグリッドで一覧する。
+ログイン後のトップ画面（`/home`）。ヒーローセクションで「今日の日付・家族名・メンバーアバター一覧」を表示し（家族のバナー画像を登録していればその画像の上に重ねる）、その下に利用可能なアプリをグリッドで一覧する。
 
 #### 構成要素
 
 - **Pages/Home.vue**: ページコンポーネント（AuthenticatedLayout 使用）
 - **HomeController::index()**: `CurrentFamilyService` 経由でアクティブ家族を取得し、`HomeResult` DTO を返す
-- **Dtos/Home/HomeResult.php**: `members`（`FamilyMemberData[]`）・`virtualUsers`（`VirtualUserData[]`）を保持する props 用 DTO
+- **Dtos/Home/HomeResult.php**: `members`（`FamilyMemberData[]`）・`virtualUsers`（`VirtualUserData[]`）・`bannerUrl`（家族のバナー画像。未設定なら null）を保持する props 用 DTO
+
+#### バナー
+
+- 家族設定（S-010）で登録した画像をヒーローの背景にし（縦横比 3:1・`cover` で切り抜き。中身が収まらなければ縦に伸びる）、日付・家族名・メンバーアバターを下寄せで重ねる。文字が読めるよう画像の下側を暗くするグラデーションと文字の影を付ける
+- 未設定ならヒーローの背景はテーマカラーのグラデーション
 
 #### ヒーローセクション
 
-- 背景: テーマカラー（`primary` → `secondary`）の 135deg グラデーション
+- 背景: テーマカラー（`primary` → `secondary`）の 135deg グラデーション（家族のバナー画像があればその画像）
 - 日付ラベル: `〇月〇日（曜日）` 形式（`todayLabel` computed でクライアント生成）
 - 家族名: 共有プロパティ `currentFamily` から取得（未設定時は非表示）
 - メンバーアバター一覧: 実ユーザー（`members`）＋仮想ユーザー（`virtualUsers`）を横並び表示。アバター画像があれば画像、無ければ名前の先頭1文字（イニシャル）を表示
@@ -244,7 +246,9 @@
 - **EditProfileForm.vue**: 名前・誕生日・アバター画像の編集フォーム
 - **ImageUploadField.vue**: 画像アップロードUI（プレビュー付き）
 - **DatePickerDialog.vue**: 誕生日選択用日付ピッカーダイアログ
+- プロフィール: アバター画像の下に、ユーザー名・メールアドレス・生年月日・登録日を「左にラベル・右に値」で表示（長い値は省略表示）
 - 「アプリ」カード: 「アプリをインストール」（S-026 へ遷移）・バージョン表示（`v{package.json の version} ({ビルドID})`、`Constants/appVersion.ts`）
+- ログアウトボタン: ページの一番下。確認ダイアログ（`useConfirmDialog`）の後に `POST /logout`
 
 #### ユーザー操作フロー（誕生日変更）
 
@@ -334,6 +338,7 @@
 
 - **Pages/MyPage/FamilySettings.vue**: ページコンポーネント（インラインフォーム）
 - **Components/Family/RegenerateFamilyCodeDialog.vue**: 家族コード再生成ダイアログ（有効期限選択付き）
+- **Components/Family/FamilyImageSettingsForm.vue**: 家族設定の画像カード（「家族のアイコン」: 丸いプレビュー・推奨 256×256 以上 / 「ホームのバナー」: 3:1 のプレビュー・推奨 1200×400 程度）。画像を選択・保存・削除（オーナーのみ。オーナー以外はプレビューのみ）
 - **Components/Family/FamilyPwaSettingsForm.vue**: アプリ設定（ホーム画面）カード。アプリ名・アプリ画像・ホーム画面風プレビュー・反映タイミングの注意書き
 
 #### ユーザー操作フロー
@@ -518,8 +523,8 @@ https://{ドメイン}/join/{code}?role={role}&signature={sig}
 - **Components/Common/PickerField.vue**: 入力欄と同じ見た目（読み取り専用の v-text-field）の選択欄。繰り返し・参加者・ラベルの欄に使い、タップでボトムシートを開く
 - **Components/Calendar/RecurrenceField.vue**: 繰り返しの設定欄（ボトムシートで 繰り返さない／毎日／毎週（曜日）／毎月（日付・第n曜日）／毎年、終了: なし・日付・回数）。値は RRULE 文字列（`Utils/calendarRecurrence.ts` で相互変換）
 - **Components/Calendar/RecurrenceScopeDialog.vue**: 繰り返し予定の変更・削除の範囲（この予定のみ／これ以降の予定／すべての予定）を選ぶダイアログ
-- **Components/Calendar/CalendarSettingsSheet.vue**: カレンダー設定（ヘッダーの「今日」ボタンの左の歯車から、画面の 90% の高さのボトムシートで開く）。メニューは「ラベルの編集」（ラベル編集画面を開く）と「誕生日のラベル」（ラベルを選ぶ／使わない）。設定項目はコンポーネント内の `MENU` に追加していく
-- **Components/Calendar/LabelSelectSheet.vue**: ラベルを選ぶボトムシート（色と名前の一覧から単一選択。一番下の控えめなボタン「ラベル名やカラーを変更」で編集画面へ。`none-label` で「ラベルを使わない」選択肢、`hide-edit-button` で編集ボタンを隠す）
+- **Components/Calendar/CalendarSettingsSheet.vue**: カレンダー設定（ヘッダーの「今日」ボタンの左の歯車から、画面の 90% の高さのボトムシートで開く）。メニューは「ラベルの編集」（ラベル編集画面を開く）と「誕生日のカラー」（Vuetify の `v-color-picker` で自由に色を選ぶ。「既定の色に戻す」あり）。設定項目はコンポーネント内の `MENU` に追加していく
+- **Components/Calendar/LabelSelectSheet.vue**: ラベルを選ぶボトムシート（色と名前の一覧から単一選択。一番下の控えめなボタン「ラベル名やカラーを変更」で編集画面へ）
 - **Components/Calendar/LabelEditForm.vue**: ラベルの編集画面（フルスクリーン。ドラッグで並び替え・名前・カラー（パレットから選択））。保存すると `PUT /calendar/labels` で家族のラベルを更新し、同じラベルの予定の色も変わる
 - **Components/Calendar/ParticipantSelectSheet.vue** / **ParticipantAvatars.vue**: 参加者の複数選択ボトムシート / 参加者アイコン（最大 4 人を重ねて表示し、5 人以上は「+N」。フォームの参加者欄は名前を出さずアイコンのみ）
 - **Constants/calendarColors.ts**: カラーパレット（25 色）・誕生日の色
@@ -542,7 +547,8 @@ https://{ドメイン}/join/{code}?role={role}&signature={sig}
 - 一度に取得できる期間は 100 日まで
 - 複数日の予定は期間中の各日に別々のチップで表示する（バー表示は未対応）
 - 家族全員（ゲスト・子供を含む）が予定・ラベル・カレンダー設定を編集できる。リアルタイム同期・通知はなし
-- 誕生日の色は「誕生日のラベル」の色。未設定なら既定の色（`BIRTHDAY_COLOR`）
+- 誕生日の色はカレンダー設定の「誕生日のカラー」。未設定なら既定の色（`BIRTHDAY_COLOR`）。誕生日の予定はラベルを持たない
+- 誕生日の予定はタイトルの前にケーキの画像（`public/icons/birthday_cake.png`、`BIRTHDAY_ICON`）を表示する（月のマスの予定チップ・日別の予定一覧・これから7日間の予定）。`CalendarEvent.iconImage` に画像の URL を渡すと表示される
 
 ---
 
@@ -576,7 +582,7 @@ https://{ドメイン}/join/{code}?role={role}&signature={sig}
 | SnackbarNotification.vue    | 操作結果の通知スナックバー           | エラー・成功時のフィードバック        |
 | RegenerateFamilyCodeDialog.vue | 家族コード再生成ダイアログ（有効期限選択）| 家族設定変更ページ              |
 | VirtualUserDialog.vue       | 仮想ユーザー追加・編集ダイアログ       | メンバー管理ページ                 |
-| InviteBottomSheet.vue       | 招待ロール選択＋メッセージコピー・QR表示ボトムシート | 共通レイアウト・メンバー管理ページ |
+| InviteBottomSheet.vue       | 招待ロール選択＋メッセージコピー・QR表示ボトムシート | メンバー管理ページ |
 | InviteQrDialog.vue          | QRコード表示ダイアログ（qrcodeライブラリ）| InviteBottomSheet から起動     |
 | LoadingOverlay.vue          | ローディングオーバーレイ             | API通信中のUI                     |
 | ImageUploadField.vue        | 画像選択・プレビュー・アップロード    | マイページのアバター変更            |

@@ -3,14 +3,11 @@
 // 実際の変更（ラベルの編集画面・保存）は利用側が行い、このシートは選んだ操作を emit する。
 
 import { computed, ref } from 'vue'
-import LabelSelectSheet from '@/Components/Calendar/LabelSelectSheet.vue'
 import { BIRTHDAY_COLOR } from '@/Constants/calendarColors'
-import type { CalendarLabel } from '@/Types/calendar'
 import type { CalendarSettingsResult } from '@/Types/dto.generated'
 
 const props = defineProps<{
     open: boolean
-    labels: CalendarLabel[]
     settings: CalendarSettingsResult
 }>()
 
@@ -18,8 +15,8 @@ const emit = defineEmits<{
     (e: 'update:open', value: boolean): void
     /** ラベルの編集画面を開く */
     (e: 'edit-labels'): void
-    /** 誕生日のラベルを変更した（ラベルを使わない場合は null） */
-    (e: 'update-birthday-label', labelId: string | null): void
+    /** 誕生日のカラーを変更した（既定の色に戻す場合は null） */
+    (e: 'update-birthday-color', color: string | null): void
 }>()
 
 const isOpen = computed({
@@ -27,9 +24,25 @@ const isOpen = computed({
     set: (v: boolean) => emit('update:open', v),
 })
 
+// 誕生日のカラー（カラーピッカーのシート）
 const birthdaySheetOpen = ref(false)
+const pickerColor = ref<string>(BIRTHDAY_COLOR)
 
-const birthdayLabel = computed(() => props.labels.find((l) => l.id === props.settings.birthdayLabelId))
+function openBirthdayColor(): void {
+    pickerColor.value = props.settings.birthdayColor ?? BIRTHDAY_COLOR
+    birthdaySheetOpen.value = true
+}
+
+function confirmBirthdayColor(): void {
+    // カラーピッカーは #RRGGBB / #RRGGBBAA を返すことがあるため、#rrggbb にそろえる
+    emit('update-birthday-color', pickerColor.value.slice(0, 7).toLowerCase())
+    birthdaySheetOpen.value = false
+}
+
+function resetBirthdayColor(): void {
+    emit('update-birthday-color', null)
+    birthdaySheetOpen.value = false
+}
 
 interface MenuItem {
     key: string
@@ -50,18 +63,15 @@ const MENU = computed<MenuItem[]>(() => [
         onClick: () => emit('edit-labels'),
     },
     {
-        key: 'birthday-label',
+        key: 'birthday-color',
         icon: 'mdi-cake-variant-outline',
-        title: '誕生日のラベル',
-        subtitle: birthdayLabel.value?.name ?? 'ラベルを使わない（既定の色）',
-        color: birthdayLabel.value?.color ?? BIRTHDAY_COLOR,
-        onClick: () => (birthdaySheetOpen.value = true),
+        title: '誕生日のカラー',
+        subtitle: props.settings.birthdayColor ? props.settings.birthdayColor.toUpperCase() : '既定の色',
+        color: props.settings.birthdayColor ?? BIRTHDAY_COLOR,
+        onClick: openBirthdayColor,
     },
 ])
 
-function onBirthdayLabelSelect(labelId: string): void {
-    emit('update-birthday-label', labelId || null)
-}
 </script>
 
 <template>
@@ -104,14 +114,47 @@ function onBirthdayLabelSelect(labelId: string): void {
         </v-card>
     </v-bottom-sheet>
 
-    <LabelSelectSheet
-        v-model:open="birthdaySheetOpen"
-        :model-value="settings.birthdayLabelId ?? ''"
-        :labels="labels"
-        title="誕生日のラベル"
-        none-label="ラベルを使わない（既定の色）"
-        hide-edit-button
-        @update:model-value="onBirthdayLabelSelect" />
+    <v-bottom-sheet v-model="birthdaySheetOpen">
+        <v-card class="birthday-color-sheet">
+            <v-toolbar
+                title="誕生日のカラー"
+                color="surface"
+                density="comfortable">
+                <template #append>
+                    <v-btn
+                        icon="mdi-close"
+                        aria-label="閉じる"
+                        @click="birthdaySheetOpen = false" />
+                </template>
+            </v-toolbar>
+
+            <div class="d-flex justify-center px-4">
+                <v-color-picker
+                    v-model="pickerColor"
+                    mode="hex"
+                    :modes="['hex']"
+                    elevation="0"
+                    width="100%"
+                    max-width="400" />
+            </div>
+
+            <v-card-actions class="px-4 pb-4">
+                <v-btn
+                    variant="text"
+                    prepend-icon="mdi-restore"
+                    @click="resetBirthdayColor">
+                    既定の色に戻す
+                </v-btn>
+                <v-spacer />
+                <v-btn
+                    color="primary"
+                    variant="flat"
+                    @click="confirmBirthdayColor">
+                    決定
+                </v-btn>
+            </v-card-actions>
+        </v-card>
+    </v-bottom-sheet>
 </template>
 
 <style scoped>
@@ -127,6 +170,10 @@ function onBirthdayLabelSelect(labelId: string): void {
     flex: 1;
     min-height: 0;
     overflow-y: auto;
+}
+
+.birthday-color-sheet {
+    padding-bottom: env(safe-area-inset-bottom);
 }
 
 .calendar-settings-sheet__color {

@@ -28,7 +28,7 @@ export const calendarApi = {
      * カレンダー設定の更新（送った項目だけ更新する）。
      * null は「未設定に戻す」の意味で送るため、生成型（UpdateCalendarSettingsRequest は省略可のみ）ではなく明示する
      */
-    updateSettings(data: { birthdayLabelId?: string | null }) {
+    updateSettings(data: { birthdayColor?: string | null }) {
         return client.put<{ settings: CalendarSettingsResult }>('/calendar/settings', data)
     },
     updateLabels(labels: CalendarLabelInputData[]) {

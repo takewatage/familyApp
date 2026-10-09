@@ -29,6 +29,7 @@ class HomeController extends Controller
         return Inertia::render('Home', HomeResult::from([
             'members' => $this->familyMemberService->members($family),
             'virtual_users' => $this->familyMemberService->virtualUsers($family),
+            'banner_url' => $family->settings['banner']['url'] ?? null,
         ]));
     }
 }

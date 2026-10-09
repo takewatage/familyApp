@@ -393,7 +393,8 @@ function onPickerSelect(value: { year: number; month: number }): void {
 
 .swipe-calendar__weekdays {
     display: grid;
-    grid-template-columns: repeat(7, 1fr);
+    /* 月グリッドと同じく等幅に固定する */
+    grid-template-columns: repeat(7, minmax(0, 1fr));
     padding: 0 4px;
 }
 

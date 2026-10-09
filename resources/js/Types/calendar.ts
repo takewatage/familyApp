@@ -26,6 +26,8 @@ export interface CalendarEvent {
     time?: string
     /** リストやアバターに表示するアイコン名（mdi-xxx） */
     icon?: string
+    /** タイトルの前に表示する画像アイコンの URL（例: 誕生日のケーキ） */
+    iconImage?: string
     /** 予定に関係する人（リストの右端にアイコンを表示する） */
     participants?: CalendarParticipant[]
     /** 任意の追加データ。利用側が自由に使ってよい。 */

@@ -1,7 +1,12 @@
 <template>
     <v-card>
         <v-card-title>{{ title }}</v-card-title>
-        <v-card-text style="white-space: pre-line">{{ message }}</v-card-text>
+        <!-- 本文は任意（タイトルだけで足りる確認では出さない） -->
+        <v-card-text
+            v-if="message"
+            style="white-space: pre-line">
+            {{ message }}
+        </v-card-text>
         <v-card-actions>
             <v-spacer />
             <v-btn
@@ -32,8 +37,8 @@ interface Props extends DialogComponentProps<boolean> {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-    title: 'Confirm',
-    message: 'Are you sure?',
+    title: '確認',
+    message: '',
     confirmText: 'OK',
     cancelText: 'キャンセル',
     confirmColor: 'primary',

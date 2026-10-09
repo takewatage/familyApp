@@ -16,5 +16,9 @@ class FamilySettingsResult extends Data
         public FamilyData $family,
         public bool $is_owner,
         public FamilyPwaSettingsData $pwa,
+        /** バナー画像（未設定なら null） */
+        public ?string $banner_url = null,
+        /** 家族のアイコン（未設定なら null） */
+        public ?string $icon_url = null,
     ) {}
 }

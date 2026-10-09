@@ -18,6 +18,10 @@ export async function createFamily(
         expired?: boolean
         /** オーナーの誕生日を今日にする（それ以外のユーザーは誕生日なし） */
         ownerBirthdayToday?: boolean
+        /** 家族のバナー画像の URL（data URL も可） */
+        bannerUrl?: string
+        /** 家族のアイコン画像の URL（data URL も可） */
+        iconUrl?: string
     } = {},
 ): Promise<CreatedFamily> {
     const response = await request.post('/__e2e/families', {
@@ -27,6 +31,8 @@ export async function createFamily(
             members: options.members,
             expired: options.expired,
             owner_birthday_today: options.ownerBirthdayToday,
+            banner_url: options.bannerUrl,
+            icon_url: options.iconUrl,
         },
     })
 

@@ -25,6 +25,10 @@ Route::post('/families', function (Request $request, InviteUrlService $inviteUrl
         'members' => ['nullable', 'integer', 'min:0'],
         'expired' => ['nullable', 'boolean'],
         'owner_birthday_today' => ['nullable', 'boolean'],
+        // バナー画像の URL（画像ストレージにアップロードせず、家族設定に直接入れる）
+        'banner_url' => ['nullable', 'string'],
+        // 家族のアイコンの URL（同上）
+        'icon_url' => ['nullable', 'string'],
     ]);
 
     // owner_email を指定した場合は既存ユーザーに 2 つ目以降の家族を作る
@@ -39,6 +43,10 @@ Route::post('/families', function (Request $request, InviteUrlService $inviteUrl
         'owner_id' => $owner->id,
         'max_members' => $data['max_members'] ?? 10,
         'code_expires_at' => ($data['expired'] ?? false) ? now()->subDay() : null,
+        'settings' => array_filter([
+            'banner' => isset($data['banner_url']) ? ['external_id' => 'e2e-banner', 'url' => $data['banner_url']] : null,
+            'icon' => isset($data['icon_url']) ? ['external_id' => 'e2e-icon', 'url' => $data['icon_url']] : null,
+        ]) ?: null,
     ]);
     $family->members()->attach($owner->id, ['role' => 'owner']);
 

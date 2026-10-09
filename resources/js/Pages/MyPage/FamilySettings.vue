@@ -8,6 +8,7 @@ import { router } from '@inertiajs/vue3'
 import type { FamilySettingsResult, UpdateFamilySettingsRequest } from '@/Types/dto.generated'
 import RegenerateFamilyCodeDialog from '@/Components/Family/RegenerateFamilyCodeDialog.vue'
 import FamilyPwaSettingsForm from '@/Components/Family/FamilyPwaSettingsForm.vue'
+import FamilyImageSettingsForm from '@/Components/Family/FamilyImageSettingsForm.vue'
 
 defineOptions({ layout: AuthenticatedLayout })
 
@@ -93,6 +94,30 @@ function formatExpiry(expiresAt: string | null | undefined): string {
                         </v-btn>
                     </v-card-actions>
                 </v-card>
+
+                <FamilyImageSettingsForm
+                    :key="`icon-${props.iconUrl ?? 'none'}`"
+                    title="家族のアイコン"
+                    hint="サイドメニューの家族名の横に表示されます。正方形の画像（256×256 以上）がおすすめです。"
+                    shape="icon"
+                    field="icon"
+                    update-route="family.settings.icon.update"
+                    destroy-route="family.settings.icon.destroy"
+                    :image-url="props.iconUrl"
+                    :is-owner="props.isOwner"
+                    class="mt-4"/>
+
+                <FamilyImageSettingsForm
+                    :key="`banner-${props.bannerUrl ?? 'none'}`"
+                    title="ホームのバナー"
+                    hint="ホームの日付・家族名の背景に表示されます。横長の画像（1200×400 程度・3:1）がおすすめです。"
+                    shape="banner"
+                    field="banner"
+                    update-route="family.settings.banner.update"
+                    destroy-route="family.settings.banner.destroy"
+                    :image-url="props.bannerUrl"
+                    :is-owner="props.isOwner"
+                    class="mt-4"/>
 
                 <FamilyPwaSettingsForm
                     :key="props.pwa.manifestHash"

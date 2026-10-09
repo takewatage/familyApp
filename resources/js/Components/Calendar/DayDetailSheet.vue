@@ -74,9 +74,19 @@ const isOpen = computed({
                             :style="{ borderLeftColor: resolveEventColor(ev) }"
                             @click="emit('select-event', ev)">
                             <template
+                                v-if="ev.iconImage"
+                                #prepend>
+                                <img
+                                    :src="ev.iconImage"
+                                    alt=""
+                                    class="day-detail-sheet__event-icon">
+                            </template>
+                            <template
                                 v-if="ev.participants?.length"
                                 #append>
-                                <ParticipantAvatars :participants="ev.participants" />
+                                <ParticipantAvatars
+                                    :participants="ev.participants"
+                                    :size="32" />
                             </template>
                         </v-list-item>
                     </v-list>
@@ -143,6 +153,14 @@ const isOpen = computed({
     position: absolute;
     right: 16px;
     bottom: calc(16px + env(safe-area-inset-bottom));
+}
+
+/* タイトルの前の画像アイコン（誕生日のケーキ等） */
+.day-detail-sheet__event-icon {
+    width: 28px;
+    height: 28px;
+    object-fit: contain;
+    margin-right: 12px;
 }
 
 /* 予定の色を左の縦線で示す */

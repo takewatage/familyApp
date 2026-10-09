@@ -5,7 +5,6 @@ import { useAppTheme } from '@/Composables/Common/useAppTheme'
 import LoadingOverlay from '@/Components/App/LoadingOverlay.vue'
 import SnackbarNotification from '@/Components/App/SnackbarNotification.vue'
 import PwaUpdateNotifier from '@/Components/Common/PwaUpdateNotifier.vue'
-import InviteBottomSheet from '@/Components/Family/InviteBottomSheet.vue'
 import { mainAppMenuItems } from '@/Constants/mainAppMenu'
 import { FOOTER_APPS, DEFAULT_FOOTER_ITEMS, FOOTER_HIDDEN_ROUTES } from '@/Constants/footerApps'
 import type { UserData } from '@/Types/dto.generated'
@@ -15,13 +14,13 @@ useAppTheme()
 const page = usePage()
 
 const user = computed(() => (page.props.auth as { user: UserData }).user)
-const currentFamily = computed(() => page.props.currentFamily as { id: string; name: string } | null)
-const inviteUrls = computed(() => (page.props.inviteUrls as Record<string, string>) ?? {})
+const currentFamily = computed(
+    () => page.props.currentFamily as { id: string; name: string; iconUrl: string | null } | null,
+)
 
 const appMenuItems = mainAppMenuItems.filter((item) => item.route !== '/mypage')
 
 const drawer = ref(false)
-const inviteSheetVisible = ref(false)
 
 const windowWidth = ref(window.innerWidth)
 const drawerWidth = computed(() => Math.round(windowWidth.value * 0.9))
@@ -72,17 +71,25 @@ const showFooter = computed(() =>
             floating
             :width="drawerWidth">
             <v-list>
+                <!-- 家族のアイコン（家族設定で登録した画像。未設定なら既定のアイコン）と家族名 -->
                 <v-list-item
-                    prepend-icon="mdi-account-group"
                     :title="currentFamily?.name ?? ''"
-                    class="py-4"/>
-
-                <v-divider/>
-
-                <v-list-item
-                    prepend-icon="mdi-account-plus"
-                    title="メンバーを招待する"
-                    @click="inviteSheetVisible = true; drawer = false"/>
+                    class="py-4">
+                    <template #prepend>
+                        <v-avatar
+                            v-if="currentFamily?.iconUrl"
+                            size="40"
+                            class="mr-2 drawer-family-icon">
+                            <v-img
+                                :src="currentFamily.iconUrl"
+                                cover
+                                alt="家族のアイコン"/>
+                        </v-avatar>
+                        <v-icon
+                            v-else
+                            icon="mdi-account-group"/>
+                    </template>
+                </v-list-item>
 
                 <v-divider/>
 
@@ -126,11 +133,6 @@ const showFooter = computed(() =>
                 </v-btn>
             </template>
         </v-app-bar>
-
-        <InviteBottomSheet
-            v-model="inviteSheetVisible"
-            :family-name="currentFamily?.name ?? ''"
-            :invite-urls="inviteUrls"/>
 
         <v-main>
             <Transition

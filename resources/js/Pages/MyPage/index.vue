@@ -2,6 +2,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
 import { usePageProps } from '@/Composables/Common/usePageProps'
 import { useDialogService } from '@/Composables/Common/useDialogService'
+import { useConfirmDialog } from '@/Composables/Common/useConfirmDialogService'
 import type { MyPageData } from '@/Types/dto.generated'
 import EditProfileForm from '@/Components/MyPage/EditProfileForm.vue'
 import { formatDate } from '@/Utils/dateFormatter'
@@ -13,6 +14,21 @@ defineOptions({ layout: AuthenticatedLayout })
 
 const props = usePageProps<MyPageData>()
 const { open } = useDialogService()
+const { confirm } = useConfirmDialog()
+
+async function logout(): Promise<void> {
+    const ok = await confirm({
+        title: 'ログアウトしますか？',
+        confirmText: 'ログアウト',
+        confirmColor: 'error',
+    })
+
+    if (!ok) {
+        return
+    }
+
+    router.post(route('logout'))
+}
 
 /** プロフィールの表示項目（左にラベル、右に値） */
 const profileRows = computed(() => [
@@ -144,6 +160,17 @@ const onEdit = async () => {
                             :subtitle="APP_VERSION_LABEL"/>
                     </v-list>
                 </v-card>
+
+                <v-btn
+                    block
+                    size="large"
+                    variant="outlined"
+                    color="error"
+                    prepend-icon="mdi-logout"
+                    class="mt-6 mb-4"
+                    @click="logout">
+                    ログアウト
+                </v-btn>
             </v-col>
         </v-row>
     </v-container>
