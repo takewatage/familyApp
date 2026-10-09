@@ -11,7 +11,7 @@ family-app/
 │   │   ├── Model/                    # モデル対応DTO（UserData, FamilyData, ExpenseData, QuickEntryData等）
 │   │   ├── Family/                   # 家族設定・メンバー管理・切り替え関連DTO
 │   │   ├── Task/                     # タスク関連リクエスト・レスポンスDTO
-│   │   ├── Calendar/                 # カレンダー関連DTO（CalendarPageResult, CalendarParticipantResult）
+│   │   ├── Calendar/                 # カレンダー関連DTO（CalendarPageResult, CalendarParticipantResult, CalendarEventResult, CalendarEventRequest, CalendarLabelResult 等）
 │   │   ├── Budget/                   # 家計簿関連DTO（Expense/Category/Shop/PaymentMethod/QuickEntry/RecurringExpense/Budget設定 のRequest・Result）
 │   │   └── MyPage/                   # マイページ関連DTO
 │   ├── Console/
@@ -24,9 +24,9 @@ family-app/
 │   │       └── Concerns/             # コントローラー共通トレイト（AuthorizesFamilyOwnership, ProvidesBudgetOptions）
 │   ├── Models/                       # Eloquentモデル（User, Family, VirtualUser, Task等）
 │   ├── Policies/                     # Laravel認可ポリシー（FamilyPolicy等）
-│   ├── Services/                     # ビジネスロジック（CurrentFamilyService, FamilyMemberService, FamilyProvisionService, SocialAuthService, ExpenseService, RecurringExpenseGenerator, RecurringExpenseService, BudgetService, BudgetCalculationService, BudgetAlertService, RecurringExpenseReminderService, PwaManifestService等）
+│   ├── Services/                     # ビジネスロジック（CurrentFamilyService, FamilyMemberService, CalendarEventService, CalendarLabelService, CalendarSettingsService, FamilyProvisionService, SocialAuthService, ExpenseService, RecurringExpenseGenerator, RecurringExpenseService, BudgetService, BudgetCalculationService, BudgetAlertService, RecurringExpenseReminderService, PwaManifestService等）
 │   │   └── Concerns/                 # サービス共通トレイト（ValidatesFamilyMember）
-│   └── Support/                      # 共通ヘルパー（BudgetScopeRules: カテゴリー family スコープ validation）
+│   └── Support/                      # 共通ヘルパー（BudgetScopeRules: カテゴリー family スコープ validation / CalendarRecurrence: 予定の RRULE の検証・展開）
 ├── database/
 │   ├── migrations/                   # DBマイグレーションファイル
 │   ├── factories/                    # テスト用モデルファクトリー
@@ -40,8 +40,8 @@ family-app/
 │   │   │   ├── App/                  # アプリケーション全体コンポーネント
 │   │   │   ├── Auth/                 # 認証関連コンポーネント
 │   │   │   ├── Budget/               # 家計簿コンポーネント（ExpenseForm等）
-│   │   │   ├── Calendar/             # スワイプカレンダー（SwipeCalendar, MonthGrid, DayCell, 各種Sheet, EventEditForm, ParticipantSelectSheet, ParticipantAvatars, LabelSelectSheet, LabelEditForm）
-│   │   │   ├── Common/               # 共通コンポーネント（再利用可能。PwaUpdateNotifier 等）
+│   │   │   ├── Calendar/             # スワイプカレンダー（SwipeCalendar, MonthGrid, DayCell, 各種Sheet, EventEditForm, RecurrenceField, RecurrenceScopeDialog, ParticipantSelectSheet, ParticipantAvatars, LabelSelectSheet, LabelEditForm, CalendarSettingsSheet）
+│   │   │   ├── Common/               # 共通コンポーネント（再利用可能。PwaUpdateNotifier, DatePickerDialog, TimePickerDialog, PickerField 等）
 │   │   │   ├── Dok/                  # Dok機能コンポーネント
 │   │   │   ├── Family/               # 家族設定・メンバー管理・切り替えコンポーネント（FamilyPwaSettingsForm 等）
 │   │   │   ├── FamilyTask/           # タスク関連コンポーネント
@@ -52,7 +52,7 @@ family-app/
 │   │   │   ├── Calendar/             # カレンダー関連Composables（useCalendar: 月グリッド生成 / useSwipe: 横スワイプ）
 │   │   │   ├── Dok/                  # Dok関連Composables
 │   │   │   └── Task/                 # タスク関連Composables
-│   │   ├── Constants/                # 定数定義（footerApps.ts: フッターアプリ定義 / calendarColors.ts: 予定のカラーパレット・初期ラベル）
+│   │   ├── Constants/                # 定数定義（footerApps.ts: フッターアプリ定義 / calendarColors.ts: 予定のカラーパレット・誕生日の色）
 │   │   ├── Layouts/                  # Inertiaページレイアウト
 │   │   ├── Pages/                    # Inertiaページコンポーネント
 │   │   │   ├── Auth/                 # 認証ページ
@@ -80,7 +80,8 @@ family-app/
 │   └── Unit/                         # ユニットテスト
 ├── e2e/                              # E2E テスト（Playwright）
 │   ├── auth/                         # ログイン・招待経由の新規登録
-│   ├── support/                      # テストデータ作成（/__e2e）・ログイン等のヘルパー
+│   ├── calendar/                     # カレンダー（予定の保存・繰り返し・誕生日・ラベル・参加者・高さ固定）
+│   ├── support/                      # テストデータ作成（/__e2e/families・/__e2e/calendar-events）・ログイン・カレンダー操作のヘルパー
 │   └── global-setup.ts               # 実行前に E2E 専用 DB（testing_e2e）を作り直す
 ├── docs/
 │   ├── steering/                     # 永続化ドキュメント（本ファイル群）
@@ -168,7 +169,7 @@ family-app/
   - `Common/usePwaMeta.ts`: `setupPwaMeta()` を `app.ts` で一度だけ呼ぶ。Inertia の `navigate` イベントで共有プロパティ `pwa` を見て `<head>` の manifest / apple-touch-icon / `apple-mobile-web-app-title` を差し替える（家族切り替え・ログアウト対応。レイアウト非依存）
   - `Common/usePwaUpdate.ts`: `startPwaUpdate()` を `app.ts` で一度だけ呼び、Service Worker（`/sw.js`）の登録と新バージョン検知（1 時間ごと・`visibilitychange` で更新チェック）を行う。本番ビルドのみ登録。`usePwaUpdate()` は検知状態（モジュール共有の `needRefresh`）と操作を返す
   - `Common/usePwaInstall.ts`: `beforeinstallprompt` の捕捉（`app.ts` で先読み）、インストール済み判定、プラットフォーム判定（iPadOS 対応）
-  - `Calendar/useCalendar.ts`: カレンダーの表示年月・選択日の状態と月グリッド（前月埋め + 当月 + 翌月埋め）の生成。クライアント内で完結する月移動を担う
+  - `Calendar/useCalendar.ts`: カレンダーの表示年月・選択日の状態と月グリッド（前月埋め + 当月 + 翌月埋め。常に 6 週・42 マス）の生成。クライアント内で完結する月移動を担う
   - `Calendar/useSwipe.ts`: 横スワイプの指追従（`transform: translateX`）としきい値によるページ送り判定。縦スクロールと競合しないよう最初の動きで軸をロックする
   - **注意**: `Budget/useMonthNavigation.ts`（Inertia 遷移でサーバーから取り直す月切替）と `Calendar/useCalendar.ts`（クライアント内の月移動）は役割が異なるため統合しない
 

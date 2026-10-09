@@ -43,14 +43,63 @@ categoryBudgets: Array<BudgetCategoryData>;
 alerts: Array<BudgetAlertData>;
 categories: Array<CategoryData>;
 };
+export type CalendarEventRequest = {
+title: string;
+allDay: boolean;
+startDate: string;
+endDate: string;
+memo?: string;
+startTime?: string;
+endTime?: string;
+labelId?: string;
+participantIds?: Array<string>;
+rrule?: string;
+scope?: string;
+occurrenceDate?: string;
+};
+export type CalendarEventResult = {
+id: string;
+occurrenceDate: string;
+title: string;
+memo?: string;
+allDay: boolean;
+startDate: string;
+endDate: string;
+startTime?: string;
+endTime?: string;
+labelId?: string;
+participantIds: Array<string>;
+rrule?: string;
+isRecurring: boolean;
+isBirthday: boolean;
+};
+export type CalendarEventsRequest = {
+from: string;
+to: string;
+};
+export type CalendarLabelInputData = {
+id: string;
+name: string;
+color: string;
+};
+export type CalendarLabelResult = {
+id: string;
+name: string;
+color: string;
+};
 export type CalendarPageResult = {
 participants: Array<CalendarParticipantResult>;
+labels: Array<CalendarLabelResult>;
+settings?: CalendarSettingsResult;
 };
 export type CalendarParticipantResult = {
 id: string;
 name: string;
 avatarUrl?: string;
 isVirtual: boolean;
+};
+export type CalendarSettingsResult = {
+birthdayLabelId?: string;
 };
 export type CategoriesPageResult = {
 categories: Array<CategoryData>;
@@ -72,6 +121,10 @@ budgetAmount: string;
 actualAmount: string;
 remaining: string;
 usagePercent?: string;
+};
+export type DeleteCalendarEventRequest = {
+scope?: string;
+occurrenceDate?: string;
 };
 export type DeleteCompletedTasksRequest = {
 categoryId: string;
@@ -409,6 +462,12 @@ export type TaskPageData = {
 categories: Array<TaskCategoryData>;
 tasks: Array<TaskData>;
 familyId: string;
+};
+export type UpdateCalendarLabelsRequest = {
+labels: Array<CalendarLabelInputData>;
+};
+export type UpdateCalendarSettingsRequest = {
+birthdayLabelId?: string;
 };
 export type UpdateCategoryRequest = {
 name: string;

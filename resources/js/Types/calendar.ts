@@ -123,4 +123,13 @@ export interface EventEditModel {
     labelId: string
     /** 参加者の ID（複数選択） */
     participantIds: string[]
+    /** メモ */
+    memo: string
+    /** 繰り返しのルール（RFC 5545 の RRULE。繰り返さないなら null） */
+    rrule: string | null
 }
+
+/**
+ * 予定の編集フォームの結果。保存か削除か
+ */
+export type EventEditResult = { type: 'save'; value: EventEditModel } | { type: 'delete' }

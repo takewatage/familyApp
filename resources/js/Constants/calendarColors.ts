@@ -3,7 +3,8 @@
  *
  * 1. TimeTree のラベル名に合わせた 10 色
  *    ※ 参照元の色は CSS 変数で、実際の色コードが取れなかったため名前から合わせた近似色。
- *       正確な値が分かったら value を差し替える
+ *       正確な値が分かったら value を差し替える（家族の初期ラベルは
+ *       app/Services/CalendarLabelService::DEFAULT_LABELS で同じ値を持つ）
  * 2. 色コード指定の 15 色（参照元の値をそのまま使用）
  *
  * 明るい色（イエロー等）は予定チップの文字色を黒にする（Utils/calendarColor の eventTextColor）。
@@ -38,21 +39,8 @@ export const CALENDAR_COLORS = [
     { name: 'ダーク・グレイ', value: '#757575' },
 ] as const
 
-export type CalendarColorName = (typeof CALENDAR_COLORS)[number]['name']
-
-/** 名前からカラーコードを引く */
-export function calendarColor(name: CalendarColorName): string {
-    return CALENDAR_COLORS.find((c) => c.name === name)?.value ?? DEFAULT_CALENDAR_COLOR
-}
-
+/** ラベルのない予定の色 */
 export const DEFAULT_CALENDAR_COLOR = '#2BB673'
 
-/**
- * 初期のラベル（TimeTree と同じく、カラー名をそのままラベル名にする）。
- * ラベル名・カラー・並び順は「ラベル名やカラーを変更」で編集できる（モックアップのためページ内のみ）
- */
-export const DEFAULT_CALENDAR_LABELS = CALENDAR_COLORS.slice(0, 10).map((c, i) => ({
-    id: `label-${i + 1}`,
-    name: c.name as string,
-    color: c.value as string,
-}))
+/** 誕生日の予定の色 */
+export const BIRTHDAY_COLOR = '#F79A2E'

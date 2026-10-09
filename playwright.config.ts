@@ -32,6 +32,9 @@ export default defineConfig({
     workers: 1,
     fullyParallel: false,
     forbidOnly: !!process.env.CI,
+    // 予定の保存→取り直しを何度も行うテストがあるため、既定（30 秒）より長めにする
+    timeout: 60_000,
+    expect: { timeout: 10_000 },
     retries: 0,
     reporter: [
         ['list'],

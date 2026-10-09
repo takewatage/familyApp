@@ -155,10 +155,13 @@ export function useDialogService() {
                                     {
                                         default: () => [
                                             renderToolbar(),
+                                            // 中身が画面より長いときはここでスクロールする（ツールバーは固定）。
+                                            // flex にすると中身（v-card 等）が高さに合わせて縮み、はみ出した部分が切れるため block にする。
+                                            // 自前でスクロール領域を持つ中身（高さ 100% + 内側 overflow）はそのまま動く
                                             h(
                                                 'div',
                                                 {
-                                                    style: 'flex: 1; overflow: hidden; display: flex; flex-direction: column; min-height: 0;',
+                                                    style: 'flex: 1; overflow-y: auto; min-height: 0;',
                                                 },
                                                 [
                                                     h(options.component, {

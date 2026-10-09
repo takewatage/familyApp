@@ -29,6 +29,7 @@
 | VueUse                             | 14.0     | Vue3 Composition API ユーティリティ           |
 | Day.js                             | 1.11     | 日付処理                                     |
 | vue-draggable-plus                 | 0.6      | ドラッグ＆ドロップによる並び替え               |
+| rlanvin/php-rrule                  | 3.0      | カレンダーの繰り返し予定（RFC 5545 の RRULE・EXDATE）の展開 |
 | Laravel Echo                       | -        | WebSocketイベントのフロントエンド受信          |
 | qrcode                             | -        | QRコード生成（DataURL → `<img>` 表示）       |
 | vite-plugin-pwa                    | 2.0      | Service Worker 生成（generateSW）・登録（`virtual:pwa-register/vue`）。manifest は生成しない（`manifest: false`） |
@@ -151,7 +152,7 @@ sail yarn build
 | `/task-categories/{taskCategory}`   | DELETE  | カテゴリー削除                  | ✅完了  |
 | `/task-categories/reorder`          | POST    | カテゴリー並び替え              | ✅完了  |
 | `/dok`                              | GET     | Dok画面                       | ⚠️一部完了 |
-| `/calendar`                         | GET     | カレンダー画面（モックアップ。予定データなし、参加者の選択肢として家族メンバーを返す `CalendarPageResult`） | ⚠️一部完了 |
+| `/calendar`                         | GET     | カレンダー画面（`CalendarPageResult`: 参加者の選択肢＝家族メンバー＋仮想ユーザー、家族のラベル。予定は画面から API で取得） | ✅完了 |
 | `/calendar/demo`                    | GET     | カレンダー動作確認ページ（メニュー非掲載） | ✅完了  |
 | `/family/settings`                  | GET     | 家族設定変更ページ              | ✅完了     |
 | `/family/settings`                  | PATCH   | 家族基本情報の更新（オーナーのみ）| ✅完了     |
@@ -209,6 +210,12 @@ sail yarn build
 | `/budget/categories/reorder` | POST | カテゴリー並び替え（`ReorderCategoriesRequest`。家族カテゴリーのみ、`budgetCategoryApi.reorder`） | ✅完了 |
 | `/budget/shops/search` | GET | 店名オートコンプリート（家族スコープ・利用回数降順、`budgetShopApi.search`） | ✅完了 |
 | `/budget/quick-entries/{quickEntry}/use` | POST | クイック入力の利用回数加算（支出フォームへのプリセット時、`budgetQuickEntryApi.use`。family 越境は404） | ✅完了 |
+| `/calendar/events` | GET | 期間内（`from`〜`to`、最大 100 日）の予定。繰り返しを展開済み・家族メンバーの誕生日を含む（`CalendarEventResult[]`、`calendarApi.events`） | ✅完了 |
+| `/calendar/events` | POST | 予定の作成（`CalendarEventRequest`。ラベル・参加者は現在の家族のものに限る） | ✅完了 |
+| `/calendar/events/{calendarEvent}` | PUT | 予定の更新。繰り返し予定は `scope`（this / following / all）と `occurrence_date` で範囲を指定。family 越境は404 | ✅完了 |
+| `/calendar/events/{calendarEvent}` | DELETE | 予定の削除（範囲指定は更新と同じ）。family 越境は404 | ✅完了 |
+| `/calendar/labels` | PUT | 家族のラベルの一括更新（名前・カラー・並び順。全件そろっている必要がある） | ✅完了 |
+| `/calendar/settings` | PUT | 家族のカレンダー設定の更新（送った項目だけ更新。`birthday_label_id`: 誕生日のラベル、null で未設定に戻す。`families.settings.calendar` に保存） | ✅完了 |
 
 ## 5. データベース
 
@@ -217,12 +224,16 @@ sail yarn build
 | テーブル名             | 説明                                    |
 |----------------------|-----------------------------------------|
 | `users`              | ユーザー基本情報（UUID, name, email, birthday nullable, settings JSON nullable）settings スキーマ: `{ theme: 'light'\|'dark'\|'system', theme_name: 'pink'\|'sunset'\|'ocean'\|'forest'\|'lavender'\|'autumn'\|'midnight', footer_items: string[] }` |
-| `families`           | 家族グループ情報（UUID, name, code, code_expires_at nullable, owner_id）|
+| `families`           | 家族グループ情報（UUID, name, code, code_expires_at nullable, owner_id, settings JSON nullable）settings スキーマ: `{ pwa: {...}, calendar: { birthday_label_id: string\|null } }` |
 | `family_user`        | ユーザーと家族グループの中間テーブル（role付き）|
 | `task_categories`    | タスクカテゴリー（family_id, name, sort）  |
 | `tasks`              | タスク（family_id, category_id, content, color, memo, is_completed, sort）|
 | `files`              | ファイル管理（ポリモーフィック: avatar等）  |
 | `virtual_users`      | 仮想ユーザー（family_id, name）アバターはfilesテーブルで管理 |
+| `calendar_labels`    | 予定のラベル（family_id, name, color, sort）。家族で共有し、初回アクセス時に初期 10 件を作成 |
+| `calendar_events`    | 予定（family_id, created_by, title, memo, label_id, all_day, start_date / end_date, start_time / end_time, rrule, recurrence_end_date, recurring_event_id, original_date, softDeletes）。recurrence_end_date は UNTIL / COUNT から保存時に計算する最後の発生日で、終わった繰り返しを取得対象から外すのに使う。日時は家族の現地日付・時刻で保存。繰り返しは rrule、この回だけの変更は recurring_event_id + original_date の上書き予定 |
+| `calendar_event_exdates` | 繰り返し予定の除外日（この回だけ削除した日） |
+| `calendar_event_participants` | 予定の参加者（ポリモーフィック: User / VirtualUser） |
 | `password_reset_tokens` | パスワードリセット用トークン             |
 | `sessions`           | ユーザーセッション                        |
 | `cache`              | キャッシュテーブル                        |
@@ -236,6 +247,9 @@ sail yarn build
 - `Family` → `TaskCategory`: 1対多
 - `TaskCategory` → `Task`: 1対多
 - `User` → `File`: 1対多（ポリモーフィック）
+- `Family` → `CalendarLabel` / `CalendarEvent`: 1対多
+- `CalendarEvent` → `CalendarEvent`（上書き予定）: 1対多（`recurring_event_id`）
+- `CalendarEvent` → `CalendarEventExdate` / `CalendarEventParticipant`: 1対多（参加者は User / VirtualUser へのポリモーフィック）
 
 ## 6. 外部連携
 

@@ -1,28 +1,37 @@
 <script setup lang="ts">
 // 予定の編集フォーム（フルスクリーンダイアログ用）。
-// useDialogService で開き、保存時に onClose(入力値) で結果を返す。
-// 保存（永続化）はこのコンポーネントでは行わない。結果を受け取った利用側の責任。
+// useDialogService で開き、保存時は onClose({ type: 'save', value }) 、削除時は onClose({ type: 'delete' }) を返す。
+// 保存・削除（永続化）はこのコンポーネントでは行わない。結果を受け取った利用側の責任。
 
 import { computed, reactive, ref } from 'vue'
 import DatePickerDialog from '@/Components/Common/DatePickerDialog.vue'
+import TimePickerDialog from '@/Components/Common/TimePickerDialog.vue'
 import LabelEditForm from '@/Components/Calendar/LabelEditForm.vue'
+import PickerField from '@/Components/Common/PickerField.vue'
 import LabelSelectSheet from '@/Components/Calendar/LabelSelectSheet.vue'
 import ParticipantAvatars from '@/Components/Calendar/ParticipantAvatars.vue'
 import ParticipantSelectSheet from '@/Components/Calendar/ParticipantSelectSheet.vue'
+import RecurrenceField from '@/Components/Calendar/RecurrenceField.vue'
 import { todayKey } from '@/Utils/calendarDate'
+import { adaptRecurrenceToStart } from '@/Utils/calendarRecurrence'
 import { useDialogService } from '@/Composables/Common/useDialogService'
-import type { CalendarLabel, CalendarParticipant, EventEditModel } from '@/Types/calendar'
+import type { CalendarLabel, CalendarParticipant, EventEditModel, EventEditResult } from '@/Types/calendar'
 
 const props = defineProps<{
     /** 初期値（新規追加時は開始日・終了日などを渡す） */
     initial?: Partial<EventEditModel>
     /** ラベルの選択肢 */
     labels: CalendarLabel[]
-    /** ラベルを編集（名前・カラー・並び順）したときに呼ぶ。利用側でラベル一覧を更新する */
-    onLabelsChange?: (labels: CalendarLabel[]) => void
+    /**
+     * ラベルを編集（名前・カラー・並び順）したときに呼ぶ。利用側で保存し、保存後のラベル一覧を返す
+     * （保存に失敗したら undefined を返し、フォームの表示は変えない）
+     */
+    onLabelsChange?: (labels: CalendarLabel[]) => Promise<CalendarLabel[] | undefined>
+    /** 削除ボタンを表示するか（編集時） */
+    deletable?: boolean
     /** 参加者の選択肢（家族メンバー）。空なら参加者欄を出さない */
     participants?: CalendarParticipant[]
-    onClose?: (result?: EventEditModel) => void
+    onClose?: (result?: EventEditResult) => void
 }>()
 
 const form = reactive<EventEditModel>({
@@ -34,6 +43,8 @@ const form = reactive<EventEditModel>({
     endTime: '',
     labelId: props.labels[0]?.id ?? '',
     participantIds: [],
+    memo: '',
+    rrule: null,
     ...props.initial,
 })
 
@@ -61,8 +72,11 @@ async function openLabelEditor(): Promise<void> {
         return
     }
 
-    labelList.value = result
-    props.onLabelsChange?.(result)
+    const saved = props.onLabelsChange ? await props.onLabelsChange(result) : result
+
+    if (saved) {
+        labelList.value = saved
+    }
 }
 
 const selectedParticipants = computed(() =>
@@ -76,9 +90,12 @@ function onTitleChange(value: string | null): void {
     form.title = value ?? ''
 }
 
-// 開始日を終了日より後にしたら、終了日を開始日に合わせる
+// 開始日を終了日より後にしたら、終了日を開始日に合わせる。繰り返しのルールも新しい開始日に合わせる
 function onStartDateChange(value: string | null): void {
+    const previous = form.startDate
+
     form.startDate = value ?? todayKey()
+    form.rrule = adaptRecurrenceToStart(form.rrule, previous, form.startDate)
 
     if (form.endDate < form.startDate) {
         form.endDate = form.startDate
@@ -120,11 +137,19 @@ function save(): void {
     }
 
     props.onClose?.({
-        ...form,
-        title: form.title.trim(),
-        startTime: form.allDay ? '' : form.startTime,
-        endTime: form.allDay ? '' : form.endTime,
+        type: 'save',
+        value: {
+            ...form,
+            title: form.title.trim(),
+            memo: form.memo.trim(),
+            startTime: form.allDay ? '' : form.startTime,
+            endTime: form.allDay ? '' : form.endTime,
+        },
     })
+}
+
+function remove(): void {
+    props.onClose?.({ type: 'delete' })
 }
 
 /** 送信を試みた後だけエラーを表示する */
@@ -137,103 +162,116 @@ function errorOf(key: keyof EventEditModel): string | undefined {
     <v-card
         class="pa-4"
         elevation="0">
-        <v-text-field
-            :model-value="form.title"
-            label="タイトル"
-            placeholder="予定を入力..."
-            variant="outlined"
-            density="comfortable"
-            autofocus
-            clearable
-            :error-messages="errorOf('title')"
-            @update:model-value="onTitleChange" />
-
-        <v-switch
-            v-model="form.allDay"
-            label="終日"
-            color="primary"
-            density="compact"
-            hide-details
-            class="mb-2" />
-
-        <div class="event-edit-form__row">
-            <DatePickerDialog
-                :model-value="form.startDate"
-                label="開始日"
-                density="comfortable"
-                @update:model-value="onStartDateChange" />
+        <!-- 入力欄は hide-details="auto"（エラー時だけメッセージ領域を出す）にし、欄の間隔は gap で揃える -->
+        <div class="event-edit-form__fields">
             <v-text-field
-                v-if="!form.allDay"
-                v-model="form.startTime"
-                label="開始時刻"
-                type="time"
+                :model-value="form.title"
+                label="タイトル"
+                placeholder="予定を入力..."
                 variant="outlined"
                 density="comfortable"
-                :error-messages="errorOf('startTime')" />
-        </div>
+                autofocus
+                clearable
+                hide-details="auto"
+                :error-messages="errorOf('title')"
+                @update:model-value="onTitleChange" />
 
-        <div class="event-edit-form__row">
-            <DatePickerDialog
-                v-model="form.endDate"
-                label="終了日"
-                density="comfortable"
-                :error-messages="errorOf('endDate')" />
-            <v-text-field
-                v-if="!form.allDay"
-                v-model="form.endTime"
-                label="終了時刻（任意）"
-                type="time"
-                variant="outlined"
-                density="comfortable"
-                :error-messages="errorOf('endTime')" />
-        </div>
+            <div class="event-edit-form__switch-row">
+                <span class="text-body-1">終日</span>
+                <v-switch
+                    v-model="form.allDay"
+                    aria-label="終日"
+                    color="primary"
+                    density="compact"
+                    hide-details
+                    class="flex-grow-0" />
+            </div>
 
-        <template v-if="participants?.length">
-            <p class="text-caption text-medium-emphasis mb-1">参加者</p>
-            <v-card
-                variant="outlined"
-                class="event-edit-form__picker mb-4"
-                role="button"
+            <div class="event-edit-form__row">
+                <DatePickerDialog
+                    :model-value="form.startDate"
+                    label="開始日"
+                    density="comfortable"
+                    hide-details="auto"
+                    @update:model-value="onStartDateChange" />
+                <TimePickerDialog
+                    v-if="!form.allDay"
+                    v-model="form.startTime"
+                    label="開始時刻"
+                    hide-details="auto"
+                    class="event-edit-form__time"
+                    :error-messages="errorOf('startTime')" />
+            </div>
+
+            <div class="event-edit-form__row">
+                <DatePickerDialog
+                    v-model="form.endDate"
+                    label="終了日"
+                    density="comfortable"
+                    hide-details="auto"
+                    :error-messages="errorOf('endDate')" />
+                <TimePickerDialog
+                    v-if="!form.allDay"
+                    v-model="form.endTime"
+                    label="終了時刻"
+                    placeholder="任意"
+                    clearable
+                    hide-details="auto"
+                    class="event-edit-form__time"
+                    :error-messages="errorOf('endTime')" />
+            </div>
+
+            <RecurrenceField
+                v-model="form.rrule"
+                :start-date="form.startDate" />
+
+            <PickerField
+                v-if="participants?.length"
+                label="参加者"
                 aria-label="参加者を選択"
+                :placeholder="selectedParticipants.length ? undefined : '選択してください'"
+                value=""
                 @click="participantSheetOpen = true">
-                <ParticipantAvatars
+                <template
                     v-if="selectedParticipants.length"
-                    :participants="selectedParticipants"
-                    :max="5"
-                    :size="28" />
-                <span class="event-edit-form__ellipsis">
-                    {{
-                        selectedParticipants.length
-                            ? selectedParticipants.map((p) => p.name).join('、')
-                            : '参加者を選択'
-                    }}
-                </span>
-                <v-icon
-                    icon="mdi-chevron-right"
-                    class="ml-auto" />
-            </v-card>
+                    #prepend>
+                    <ParticipantAvatars
+                        :participants="selectedParticipants"
+                        :size="28" />
+                </template>
+            </PickerField>
 
-            <ParticipantSelectSheet
-                v-model:open="participantSheetOpen"
-                v-model="form.participantIds"
-                :participants="participants" />
-        </template>
+            <PickerField
+                label="ラベル"
+                aria-label="ラベルを選択"
+                placeholder="ラベルなし"
+                :value="selectedLabel?.name ?? ''"
+                @click="labelSheetOpen = true">
+                <template
+                    v-if="selectedLabel"
+                    #prepend>
+                    <span
+                        class="event-edit-form__label-swatch"
+                        :style="{ background: selectedLabel.color }" />
+                </template>
+            </PickerField>
 
-        <p class="text-caption text-medium-emphasis mb-1">ラベル</p>
-        <v-card
-            variant="outlined"
-            class="event-edit-form__picker"
-            role="button"
-            aria-label="ラベルを選択"
-            @click="labelSheetOpen = true">
-            <span
-                class="event-edit-form__label-swatch"
-                :style="{ background: selectedLabel?.color ?? 'transparent' }" />
-            <span class="event-edit-form__ellipsis">{{ selectedLabel?.name ?? 'ラベルを選択' }}</span>
-            <v-icon
-                icon="mdi-chevron-right"
-                class="ml-auto" />
-        </v-card>
+            <v-textarea
+                v-model="form.memo"
+                label="メモ"
+                variant="outlined"
+                density="comfortable"
+                rows="3"
+                auto-grow
+                maxlength="2000"
+                hide-details="auto" />
+        </div>
+
+        <ParticipantSelectSheet
+            v-if="participants?.length"
+            v-model:open="participantSheetOpen"
+            v-model="form.participantIds"
+            :participants="participants" />
 
         <LabelSelectSheet
             v-model:open="labelSheetOpen"
@@ -250,13 +288,41 @@ function errorOf(key: keyof EventEditModel): string | undefined {
             @click="save">
             保存
         </v-btn>
+
+        <v-btn
+            v-if="deletable"
+            color="error"
+            variant="text"
+            block
+            prepend-icon="mdi-delete-outline"
+            class="mt-2"
+            @click="remove">
+            この予定を削除
+        </v-btn>
     </v-card>
 </template>
 
 <style scoped>
-/* 日付と時刻を横並び（時刻がない終日は日付が全幅） */
+/* フォームの欄を縦に並べ、間隔を揃える */
+.event-edit-form__fields {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* 「終日」のラベルを左、スイッチを右端に置く（上下の余白は詰める） */
+.event-edit-form__switch-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: -8px 0;
+    padding-left: 4px;
+}
+
+/* 日付と時刻を横並び（時刻がない終日は日付が全幅）。片方にエラーが出ても、もう片方の高さは変えない */
 .event-edit-form__row {
     display: flex;
+    align-items: flex-start;
     gap: 8px;
 }
 
@@ -265,12 +331,9 @@ function errorOf(key: keyof EventEditModel): string | undefined {
     min-width: 0;
 }
 
-.event-edit-form__picker {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 12px;
-    min-height: 48px;
+/* 時刻は「HH:mm」だけなので幅を抑え、日付（YYYY年M月D日）が見切れないようにする */
+.event-edit-form__row > .event-edit-form__time {
+    flex: 0 0 128px;
 }
 
 .event-edit-form__label-swatch {
@@ -280,9 +343,4 @@ function errorOf(key: keyof EventEditModel): string | undefined {
     border-radius: 50%;
 }
 
-.event-edit-form__ellipsis {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
 </style>

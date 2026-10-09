@@ -29,11 +29,15 @@
 | アクティブ家族         | ActiveFamily   | ユーザーが現在操作対象としている家族グループ。`users.settings.activeFamilyId` に保存 | `User.settings['activeFamilyId']` |
 | ファイル              | File           | ポリモーフィックに各モデルに紐付けられるファイルリソース      | `File` モデル                               |
 | カレンダーイベント       | CalendarEvent  | カレンダーの1日に表示する1件の項目（タイトル・色・時刻・アイコン・参加者）。カレンダー自身は永続化せず、利用側が渡す | `CalendarEvent` 型、`Components/Calendar/` |
-| ラベル（予定）          | CalendarLabel  | 予定に付ける名前＋カラーの組。予定の色はラベルのカラーで決まる。名前・カラー・並び順を編集できる（カラーは固定パレットから選ぶ） | `CalendarLabel` 型、`EventEditModel.labelId`、`Constants/calendarColors.ts` |
+| ラベル（予定）          | CalendarLabel  | 予定に付ける名前＋カラーの組。家族で共有し、予定の色はラベルのカラーで決まる。名前・カラー・並び順を家族全員が編集できる | `calendar_labels` テーブル、`CalendarLabel` 型、`EventEditModel.labelId` |
+| 繰り返し予定           | Recurring Event | RRULE（RFC 5545）で繰り返す予定。変更・削除は「この予定のみ（this）／これ以降（following）／すべて（all）」の範囲で行う | `calendar_events.rrule`、`CalendarRecurrence`、`RecurrenceScope` |
+| 上書き予定             | Override       | 繰り返し予定の 1 回だけを変更したときに作る予定。繰り返し元（`recurring_event_id`）と本来の発生日（`original_date`）を持つ | `calendar_events.recurring_event_id` / `original_date` |
+| 除外日                | EXDATE         | 繰り返し予定の 1 回だけを削除した日 | `calendar_event_exdates` |
+| 発生日                | Occurrence Date | 繰り返し予定のある 1 回の本来の日付。変更・削除でどの回かを指定するのに使う | `CalendarEventResult.occurrenceDate` |
 | 参加者（予定）          | Participant    | 予定に関係する家族メンバー（ログインユーザー・仮想ユーザー）。予定の右端にアイコンで表示する | `CalendarParticipant` 型、`EventEditModel.participantIds`、`CalendarParticipantResult` |
 | 日付キー              | DateKey        | イベントを日付ごとに引くためのキー。`YYYY-MM-DD` 形式の文字列 | `DateKey` 型、`toDateKey()` |
 | イベントマップ          | EventMap       | 日付キーごとにカレンダーイベント配列を引けるマップ（`{ '2026-08-01': [...] }`） | `EventMap` 型、`SwipeCalendar` の `events` prop |
-| 月グリッド             | MonthGrid      | 1ヶ月分の7列グリッド。前月・翌月の日付で前後を埋める（当月外セル） | `MonthGrid.vue`、`DayCellData.isOtherMonth` |
+| 月グリッド             | MonthGrid      | 1ヶ月分の7列グリッド。前月・翌月の日付で前後を埋め（当月外セル）、月によらず常に 6 週（42 マス）で表示する | `MonthGrid.vue`、`DayCellData.isOtherMonth` |
 | アプリ設定（ホーム画面） | Family PWA Settings | 家族ごとの PWA 外観（アプリ名・アプリ画像）。`families.settings.pwa` に保存。オーナーのみ変更可。未設定項目は既定値（アプリ名 `familyApp`・既定アイコン） | `FamilyPwaSettingsData` DTO, `UpdateFamilyPwaSettingsRequest`, `PwaManifestService` |
 | アプリ画像            | App Icon       | ホーム画面・スプラッシュに使うアイコン。アップロード画像から PNG 180（apple-touch-icon）/ 192 / 512 / maskable 512 を生成 | `families.settings.pwa.icon`, `ImageUploadService::uploadAppIcon()` |
 | アプリバージョン        | App Version    | 利用者向けのバージョン表記 `v{version} ({ビルドID})`。番号の SSoT は `package.json` の `version` | `__APP_VERSION__`, `__APP_BUILD_ID__`, `APP_VERSION_LABEL` |
