@@ -104,8 +104,9 @@ export function useCalendar(options: UseCalendarOptions): UseCalendarReturn {
             })
         }
 
-        // 翌月埋め（7の倍数になるまで）
-        const trailing = (7 - (list.length % 7)) % 7
+        // 翌月埋め。常に 6 週（42 マス）にそろえる
+        // （月によって 5 週・6 週と行数が変わると、前後の月を並べたスワイプ領域の高さが月ごとに変わるため）
+        const trailing = 42 - list.length
 
         for (let t = 1; t <= trailing; t++) {
             const d = new Date(year, month + 1, t)

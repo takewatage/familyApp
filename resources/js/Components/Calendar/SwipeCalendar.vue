@@ -207,8 +207,10 @@ function onPickerSelect(value: { year: number; month: number }): void {
                 color="transparent"
                 density="compact"
                 flat>
-                <v-toolbar-title>{{ viewYear }}年</v-toolbar-title>
+                <!-- 年は月ナビゲーションの「YYYY年M月」に表示する -->
                 <template #append>
+                    <!-- 利用側のボタン（設定など）を「今日」ボタンの左に置く -->
+                    <slot name="header-actions" />
                     <v-btn
                         icon="mdi-calendar-today"
                         size="small"
@@ -225,6 +227,7 @@ function onPickerSelect(value: { year: number; month: number }): void {
         <!-- 月ナビゲーション -->
         <slot
             name="nav"
+            :year="viewYear"
             :month-label="monthNames[viewMonth]"
             :prev="() => changeMonth(-1)"
             :next="() => changeMonth(1)"
@@ -243,7 +246,7 @@ function onPickerSelect(value: { year: number; month: number }): void {
                     class="text-h6"
                     append-icon="mdi-menu-down"
                     @click="openPicker">
-                    {{ monthNames[viewMonth] }}
+                    {{ viewYear }}年{{ monthNames[viewMonth] }}
                 </v-btn>
                 <v-spacer />
                 <v-btn

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// 予定の参加者アイコンを重ねて表示する。max を超えた分は「+N」にまとめる。
+// 予定の参加者アイコンを重ねて表示する。max（既定 4 人）を超えた分は「+N」にまとめる。
 
 import { computed } from 'vue'
 import type { CalendarParticipant } from '@/Types/calendar'
@@ -11,7 +11,7 @@ const props = withDefaults(
         max?: number
         size?: number
     }>(),
-    { max: 3, size: 24 },
+    { max: 4, size: 24 },
 )
 
 const visible = computed(() => props.participants.slice(0, props.max))

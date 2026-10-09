@@ -14,5 +14,8 @@ class CalendarPageResult extends Data
     public function __construct(
         /** @var CalendarParticipantResult[] */
         public array $participants,
+        /** @var CalendarLabelResult[] 家族のラベル（並び順） */
+        public array $labels = [],
+        public ?CalendarSettingsResult $settings = null,
     ) {}
 }

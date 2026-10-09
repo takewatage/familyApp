@@ -1,29 +1,39 @@
 <script setup lang="ts">
-// カレンダー画面（モックアップ）。
-// 機能が未確定のため、サーバーからはデータを受け取らず、ダミーの予定をこのページで保持する。
-// 予定の追加はページ内のメモリにだけ反映し、リロードすると消える。
-// 参加者の選択肢には、サーバーから受け取った現在の家族のメンバー（仮想ユーザー含む）を使う。
-// 予定の色はラベル（名前＋カラー）で決まる。ラベルの編集もページ内のみ（リロードで初期値に戻る）。
+// カレンダー画面。予定は家族で共有し、表示中の月（前後の月を含む）を API から取得する。
+// 予定の追加・編集・削除は EventEditForm（全画面）で行い、保存後に表示中の期間を取り直す。
+// 繰り返し予定の変更・削除は、範囲（この予定のみ / これ以降 / すべて）を選んでから送る。
 
-import { computed, ref } from 'vue'
-import { Head } from '@inertiajs/vue3'
+import { computed, onMounted, ref } from 'vue'
+import { Head, usePage } from '@inertiajs/vue3'
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
 import SwipeCalendar from '@/Components/Calendar/SwipeCalendar.vue'
 import EventEditForm from '@/Components/Calendar/EventEditForm.vue'
 import ParticipantAvatars from '@/Components/Calendar/ParticipantAvatars.vue'
+import RecurrenceScopeDialog from '@/Components/Calendar/RecurrenceScopeDialog.vue'
+import CalendarSettingsSheet from '@/Components/Calendar/CalendarSettingsSheet.vue'
+import LabelEditForm from '@/Components/Calendar/LabelEditForm.vue'
+import { calendarApi, type RecurrenceScope } from '@/Api/calendarApi'
 import { useDialogService } from '@/Composables/Common/useDialogService'
+import { useConfirmDialog } from '@/Composables/Common/useConfirmDialogService'
 import { fromDateKey, toDateKey, todayKey } from '@/Utils/calendarDate'
 import { resolveEventColor } from '@/Utils/calendarColor'
-import { DEFAULT_CALENDAR_LABELS } from '@/Constants/calendarColors'
+import { BIRTHDAY_COLOR, DEFAULT_CALENDAR_COLOR } from '@/Constants/calendarColors'
 import type {
     CalendarEvent,
     CalendarLabel,
     CalendarParticipant,
     DateKey,
     EventEditModel,
+    EventEditResult,
     EventMap,
+    YearMonth,
 } from '@/Types/calendar'
-import type { CalendarPageResult } from '@/Types/dto.generated'
+import type {
+    CalendarEventRequest,
+    CalendarEventResult,
+    CalendarPageResult,
+    CalendarSettingsResult,
+} from '@/Types/dto.generated'
 
 defineOptions({ layout: AuthenticatedLayout })
 
@@ -34,32 +44,76 @@ const participants = computed<CalendarParticipant[]>(() =>
     props.participants.map((p) => ({ id: p.id, name: p.name, avatarUrl: p.avatarUrl ?? null })),
 )
 
-function resolveParticipants(ids: string[]): CalendarParticipant[] {
-    return participants.value.filter((p) => ids.includes(p.id))
+/** 新しい予定の参加者の初期値（ログイン中のユーザー自身。家族のメンバーにいる場合のみ） */
+const page = usePage()
+const defaultParticipantIds = computed<string[]>(() => {
+    const userId = (page.props.auth as { user?: { id: string } } | undefined)?.user?.id
+
+    return userId && participants.value.some((p) => p.id === userId) ? [userId] : []
+})
+
+/** ラベル（家族で共有。編集すると API で保存する） */
+const labels = ref<CalendarLabel[]>(props.labels.map((l) => ({ ...l })))
+
+const dialogService = useDialogService()
+const { confirm } = useConfirmDialog()
+
+// ---------------------------------------------------------------- カレンダー設定
+
+/** 家族のカレンダー設定（誕生日のラベル等） */
+const settings = ref<CalendarSettingsResult>({ ...(props.settings ?? {}) })
+const settingsOpen = ref(false)
+
+/** 設定からラベルの編集画面を開く（予定フォームからと同じ画面・同じ保存処理） */
+async function openLabelEditorFromSettings(): Promise<void> {
+    const dialog = dialogService.open<CalendarLabel[]>({
+        component: LabelEditForm,
+        props: { labels: labels.value },
+        fullscreen: true,
+        transition: 'dialog-bottom-transition',
+        toolbar: { title: 'ラベルの編集' },
+    })
+
+    const result = await dialog.afterClosed()
+
+    if (result) {
+        await onLabelsChange(result)
+    }
 }
 
-// ラベル（並び順・名前・カラーは「ラベル名やカラーを変更」で編集できる）
-const labels = ref<CalendarLabel[]>(DEFAULT_CALENDAR_LABELS.map((l) => ({ ...l })))
+async function onBirthdayLabelChange(labelId: string | null): Promise<void> {
+    try {
+        const res = await calendarApi.updateSettings({ birthdayLabelId: labelId })
 
-/** 初期ラベル名からラベル ID を引く（ダミー予定用） */
-function labelIdOf(name: string): string {
-    return DEFAULT_CALENDAR_LABELS.find((l) => l.name === name)?.id ?? DEFAULT_CALENDAR_LABELS[0].id
+        settings.value = res.data.settings
+    } catch {
+        // エラーは client が表示する
+        return
+    }
+
+    await fetchEvents()
 }
 
-function onLabelsChange(next: CalendarLabel[]): void {
-    labels.value = next
+// ---------------------------------------------------------------- 予定の取得
+
+/** 表示中の月（0 始まり） */
+const viewMonth = ref<YearMonth>({ year: new Date().getFullYear(), month: new Date().getMonth() })
+
+const monthEvents = ref<CalendarEventResult[]>([])
+const upcomingResults = ref<CalendarEventResult[]>([])
+const loading = ref(false)
+
+// 月移動が続いたとき、古い月の結果で上書きしないよう最新のリクエストだけを反映する
+let requestSeq = 0
+
+/** 表示中の月の前月 1 日〜翌月末（スワイプ中に前後の月も見えるため） */
+function monthRange(ym: YearMonth): { from: DateKey; to: DateKey } {
+    return {
+        from: toDateKey(new Date(ym.year, ym.month - 1, 1)),
+        to: toDateKey(new Date(ym.year, ym.month + 2, 0)),
+    }
 }
 
-/** 予定の種類（将来のデータ連携元を想定したモック上の分類） */
-type EventSource = 'family' | 'payment' | 'birthday'
-
-const SOURCE_STYLES: Record<EventSource, { icon: string; label: string }> = {
-    family: { icon: 'mdi-account-group', label: 'エメラルド・グリーン' },
-    payment: { icon: 'mdi-cash-clock', label: 'アップル・レッド' },
-    birthday: { icon: 'mdi-cake-variant', label: 'ブライト・オレンジ' },
-}
-
-/** 今日を基準に n 日ずらした日付キーを返す */
 function keyFromToday(offsetDays: number): DateKey {
     const d = new Date()
 
@@ -68,69 +122,99 @@ function keyFromToday(offsetDays: number): DateKey {
     return toDateKey(d)
 }
 
-/**
- * ダミー予定を作る。memberIndexes は家族メンバーの並び順で参加者を指定する（メンバーが少なければ存在する分だけ）
- */
-function mockEvent(
-    id: number,
-    source: EventSource,
-    title: string,
-    time?: string,
-    memberIndexes: number[] = [],
-    labelName?: string,
-): CalendarEvent {
-    const eventParticipants = memberIndexes
-        .map((i) => participants.value[i])
-        .filter((p): p is CalendarParticipant => !!p)
+async function fetchMonth(): Promise<void> {
+    const seq = ++requestSeq
+    const { from, to } = monthRange(viewMonth.value)
 
-    return {
-        id,
-        title,
-        time,
-        icon: SOURCE_STYLES[source].icon,
-        participants: eventParticipants,
-        meta: { source, labelId: labelIdOf(labelName ?? SOURCE_STYLES[source].label) },
+    loading.value = true
+
+    try {
+        const res = await calendarApi.events(from, to)
+
+        if (seq === requestSeq) {
+            monthEvents.value = res.data.events
+        }
+    } finally {
+        if (seq === requestSeq) {
+            loading.value = false
+        }
     }
 }
 
-// 表示確認用のダミー予定
-const events = ref<EventMap>({
-    [keyFromToday(0)]: [
-        mockEvent(1, 'family', '買い出し', '10:00', [0]),
-        mockEvent(2, 'family', '習い事の送迎', '16:30', [1, 2], 'ディープ・スカイブルー'),
-    ],
-    [keyFromToday(2)]: [mockEvent(3, 'birthday', 'パパの誕生日', undefined, [0, 1, 2, 3, 4])],
-    [keyFromToday(4)]: [
-        mockEvent(4, 'payment', '家賃'),
-        mockEvent(5, 'payment', '電気代'),
-        mockEvent(6, 'family', '保育園の面談', '18:00', [0, 1], 'ソフト・バイオレット'),
-    ],
-    [keyFromToday(6)]: [mockEvent(7, 'family', '家族で外食', '19:00', [0, 1, 2, 3], 'フレンチ・ローズ')],
-    [keyFromToday(12)]: [mockEvent(8, 'payment', '動画サブスク')],
-    [keyFromToday(-3)]: [mockEvent(9, 'family', '大掃除', undefined, [0], 'モダーン・サイアン')],
-})
+/** 「これから7日間」は表示中の月に関係しないため、月移動では取り直さない */
+async function fetchUpcoming(): Promise<void> {
+    const res = await calendarApi.events(todayKey(), keyFromToday(6))
 
-let nextId = 100
+    upcomingResults.value = res.data.events
+}
 
-/** 表示用の予定（ラベルのカラーを反映する。ラベルを編集すると全予定の色が変わる） */
-const displayEvents = computed<EventMap>(() => {
-    const colorOf = new Map(labels.value.map((l) => [l.id, l.color]))
-    const result: EventMap = {}
+/** 保存・削除の後: 表示中の月と「これから7日間」の両方を取り直す */
+async function fetchEvents(): Promise<void> {
+    await Promise.all([fetchMonth(), fetchUpcoming()])
+}
 
-    for (const [key, list] of Object.entries(events.value)) {
-        result[key] = list.map((e) => ({ ...e, color: colorOf.get(e.meta?.labelId as string) }))
+function onMonthChange(ym: YearMonth): void {
+    viewMonth.value = ym
+    fetchMonth()
+}
+
+onMounted(fetchEvents)
+
+// ---------------------------------------------------------------- 表示用の変換
+
+const labelColor = computed(() => new Map(labels.value.map((l) => [l.id, l.color])))
+
+function formatTime(r: CalendarEventResult): string | undefined {
+    if (r.allDay || !r.startTime) {
+        return undefined
     }
 
-    return result
-})
+    return r.endTime ? `${r.startTime} - ${r.endTime}` : r.startTime
+}
+
+function toCalendarEvent(r: CalendarEventResult): CalendarEvent {
+    return {
+        // 繰り返しは同じ予定 ID の回が並ぶため、発生日と組み合わせて一意にする
+        id: `${r.id}:${r.occurrenceDate}`,
+        title: r.title,
+        time: formatTime(r),
+        // 誕生日はカレンダー設定の「誕生日のラベル」の色（未設定なら既定の色）
+        color: labelColor.value.get(r.labelId ?? '') ?? (r.isBirthday ? BIRTHDAY_COLOR : DEFAULT_CALENDAR_COLOR),
+        icon: r.isBirthday ? 'mdi-cake-variant' : r.isRecurring ? 'mdi-repeat' : undefined,
+        participants: participants.value.filter((p) => r.participantIds.includes(p.id)),
+        meta: { result: r },
+    }
+}
+
+/** 予定を日付ごとにまとめる（複数日の予定は期間中の各日に表示する） */
+function toEventMap(results: CalendarEventResult[]): EventMap {
+    const map: EventMap = {}
+
+    for (const r of results) {
+        const event = toCalendarEvent(r)
+        const d = fromDateKey(r.startDate)
+        const last = fromDateKey(r.endDate)
+
+        while (d <= last) {
+            const key = toDateKey(d)
+
+            map[key] = [...(map[key] ?? []), event]
+            d.setDate(d.getDate() + 1)
+        }
+    }
+
+    return map
+}
+
+const events = computed<EventMap>(() => toEventMap(monthEvents.value))
 
 // 今日から7日間の予定（一覧表示用）
 const upcomingEvents = computed(() => {
-    const days = Array.from({ length: 7 }, (_, i) => keyFromToday(i))
+    const map = toEventMap(upcomingResults.value)
 
-    return days
-        .filter((key) => displayEvents.value[key]?.length)
-        .map((key) => ({ key, label: formatDayLabel(key), events: displayEvents.value[key] }))
+    return Array.from({ length: 7 }, (_, i) => keyFromToday(i))
+        .filter((key) => map[key]?.length)
+        .map((key) => ({ key, label: formatDayLabel(key), events: map[key] }))
 })
 
 function formatDayLabel(key: DateKey): string {
@@ -140,6 +224,8 @@ function formatDayLabel(key: DateKey): string {
     return `${d.getMonth() + 1}/${d.getDate()}（${weekdays[d.getDay()]}）`
 }
 
+// ---------------------------------------------------------------- 追加・編集・削除
+
 // 予定追加の対象日（最後にタップした日。未選択なら今日）
 const selectedDate = ref<DateKey>(todayKey())
 
@@ -147,145 +233,197 @@ function onSelectDate(key: DateKey): void {
     selectedDate.value = key
 }
 
-const dialogService = useDialogService()
-
 // 日別の予定一覧の＋ボタン: その日を開始日にして追加画面を開く
 function onAddClick(payload: { date: DateKey }): void {
     selectedDate.value = payload.date
     openAddDialog()
 }
 
-async function openAddDialog(): Promise<void> {
-    const dialog = dialogService.open<EventEditModel>({
-        component: EventEditForm,
-        props: {
-            initial: { startDate: selectedDate.value, endDate: selectedDate.value },
-            participants: participants.value,
-            labels: labels.value,
-            onLabelsChange,
-        },
-        fullscreen: true,
-        transition: 'dialog-bottom-transition',
-        toolbar: { title: '予定を追加' },
-    })
+/** ラベルの編集を保存し、保存後の一覧を返す（失敗時は client がエラーを表示し、undefined を返す） */
+async function onLabelsChange(next: CalendarLabel[]): Promise<CalendarLabel[] | undefined> {
+    try {
+        const res = await calendarApi.updateLabels(next.map((l) => ({ id: l.id, name: l.name, color: l.color })))
 
-    const result = await dialog.afterClosed()
+        labels.value = res.data.labels
 
-    if (result) {
-        putEvent(result)
+        return labels.value
+    } catch {
+        return undefined
     }
 }
 
-// 日付詳細シートで予定をタップしたら、同じフォームを編集モードで開く
-async function onEventClick(payload: { date: DateKey; event: CalendarEvent }): Promise<void> {
-    const dialog = dialogService.open<EventEditModel>({
+function openForm(title: string, initial: Partial<EventEditModel>, deletable: boolean): Promise<EventEditResult | undefined> {
+    const dialog = dialogService.open<EventEditResult>({
         component: EventEditForm,
         props: {
-            initial: toEditModel(payload.event, payload.date),
+            initial,
             participants: participants.value,
             labels: labels.value,
             onLabelsChange,
+            deletable,
         },
         fullscreen: true,
         transition: 'dialog-bottom-transition',
-        toolbar: { title: '予定を編集' },
+        toolbar: { title },
     })
 
-    const result = await dialog.afterClosed()
+    return dialog.afterClosed()
+}
 
-    if (result) {
-        putEvent(result, payload.event)
+function toRequest(form: EventEditModel): CalendarEventRequest {
+    return {
+        title: form.title,
+        memo: form.memo || undefined,
+        allDay: form.allDay,
+        startDate: form.startDate,
+        endDate: form.endDate,
+        startTime: form.allDay ? undefined : form.startTime || undefined,
+        endTime: form.allDay ? undefined : form.endTime || undefined,
+        labelId: form.labelId || undefined,
+        participantIds: form.participantIds,
+        rrule: form.rrule ?? undefined,
     }
+}
+
+async function askScope(mode: 'save' | 'delete'): Promise<RecurrenceScope | undefined> {
+    const dialog = dialogService.open<RecurrenceScope>({
+        component: RecurrenceScopeDialog,
+        props: { mode },
+        maxWidth: '400px',
+    })
+
+    return dialog.afterClosed()
 }
 
 /**
- * 予定をフォームの入力値に変換する。
- * フォームで追加した予定は meta に入力値を持っているのでそれを使い、
- * ダミー予定はタップした日の1日予定として time（'10:00' / '10:00 - 11:00'）から復元する。
+ * フォームを開いて保存する。保存に失敗したら（client がエラーを表示）入力した内容のままフォームを開き直す
  */
-function toEditModel(event: CalendarEvent, date: DateKey): EventEditModel {
-    const saved = event.meta as Partial<EventEditModel> | undefined
-    const participantIds = (event.participants ?? []).map((p) => p.id)
-    const labelId = (event.meta?.labelId as string | undefined) ?? labels.value[0].id
+async function editUntilSaved(
+    title: string,
+    initial: Partial<EventEditModel>,
+    deletable: boolean,
+    save: (form: EventEditModel) => Promise<boolean>,
+    remove?: () => Promise<void>,
+): Promise<void> {
+    let values = initial
 
-    if (saved?.startDate && saved.endDate) {
-        return {
-            title: event.title,
-            allDay: saved.allDay ?? !event.time,
-            startDate: saved.startDate,
-            endDate: saved.endDate,
-            startTime: saved.startTime ?? '',
-            endTime: saved.endTime ?? '',
-            labelId,
-            participantIds,
+    for (;;) {
+        const result = await openForm(title, values, deletable)
+
+        if (!result) {
+            return
+        }
+
+        if (result.type === 'delete') {
+            await remove?.()
+
+            return
+        }
+
+        try {
+            if (await save(result.value)) {
+                await fetchEvents()
+            }
+
+            return
+        } catch {
+            values = result.value
+        }
+    }
+}
+
+async function openAddDialog(): Promise<void> {
+    const initial = {
+        startDate: selectedDate.value,
+        endDate: selectedDate.value,
+        participantIds: defaultParticipantIds.value,
+    }
+
+    await editUntilSaved('予定を追加', initial, false, async (form) => {
+        await calendarApi.store(toRequest(form))
+
+        return true
+    })
+}
+
+// 日別の予定一覧で予定をタップしたら、同じフォームを編集モードで開く（誕生日は編集できない）
+async function onEventClick(payload: { date: DateKey; event: CalendarEvent }): Promise<void> {
+    const r = payload.event.meta?.result as CalendarEventResult | undefined
+
+    if (!r || r.isBirthday) {
+        return
+    }
+
+    await editUntilSaved(
+        '予定を編集',
+        toEditModel(r),
+        true,
+        async (form) => {
+            let scope: RecurrenceScope | undefined
+
+            if (r.isRecurring) {
+                scope = await askScope('save')
+
+                // 範囲を選ばずに閉じたら保存しない（入力した内容は破棄）
+                if (!scope) {
+                    return false
+                }
+            }
+
+            await calendarApi.update(r.id, { ...toRequest(form), scope, occurrenceDate: r.occurrenceDate })
+
+            return true
+        },
+        () => deleteEvent(r),
+    )
+}
+
+async function deleteEvent(r: CalendarEventResult): Promise<void> {
+    let scope: RecurrenceScope | undefined
+
+    if (r.isRecurring) {
+        scope = await askScope('delete')
+
+        if (!scope) {
+            return
+        }
+    } else {
+        const ok = await confirm({
+            title: '予定を削除しますか？',
+            message: r.title,
+            confirmText: '削除する',
+            confirmColor: 'error',
+        })
+
+        if (!ok) {
+            return
         }
     }
 
-    const [startTime = '', endTime = ''] = (event.time ?? '').split(' - ')
+    try {
+        await calendarApi.destroy(r.id, scope, r.occurrenceDate)
+    } catch {
+        // エラーは client が表示する
+        return
+    }
 
+    await fetchEvents()
+}
+
+function toEditModel(r: CalendarEventResult): EventEditModel {
     return {
-        title: event.title,
-        allDay: !event.time,
-        startDate: date,
-        endDate: date,
-        startTime,
-        endTime,
-        labelId,
-        participantIds,
+        title: r.title,
+        allDay: r.allDay,
+        startDate: r.startDate,
+        endDate: r.endDate,
+        startTime: r.startTime ?? '',
+        endTime: r.endTime ?? '',
+        // ラベルなしの予定はラベルなしのまま（先頭のラベルで埋めない）
+        labelId: r.labelId ?? '',
+        participantIds: r.participantIds,
+        memo: r.memo ?? '',
+        rrule: r.rrule ?? null,
     }
-}
-
-/** 開始日〜終了日の日付キーを列挙する */
-function dateKeysInRange(start: DateKey, end: DateKey): DateKey[] {
-    const keys: DateKey[] = []
-    const d = fromDateKey(start)
-    const last = fromDateKey(end)
-
-    while (d <= last) {
-        keys.push(toDateKey(d))
-        d.setDate(d.getDate() + 1)
-    }
-
-    return keys
-}
-
-function formatTimeLabel(form: EventEditModel): string | undefined {
-    if (form.allDay) {
-        return undefined
-    }
-
-    return form.endTime ? `${form.startTime} - ${form.endTime}` : form.startTime
-}
-
-// 予定はページ内のメモリにだけ保持する（モックのため保存しない）
-// original を渡すと編集: 同じ id の予定を全日付から外し、種類・アイコンを引き継いで入れ直す
-// 複数日にまたがる予定は、期間中の各日に同じ予定を表示する
-function putEvent(form: EventEditModel, original?: CalendarEvent): void {
-    const source = (original?.meta?.source as EventSource | undefined) ?? 'family'
-    const event: CalendarEvent = {
-        id: original?.id ?? nextId++,
-        title: form.title,
-        time: formatTimeLabel(form),
-        icon: original?.icon ?? SOURCE_STYLES[source].icon,
-        participants: resolveParticipants(form.participantIds),
-        meta: { source, ...form },
-    }
-
-    const next: EventMap = {}
-
-    for (const [key, list] of Object.entries(events.value)) {
-        const rest = original ? list.filter((e) => e.id !== original.id) : list
-
-        if (rest.length) {
-            next[key] = rest
-        }
-    }
-
-    for (const key of dateKeysInRange(form.startDate, form.endDate)) {
-        next[key] = [...(next[key] ?? []), event]
-    }
-
-    events.value = next
 }
 </script>
 
@@ -293,14 +431,37 @@ function putEvent(form: EventEditModel, original?: CalendarEvent): void {
     <Head title="カレンダー" />
 
     <v-container class="pa-0">
+        <v-progress-linear
+            :active="loading"
+            indeterminate
+            color="primary"
+            height="2"
+            aria-label="予定を読み込み中" />
+
         <SwipeCalendar
-            :events="displayEvents"
+            :events="events"
             :max-events-per-cell="3"
             detail-fullscreen
             detail-add-button
             @select-date="onSelectDate"
+            @month-change="onMonthChange"
             @event-click="onEventClick"
-            @add-click="onAddClick" />
+            @add-click="onAddClick">
+            <template #header-actions>
+                <v-btn
+                    icon="mdi-cog-outline"
+                    size="small"
+                    aria-label="カレンダー設定"
+                    @click="settingsOpen = true" />
+            </template>
+        </SwipeCalendar>
+
+        <CalendarSettingsSheet
+            v-model:open="settingsOpen"
+            :labels="labels"
+            :settings="settings"
+            @edit-labels="openLabelEditorFromSettings"
+            @update-birthday-label="onBirthdayLabelChange" />
 
         <div class="d-flex justify-end pr-4 pt-2">
             <v-btn

@@ -6,6 +6,8 @@ use App\Dtos\Calendar\CalendarPageResult;
 use App\Dtos\Calendar\CalendarParticipantResult;
 use App\Dtos\Family\FamilyMemberData;
 use App\Dtos\Model\VirtualUserData;
+use App\Services\CalendarLabelService;
+use App\Services\CalendarSettingsService;
 use App\Services\CurrentFamilyService;
 use App\Services\FamilyMemberService;
 use Inertia\Inertia;
@@ -16,13 +18,15 @@ class CalendarController extends Controller
     public function __construct(
         private readonly CurrentFamilyService $currentFamilyService,
         private readonly FamilyMemberService $familyMemberService,
+        private readonly CalendarLabelService $calendarLabelService,
+        private readonly CalendarSettingsService $calendarSettingsService,
     ) {}
 
     /**
-     * カレンダー画面（モックアップ）。
+     * カレンダー画面。
      *
-     * 予定は未確定のため、表示用のダミーイベントはページ側（Pages/Calendar/Index.vue）で保持する。
-     * 予定の参加者として選べるよう、現在の家族のメンバー（仮想ユーザー含む）だけを渡す。
+     * 参加者の選択肢（現在の家族のメンバー・仮想ユーザー）とラベルを渡す。
+     * 予定は表示中の月に合わせて画面から GET /calendar/events で取得する。
      */
     public function index(): Response
     {
@@ -48,6 +52,8 @@ class CalendarController extends Controller
 
         return Inertia::render('Calendar/Index', CalendarPageResult::from([
             'participants' => [...$members, ...$virtualUsers],
+            'labels' => $this->calendarLabelService->list($family),
+            'settings' => $this->calendarSettingsService->get($family),
         ]));
     }
 }

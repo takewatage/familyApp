@@ -11,6 +11,8 @@ const props = defineProps<{
     clearable?: boolean
     density?: 'default' | 'comfortable' | 'compact'
     variant?: 'outlined' | 'filled' | 'underlined' | 'plain' | 'solo'
+    /** 入力欄の下のメッセージ領域（v-text-field の hide-details と同じ） */
+    hideDetails?: boolean | 'auto'
 }>()
 
 const emit = defineEmits<{
@@ -99,6 +101,7 @@ const clear = () => {
         :hint="hint"
         :density="density ?? 'comfortable'"
         :variant="variant ?? 'outlined'"
+        :hide-details="hideDetails"
         readonly
         prepend-inner-icon="mdi-calendar"
         @click="openDialog"
