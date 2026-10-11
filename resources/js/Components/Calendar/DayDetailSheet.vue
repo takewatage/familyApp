@@ -5,6 +5,7 @@
 import { computed } from 'vue'
 import { VBottomSheet } from 'vuetify/components/VBottomSheet'
 import { VDialog } from 'vuetify/components/VDialog'
+import EventMemo from '@/Components/Calendar/EventMemo.vue'
 import ParticipantAvatars from '@/Components/Calendar/ParticipantAvatars.vue'
 import { resolveEventColor } from '@/Utils/calendarColor'
 import type { CalendarEvent } from '@/Types/calendar'
@@ -88,6 +89,9 @@ const isOpen = computed({
                                     :participants="ev.participants"
                                     :size="32" />
                             </template>
+                            <EventMemo
+                                v-if="ev.memo"
+                                :memo="ev.memo" />
                         </v-list-item>
                     </v-list>
                     <v-card-text

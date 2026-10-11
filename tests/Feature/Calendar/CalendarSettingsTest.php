@@ -43,7 +43,8 @@ class CalendarSettingsTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page->where('settings.birthdayColor', '#1e88e5'));
 
         // 誕生日の予定はラベルなし（色はカレンダー設定で画面が決める）
-        $this->inFamily()->getJson(route('calendar.events.index', ['from' => '2026-10-01', 'to' => '2026-10-31']))
+        // （10/12 スポーツの日と重ならないよう、誕生日の当日だけを取得する）
+        $this->inFamily()->getJson(route('calendar.events.index', ['from' => '2026-10-15', 'to' => '2026-10-15']))
             ->assertJsonPath('events.0.isBirthday', true)
             ->assertJsonPath('events.0.labelId', null);
 

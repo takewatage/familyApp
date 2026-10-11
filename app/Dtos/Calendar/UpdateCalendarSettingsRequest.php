@@ -16,12 +16,16 @@ class UpdateCalendarSettingsRequest extends Data
         /** 誕生日の予定の色（#rrggbb。null で既定の色に戻す） */
         #[Optional]
         public ?string $birthday_color = null,
+        /** 祝日を表示するか（ログイン中のユーザーだけに反映） */
+        #[Optional]
+        public ?bool $show_holidays = null,
     ) {}
 
     public static function rules(): array
     {
         return [
             'birthday_color' => ['nullable', 'string', 'regex:/^#[0-9a-fA-F]{6}$/'],
+            'show_holidays' => ['sometimes', 'boolean'],
         ];
     }
 
@@ -29,6 +33,7 @@ class UpdateCalendarSettingsRequest extends Data
     {
         return [
             'birthday_color' => '誕生日のカラー',
+            'show_holidays' => '祝日を表示',
         ];
     }
 }

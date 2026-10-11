@@ -60,6 +60,8 @@ export async function createCalendarEvent(
         title: string
         /** 今日から何日後に始まるか（既定 0 = 今日） */
         startOffset?: number
+        /** 開始日（Y-m-d）。指定すると startOffset より優先する */
+        startDate?: string
         /** 日数（既定 1） */
         days?: number
         startTime?: string
@@ -73,6 +75,7 @@ export async function createCalendarEvent(
             family_id: familyId,
             title: event.title,
             start_offset: event.startOffset,
+            start_date: event.startDate,
             days: event.days,
             start_time: event.startTime,
             rrule: event.rrule,

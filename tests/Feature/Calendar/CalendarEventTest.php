@@ -23,7 +23,8 @@ class CalendarEventTest extends TestCase
     {
         parent::setUp();
 
-        $this->user = User::factory()->create(['birthday' => null]);
+        // 祝日は CalendarHolidayTest で確認する。ここでは予定の件数・並びだけを見るため祝日を表示しない
+        $this->user = User::factory()->create(['birthday' => null, 'settings' => ['calendar' => ['show_holidays' => false]]]);
         $this->family = Family::factory()->create(['owner_id' => $this->user->id]);
         $this->family->members()->attach($this->user->id, ['role' => 'owner']);
     }

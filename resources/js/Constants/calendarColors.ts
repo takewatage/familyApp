@@ -45,5 +45,8 @@ export const DEFAULT_CALENDAR_COLOR = '#2BB673'
 /** 誕生日の予定の色 */
 export const BIRTHDAY_COLOR = '#F79A2E'
 
+/** 祝日の色（テーマの error。日曜の日付と同じ赤） */
+export const HOLIDAY_COLOR = 'error'
+
 /** 誕生日の予定のタイトルの前に表示する画像（public/icons） */
 export const BIRTHDAY_ICON = '/icons/birthday_cake.png'

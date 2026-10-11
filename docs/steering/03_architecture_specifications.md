@@ -30,6 +30,7 @@
 | Day.js                             | 1.11     | 日付処理                                     |
 | vue-draggable-plus                 | 0.6      | ドラッグ＆ドロップによる並び替え               |
 | rlanvin/php-rrule                  | 3.0      | カレンダーの繰り返し予定（RFC 5545 の RRULE・EXDATE）の展開 |
+| azuyalabs/yasumi                   | 2.12     | カレンダーの日本の祝日・休日（国民の祝日・振替休日・国民の休日）の計算 |
 | Laravel Echo                       | -        | WebSocketイベントのフロントエンド受信          |
 | qrcode                             | -        | QRコード生成（DataURL → `<img>` 表示）       |
 | vite-plugin-pwa                    | 2.0      | Service Worker 生成（generateSW）・登録（`virtual:pwa-register/vue`）。manifest は生成しない（`manifest: false`） |
@@ -214,12 +215,12 @@ sail yarn build
 | `/budget/categories/reorder` | POST | カテゴリー並び替え（`ReorderCategoriesRequest`。家族カテゴリーのみ、`budgetCategoryApi.reorder`） | ✅完了 |
 | `/budget/shops/search` | GET | 店名オートコンプリート（家族スコープ・利用回数降順、`budgetShopApi.search`） | ✅完了 |
 | `/budget/quick-entries/{quickEntry}/use` | POST | クイック入力の利用回数加算（支出フォームへのプリセット時、`budgetQuickEntryApi.use`。family 越境は404） | ✅完了 |
-| `/calendar/events` | GET | 期間内（`from`〜`to`、最大 100 日）の予定。繰り返しを展開済み・家族メンバーの誕生日を含む（`CalendarEventResult[]`、`calendarApi.events`） | ✅完了 |
+| `/calendar/events` | GET | 期間内（`from`〜`to`、最大 100 日）の予定。繰り返しを展開済み・家族メンバーの誕生日を含む。ログイン中のユーザーの `show_holidays` が true（既定）なら日本の祝日（`isHoliday: true`、ID `holiday:{Y-m-d}`）も含む（`CalendarEventResult[]`、`calendarApi.events`） | ✅完了 |
 | `/calendar/events` | POST | 予定の作成（`CalendarEventRequest`。ラベル・参加者は現在の家族のものに限る） | ✅完了 |
 | `/calendar/events/{calendarEvent}` | PUT | 予定の更新。繰り返し予定は `scope`（this / following / all）と `occurrence_date` で範囲を指定。family 越境は404 | ✅完了 |
 | `/calendar/events/{calendarEvent}` | DELETE | 予定の削除（範囲指定は更新と同じ）。family 越境は404 | ✅完了 |
 | `/calendar/labels` | PUT | 家族のラベルの一括更新（名前・カラー・並び順。全件そろっている必要がある） | ✅完了 |
-| `/calendar/settings` | PUT | 家族のカレンダー設定の更新（送った項目だけ更新。`birthday_color`: 誕生日の予定の色（#rrggbb）、null で既定の色に戻す。`families.settings.calendar` に保存） | ✅完了 |
+| `/calendar/settings` | PUT | カレンダー設定の更新（送った項目だけ更新。`birthday_color`: 誕生日の予定の色（#rrggbb）、null で既定の色に戻す。`families.settings.calendar` に保存。`show_holidays`: 祝日を表示するか（boolean）。ログイン中のユーザーの `users.settings.calendar` に保存） | ✅完了 |
 
 ## 5. データベース
 
@@ -227,7 +228,7 @@ sail yarn build
 
 | テーブル名             | 説明                                    |
 |----------------------|-----------------------------------------|
-| `users`              | ユーザー基本情報（UUID, name, email, birthday nullable, settings JSON nullable）settings スキーマ: `{ theme: 'light'\|'dark'\|'system', theme_name: 'pink'\|'sunset'\|'ocean'\|'forest'\|'lavender'\|'autumn'\|'midnight', footer_items: string[] }` |
+| `users`              | ユーザー基本情報（UUID, name, email, birthday nullable, settings JSON nullable）settings スキーマ: `{ theme: 'light'\|'dark'\|'system', theme_name: 'pink'\|'sunset'\|'ocean'\|'forest'\|'lavender'\|'autumn'\|'midnight', footer_items: string[], calendar: { show_holidays: boolean } }` |
 | `families`           | 家族グループ情報（UUID, name, code, code_expires_at nullable, owner_id, settings JSON nullable）settings スキーマ: `{ pwa: {...}, banner: { external_id, url, updated_at }, icon: { external_id, url, updated_at }, calendar: { birthday_color: string\|null } }` |
 | `family_user`        | ユーザーと家族グループの中間テーブル（role付き）|
 | `task_categories`    | タスクカテゴリー（family_id, name, sort）  |

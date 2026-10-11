@@ -25,13 +25,16 @@ use Illuminate\Validation\ValidationException;
  */
 class CalendarEventService
 {
+    public function __construct(
+        private readonly JapaneseHolidayService $japaneseHolidayService,
+    ) {}
 
     /**
-     * 期間内（両端を含む）の予定を、繰り返しを展開して返す（誕生日を含む）
+     * 期間内（両端を含む）の予定を、繰り返しを展開して返す（誕生日を含む。$includeHolidays なら祝日も含む）
      *
      * @return CalendarEventResult[]
      */
-    public function occurrences(Family $family, Carbon $from, Carbon $to): array
+    public function occurrences(Family $family, Carbon $from, Carbon $to, bool $includeHolidays = false): array
     {
         $from = $from->copy()->startOfDay();
         $to = $to->copy()->startOfDay();
@@ -94,10 +97,15 @@ class CalendarEventService
 
         $results = array_merge($results, $this->birthdays($family, $from, $to));
 
+        if ($includeHolidays) {
+            $results = array_merge($results, $this->holidays($from, $to));
+        }
+
+        // 同じ日の中では祝日を先頭にする
         usort($results, fn (CalendarEventResult $a, CalendarEventResult $b) => [
-            $a->start_date, !$a->all_day, $a->start_time ?? '', $a->title,
+            $a->start_date, !$a->is_holiday, !$a->all_day, $a->start_time ?? '', $a->title,
         ] <=> [
-            $b->start_date, !$b->all_day, $b->start_time ?? '', $b->title,
+            $b->start_date, !$b->is_holiday, !$b->all_day, $b->start_time ?? '', $b->title,
         ]);
 
         return $results;
@@ -430,5 +438,30 @@ class CalendarEventService
         }
 
         return $results;
+    }
+
+    /**
+     * 期間内の日本の祝日・休日（終日・参加者なし・編集不可）
+     *
+     * @return CalendarEventResult[]
+     */
+    private function holidays(Carbon $from, Carbon $to): array
+    {
+        return array_map(fn (array $holiday) => new CalendarEventResult(
+            id: "holiday:{$holiday['date']}",
+            occurrence_date: $holiday['date'],
+            title: $holiday['name'],
+            memo: null,
+            all_day: true,
+            start_date: $holiday['date'],
+            end_date: $holiday['date'],
+            start_time: null,
+            end_time: null,
+            label_id: null,
+            participant_ids: [],
+            rrule: null,
+            is_recurring: false,
+            is_holiday: true,
+        ), $this->japaneseHolidayService->between($from, $to));
     }
 }

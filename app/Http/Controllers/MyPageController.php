@@ -91,7 +91,9 @@ class MyPageController extends Controller
     public function updateSettings(UpdateSettingsRequest $data): RedirectResponse
     {
         $user = auth()->user();
+        // 他の画面で保存する項目（カレンダーの祝日表示など）を消さないよう、送られた項目だけを上書きする
         $user->settings = [
+            ...($user->settings ?? []),
             'theme'        => $data->theme,
             'theme_name'   => $data->theme_name,
             'footer_items' => $data->footer_items,

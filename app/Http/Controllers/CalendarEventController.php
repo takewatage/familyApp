@@ -8,6 +8,7 @@ use App\Dtos\Calendar\DeleteCalendarEventRequest;
 use App\Models\CalendarEvent;
 use App\Models\Family;
 use App\Services\CalendarEventService;
+use App\Services\CalendarSettingsService;
 use App\Services\CurrentFamilyService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -21,17 +22,23 @@ class CalendarEventController extends Controller
     public function __construct(
         private readonly CurrentFamilyService $currentFamilyService,
         private readonly CalendarEventService $calendarEventService,
+        private readonly CalendarSettingsService $calendarSettingsService,
     ) {}
 
     /**
-     * 期間内の予定（繰り返しを展開済み・誕生日を含む）
+     * 期間内の予定（繰り返しを展開済み・誕生日を含む。祝日はログイン中のユーザーが表示する設定のときだけ含む）
      */
-    public function index(CalendarEventsRequest $data): JsonResponse
+    public function index(CalendarEventsRequest $data, Request $request): JsonResponse
     {
         $family = $this->family();
 
         return response()->json([
-            'events' => $this->calendarEventService->occurrences($family, Carbon::parse($data->from), Carbon::parse($data->to)),
+            'events' => $this->calendarEventService->occurrences(
+                $family,
+                Carbon::parse($data->from),
+                Carbon::parse($data->to),
+                includeHolidays: $this->calendarSettingsService->showHolidays($request->user()),
+            ),
         ]);
     }
 
