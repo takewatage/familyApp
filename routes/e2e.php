@@ -5,6 +5,7 @@ use App\Models\Family;
 use App\Models\User;
 use App\Services\InviteUrlService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -68,6 +69,7 @@ Route::post('/calendar-events', function (Request $request) {
         'family_id' => ['required', 'string'],
         'title' => ['required', 'string'],
         'start_offset' => ['nullable', 'integer'],
+        'start_date' => ['nullable', 'date_format:Y-m-d'],
         'days' => ['nullable', 'integer', 'min:1'],
         'start_time' => ['nullable', 'date_format:H:i'],
         'rrule' => ['nullable', 'string'],
@@ -75,7 +77,10 @@ Route::post('/calendar-events', function (Request $request) {
     ]);
 
     $family = Family::findOrFail($data['family_id']);
-    $start = now('Asia/Tokyo')->startOfDay()->addDays($data['start_offset'] ?? 0);
+    // start_date があればその日（画面の日付を固定するテスト用）、なければ今日から start_offset 日後
+    $start = isset($data['start_date'])
+        ? Carbon::parse($data['start_date'])
+        : now('Asia/Tokyo')->startOfDay()->addDays($data['start_offset'] ?? 0);
 
     $event = CalendarEvent::create([
         'family_id' => $family->id,

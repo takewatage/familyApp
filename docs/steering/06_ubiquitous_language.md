@@ -23,7 +23,8 @@
 | 完了タスク             | Completed Task | `is_completed = true` のタスク        | `Task.is_completed`, `Task.completed_at` |
 | ドク（Dok）(どっちがお得かね) | Dok            | 日用品・買い物の価格を比較する機能                 | `DokController`, `Pages/Dok/`            |
 | アバター              | Avatar         | ユーザーのプロフィール画像                     | `User.files`（collection: 'avatar'）       |
-| ユーザー設定           | UserSettings   | ユーザーごとの個別設定（テーマ・テーマカラー）。`users.settings` JSONカラムに保存。スキーマ: `{ theme, theme_color }` | `User.settings`, `UserSettingsResult` DTO |
+| ユーザー設定           | UserSettings   | ユーザーごとの個別設定（テーマ・テーマカラー・フッター・カレンダーの祝日表示）。`users.settings` JSONカラムに保存。スキーマ: `{ theme, theme_name, footer_items, calendar: { show_holidays } }` | `User.settings`, `UserSettingsResult` DTO |
+| 祝日                   | Holiday        | 日本の国民の祝日・振替休日・国民の休日。カレンダーに編集不可の終日の予定として表示する（`azuyalabs/yasumi` で計算）。表示はユーザーごとに切り替え | `CalendarEventResult.is_holiday`, `CalendarEvent.isHoliday`, `JapaneseHolidayService` |
 | テーマカラー           | ThemeColor     | プライマリカラーのプリセット。`pink` / `blue` / `purple` / `green` / `orange` / `teal` から選択 | `UserSettings.theme_color` |
 | 仮想ユーザー           | VirtualUser    | アプリにログインせずにタスク等の担当者として割り当てられる家族内の人物。`virtual_users` テーブルで管理 | `VirtualUser` モデル、`VirtualUserData` DTO |
 | アクティブ家族         | ActiveFamily   | ユーザーが現在操作対象としている家族グループ。`users.settings.activeFamilyId` に保存 | `User.settings['activeFamilyId']` |

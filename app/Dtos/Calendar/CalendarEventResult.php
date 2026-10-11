@@ -15,7 +15,7 @@ use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 class CalendarEventResult extends Data
 {
     public function __construct(
-        /** 予定 ID（繰り返しは繰り返し元、この回だけ変更した回は上書き予定の ID。誕生日は 'birthday:{ユーザーID}:{年}'） */
+        /** 予定 ID（繰り返しは繰り返し元、この回だけ変更した回は上書き予定の ID。誕生日は 'birthday:{ユーザーID}:{年}'、祝日は 'holiday:{Y-m-d}'） */
         public string $id,
         /** 発生日（Y-m-d）。繰り返しの変更・削除で「どの回か」を指定するのに使う */
         public string $occurrence_date,
@@ -37,5 +37,7 @@ class CalendarEventResult extends Data
         public bool $is_recurring,
         /** 誕生日（ユーザーの birthday から生成。編集不可） */
         public bool $is_birthday = false,
+        /** 日本の祝日・休日（JapaneseHolidayService で計算。編集不可） */
+        public bool $is_holiday = false,
     ) {}
 }

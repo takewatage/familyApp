@@ -17,6 +17,8 @@ const emit = defineEmits<{
     (e: 'edit-labels'): void
     /** 誕生日のカラーを変更した（既定の色に戻す場合は null） */
     (e: 'update-birthday-color', color: string | null): void
+    /** 祝日の表示を切り替えた（ログイン中のユーザーだけに反映） */
+    (e: 'update-show-holidays', value: boolean): void
 }>()
 
 const isOpen = computed({
@@ -51,6 +53,8 @@ interface MenuItem {
     subtitle: string
     /** 右端に出す色（ラベルの色など） */
     color?: string
+    /** オン・オフの設定なら現在の値（右端にスイッチを出す。行のタップで切り替える） */
+    toggle?: boolean
     onClick: () => void
 }
 
@@ -69,6 +73,14 @@ const MENU = computed<MenuItem[]>(() => [
         subtitle: props.settings.birthdayColor ? props.settings.birthdayColor.toUpperCase() : '既定の色',
         color: props.settings.birthdayColor ?? BIRTHDAY_COLOR,
         onClick: openBirthdayColor,
+    },
+    {
+        key: 'show-holidays',
+        icon: 'mdi-flag-outline',
+        title: '祝日を表示',
+        subtitle: '日本の祝日・休日を表示（自分だけに反映）',
+        toggle: props.settings.showHolidays,
+        onClick: () => emit('update-show-holidays', !props.settings.showHolidays),
     },
 ])
 
@@ -103,11 +115,24 @@ const MENU = computed<MenuItem[]>(() => [
                     lines="two"
                     @click="item.onClick">
                     <template #append>
-                        <span
-                            v-if="item.color"
-                            class="calendar-settings-sheet__color"
-                            :style="{ background: item.color }" />
-                        <v-icon icon="mdi-chevron-right" />
+                        <!-- スイッチは表示だけ（切り替えは行のタップで行い、二重に切り替わらないようにする） -->
+                        <v-switch
+                            v-if="item.toggle !== undefined"
+                            :model-value="item.toggle"
+                            :aria-label="item.title"
+                            color="primary"
+                            density="compact"
+                            hide-details
+                            inset
+                            readonly
+                            class="calendar-settings-sheet__switch" />
+                        <template v-else>
+                            <span
+                                v-if="item.color"
+                                class="calendar-settings-sheet__color"
+                                :style="{ background: item.color }" />
+                            <v-icon icon="mdi-chevron-right" />
+                        </template>
                     </template>
                 </v-list-item>
             </v-list>
@@ -158,6 +183,10 @@ const MENU = computed<MenuItem[]>(() => [
 </template>
 
 <style scoped>
+.calendar-settings-sheet__switch {
+    flex: none;
+}
+
 /* 画面の 90% の高さで開き、項目が増えたらリストをスクロールする */
 .calendar-settings-sheet {
     height: 100%;

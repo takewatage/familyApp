@@ -13,10 +13,15 @@ test.describe('カレンダーの予定', () => {
         await waitForReload(page, () => page.getByRole('button', { name: '保存' }).click())
 
         await gotoCalendar(page)
-        await expect(page.locator('.upcoming-event', { hasText: '保存される予定' })).toBeVisible()
+        const upcoming = page.locator('.upcoming-event', { hasText: '保存される予定' })
+        await expect(upcoming).toBeVisible()
+
+        // メモは予定一覧（これから7日間・日別）に表示する
+        await expect(upcoming.locator('.event-memo')).toHaveText('持ち物: 水筒')
+        const dialog = await openToday(page)
+        await expect(dialog.locator('.day-detail-sheet__event', { hasText: '保存される予定' }).locator('.event-memo')).toHaveText('持ち物: 水筒')
 
         // 編集画面にメモも残っている
-        const dialog = await openToday(page)
         await dialog.getByText('保存される予定').click()
         await expect(page.getByRole('textbox', { name: 'メモ' })).toHaveValue('持ち物: 水筒')
     })
@@ -38,7 +43,8 @@ test.describe('カレンダーの予定', () => {
         await expect(page.getByText('予定を削除しますか？')).toBeVisible()
         await waitForReload(page, () => page.getByRole('button', { name: '削除する' }).click())
 
-        await expect(page.getByText('これから7日間の予定はありません')).toBeVisible()
+        // （祝日は今日の日付によって 7 日間の一覧に出るため、「予定はありません」ではなく予定が消えたことを見る）
+        await expect(page.locator('.upcoming-event', { hasText: '変更後' })).toHaveCount(0)
     })
 
     test('繰り返し予定を作成し、この回だけ変更・これ以降を削除できる', async ({ page, request }) => {

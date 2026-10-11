@@ -9,7 +9,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 /**
- * カレンダー設定 API（家族で共有。家族全員が変更できる）
+ * カレンダー設定 API（家族で共有する項目は家族全員が変更できる。祝日の表示はユーザーごと）
  */
 class CalendarSettingsController extends Controller
 {
@@ -28,7 +28,7 @@ class CalendarSettingsController extends Controller
         $values = array_intersect_key($data->toArray(), $request->all());
 
         return response()->json([
-            'settings' => $this->calendarSettingsService->update($family, $values),
+            'settings' => $this->calendarSettingsService->update($family, $request->user(), $values),
         ]);
     }
 }

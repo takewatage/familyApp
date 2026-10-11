@@ -29,7 +29,7 @@
 | S-022 | 予算設定画面（家計簿）       | 月ごとの予算を設定（月切替）。月収入・貯金目標、カテゴリー別予算配分、予算アラート（家族全体/カテゴリー別・消化率の閾値1-100%・有効/無効）を設定・保存 | ✅完了      |
 | S-023 | 家計簿ダッシュボード         | 月切替で当月の残高サマリー（収入・実支出・固定費・貯金目標・自由に使えるお金・貯金可能額）、全体/カテゴリー別消化率（プログレスバー）、固定費リマインダー（支払済み/期日接近/遅延の強調）を集約表示。支出登録・予算設定への導線。グラフ（棒/円）は T-10 で追加予定 | ✅完了      |
 | S-024 | カレンダー動作確認ページ     | 共通コンポーネント `SwipeCalendar` の動作確認用（メニュー非掲載・`/calendar/demo` 直打ち）。ダミーイベント表示・emit ログ・`enableAdd` 切替 | ✅完了      |
-| S-025 | カレンダー画面 | 家族で共有するカレンダー（`/calendar`）。表示中の月の予定を API で取得し、予定の追加・編集・削除（タイトル・終日・開始日/終了日・時刻・繰り返し・参加者・ラベル・メモ）、繰り返し予定の範囲指定（この予定のみ／これ以降／すべて）、家族メンバーの誕生日表示、ラベル（名前・カラー・並び順）の編集ができる。予定一覧の右端に参加者アイコン、日別の予定一覧は全画面表示。ホーム・サイドバー・フッター設定から遷移 | ✅完了 |
+| S-025 | カレンダー画面 | 家族で共有するカレンダー（`/calendar`）。表示中の月の予定を API で取得し、予定の追加・編集・削除（タイトル・終日・開始日/終了日・時刻・繰り返し・参加者・ラベル・メモ）、繰り返し予定の範囲指定（この予定のみ／これ以降／すべて）、家族メンバーの誕生日表示、日本の祝日・休日の表示、ラベル（名前・カラー・並び順）の編集ができる。予定一覧の右端に参加者アイコン、日別の予定一覧は全画面表示。ホーム・サイドバー・フッター設定から遷移 | ✅完了 |
 | S-026 | アプリインストール案内ページ | PWA のホーム画面追加案内（`/mypage/app-install`、ログインユーザーのみ）。家族のアプリ画像・アプリ名・バージョンを表示し、状態（インストール済み / 追加ボタン / iOS 手順 / その他）別に案内 | ✅完了 |
 | S-027 | 新バージョン更新通知 | Service Worker が新しいビルドを検知すると共通レイアウトにスナックバー「新しいバージョンがあります」（あとで / 更新）を表示 | ✅完了 |
 
@@ -513,30 +513,33 @@ https://{ドメイン}/join/{code}?role={role}&signature={sig}
 
 #### 概要
 
-家族で共有するカレンダー。予定・ラベルは家族単位で保存し、家族全員が作成・編集・削除できる（リアルタイム同期・通知はなし。画面を開いたとき・月を移動したとき・保存したときに取り直す）。開発作業ドキュメント: `docs/working/20260930_calendar-app/`
+家族で共有するカレンダー。予定・ラベルは家族単位で保存し、家族全員が作成・編集・削除できる（リアルタイム同期・通知はなし。画面を開いたとき・月を移動したとき・保存したときに取り直す）。開発作業ドキュメント: `docs/working/20260930_calendar-app/`、祝日: `docs/working/20261009_calendar-holidays/`
 
 #### 構成要素
 
-- **Pages/Calendar/Index.vue**: 表示中の月（前月 1 日〜翌月末）と「これから7日間」の予定を `calendarApi.events` で取得（月移動ごとに取り直し、古いリクエストの結果は捨てる）。予定の追加・編集は `useDialogService` でフルスクリーンの `EventEditForm` を開き、保存・削除後に取り直す（保存に失敗したら入力した内容のままフォームを開き直す）。新しい予定の参加者の初期値はログイン中の本人。「これから7日間」は月移動では取り直さない。繰り返し予定の保存・削除では `RecurrenceScopeDialog` で範囲を選ぶ。誕生日はタップしても編集画面を開かない
+- **Pages/Calendar/Index.vue**: 表示中の月（前月 1 日〜翌月末）と「これから7日間」の予定を `calendarApi.events` で取得（月移動ごとに取り直し、古いリクエストの結果は捨てる）。予定の追加・編集は `useDialogService` でフルスクリーンの `EventEditForm` を開き、保存・削除後に取り直す（保存に失敗したら入力した内容のままフォームを開き直す）。新しい予定の参加者の初期値はログイン中の本人。「これから7日間」は月移動では取り直さない。繰り返し予定の保存・削除では `RecurrenceScopeDialog` で範囲を選ぶ。誕生日・祝日はタップしても編集画面を開かない
 - **Components/Calendar/EventEditForm.vue**: 予定の編集フォーム（タイトル・終日（右端のスイッチ）・開始日/終了日・開始/終了時刻・繰り返し・参加者・ラベル・メモ（行数に合わせて伸びる）、入力チェック付き、編集時は削除ボタン）。保存・削除は行わず `onClose({ type: 'save' | 'delete' })` で結果を返す。全欄を同じ outlined の見た目・16px 間隔で並べ、エラー時だけメッセージ領域を出す。開始日を変えると繰り返しのルールも新しい開始日に合わせる
 - **Components/Common/TimePickerDialog.vue**: 時刻の入力欄（タップで Vuetify の `VTimePicker` をダイアログで開く。24 時間表記、時→分の順に選び「OK」で確定）。時刻欄は幅を抑え（128px）、日付が見切れないようにする
 - **Components/Common/PickerField.vue**: 入力欄と同じ見た目（読み取り専用の v-text-field）の選択欄。繰り返し・参加者・ラベルの欄に使い、タップでボトムシートを開く
 - **Components/Calendar/RecurrenceField.vue**: 繰り返しの設定欄（ボトムシートで 繰り返さない／毎日／毎週（曜日）／毎月（日付・第n曜日）／毎年、終了: なし・日付・回数）。値は RRULE 文字列（`Utils/calendarRecurrence.ts` で相互変換）
 - **Components/Calendar/RecurrenceScopeDialog.vue**: 繰り返し予定の変更・削除の範囲（この予定のみ／これ以降の予定／すべての予定）を選ぶダイアログ
-- **Components/Calendar/CalendarSettingsSheet.vue**: カレンダー設定（ヘッダーの「今日」ボタンの左の歯車から、画面の 90% の高さのボトムシートで開く）。メニューは「ラベルの編集」（ラベル編集画面を開く）と「誕生日のカラー」（Vuetify の `v-color-picker` で自由に色を選ぶ。「既定の色に戻す」あり）。設定項目はコンポーネント内の `MENU` に追加していく
+- **Components/Calendar/CalendarSettingsSheet.vue**: カレンダー設定（ヘッダーの「今日」ボタンの左の歯車から、画面の 90% の高さのボトムシートで開く）。メニューは「ラベルの編集」（ラベル編集画面を開く）、「誕生日のカラー」（Vuetify の `v-color-picker` で自由に色を選ぶ。「既定の色に戻す」あり。家族で共有）、「祝日を表示」（スイッチ。行のタップで切り替え、ログイン中のユーザーだけに反映。変更したら予定を取り直す）。設定項目はコンポーネント内の `MENU` に追加していく
 - **Components/Calendar/LabelSelectSheet.vue**: ラベルを選ぶボトムシート（色と名前の一覧から単一選択。一番下の控えめなボタン「ラベル名やカラーを変更」で編集画面へ）
 - **Components/Calendar/LabelEditForm.vue**: ラベルの編集画面（フルスクリーン。ドラッグで並び替え・名前・カラー（パレットから選択））。保存すると `PUT /calendar/labels` で家族のラベルを更新し、同じラベルの予定の色も変わる
 - **Components/Calendar/ParticipantSelectSheet.vue** / **ParticipantAvatars.vue**: 参加者の複数選択ボトムシート / 参加者アイコン（最大 4 人を重ねて表示し、5 人以上は「+N」。フォームの参加者欄は名前を出さずアイコンのみ）
-- **Constants/calendarColors.ts**: カラーパレット（25 色）・誕生日の色
-- **CalendarController@index**: `CalendarPageResult`（`participants`: 家族のメンバー＋仮想ユーザー、`labels`: 家族のラベル（初回アクセス時に初期 10 件を作成）、`settings`: 家族のカレンダー設定）
-- **CalendarSettingsController** / **CalendarSettingsService**: カレンダー設定の更新（`families.settings.calendar` に保存。誕生日の予定には設定したラベルを付けて返す）
+- **Components/Calendar/EventMemo.vue**: 予定のメモ（日別の予定一覧・これから7日間の予定で時刻の下に表示。メモのアイコン付きの薄い背景、改行はそのまま、2 行で切って「…」）。メモがない予定は表示しない
+- **Constants/calendarColors.ts**: カラーパレット（25 色）・誕生日の色・祝日の色（`HOLIDAY_COLOR`: テーマの error）
+- **CalendarController@index**: `CalendarPageResult`（`participants`: 家族のメンバー＋仮想ユーザー、`labels`: 家族のラベル（初回アクセス時に初期 10 件を作成）、`settings`: カレンダー設定（誕生日のカラーは家族、祝日の表示はログイン中のユーザー））
+- **CalendarSettingsController** / **CalendarSettingsService**: カレンダー設定の更新（送った項目だけ更新。`birthday_color` は `families.settings.calendar`、`show_holidays` は `users.settings.calendar` に保存）
+- **JapaneseHolidayService**: 期間内の日本の祝日・休日（国民の祝日・振替休日・国民の休日）を `azuyalabs/yasumi` で計算する（外部通信なし）。`CalendarEventService::occurrences(includeHolidays:)` が `id: 'holiday:{Y-m-d}'`・`isHoliday: true` の終日の予定として返す（同じ日の中では先頭）
+- **Components/Calendar/DayCell.vue**: 祝日の日は日付の数字を日曜と同じ赤（土曜でも赤。今日の表示を優先）にし、祝日名は塗りつぶさない赤文字・薄い赤背景のチップ（`.day-cell__event--holiday`）で表示する
 - **CalendarEventController** / **CalendarLabelController**: 予定・ラベルの API（`CalendarEventService` / `CalendarLabelService`。繰り返しの展開は `Support/CalendarRecurrence`）
 - **Components/Calendar/SwipeCalendar.vue**: カレンダー本体（`detail-fullscreen` で日別の予定一覧を全画面、`detail-add-button` で右下に＋ボタン）。月によらず常に 6 週（42 マス）で表示し、月を移動してもカレンダーの高さが変わらない
 
 #### ユーザー操作フロー
 
 1. ホーム・サイドバー・フッターの「カレンダー」から `/calendar` を開く
-2. 当月のカレンダーと予定（家族全員の予定・誕生日）、これから7日間の予定一覧が表示される
+2. 当月のカレンダーと予定（家族全員の予定・誕生日・祝日）、これから7日間の予定一覧が表示される
 3. 日付をタップして日別の予定一覧（全画面）で予定と参加者を確認する。右下の＋でその日の予定を追加できる
 4. カレンダー下の＋ボタンから予定を追加する（繰り返し・参加者・ラベル・メモを設定できる）
 5. 日別の予定一覧で予定をタップすると「予定を編集」が開き、変更・削除できる。繰り返し予定は「この予定のみ／これ以降／すべて」を選ぶ
@@ -547,6 +550,7 @@ https://{ドメイン}/join/{code}?role={role}&signature={sig}
 - 一度に取得できる期間は 100 日まで
 - 複数日の予定は期間中の各日に別々のチップで表示する（バー表示は未対応）
 - 家族全員（ゲスト・子供を含む）が予定・ラベル・カレンダー設定を編集できる。リアルタイム同期・通知はなし
+- 祝日はルール計算（`azuyalabs/yasumi`）で求めるため、法改正・特例はライブラリの更新で追従する。地域の休日・他国の祝日は対象外。「祝日を表示」は未設定なら表示
 - 誕生日の色はカレンダー設定の「誕生日のカラー」。未設定なら既定の色（`BIRTHDAY_COLOR`）。誕生日の予定はラベルを持たない
 - 誕生日の予定はタイトルの前にケーキの画像（`public/icons/birthday_cake.png`、`BIRTHDAY_ICON`）を表示する（月のマスの予定チップ・日別の予定一覧・これから7日間の予定）。`CalendarEvent.iconImage` に画像の URL を渡すと表示される
 

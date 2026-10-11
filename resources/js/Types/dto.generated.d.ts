@@ -72,6 +72,7 @@ participantIds: Array<string>;
 rrule?: string;
 isRecurring: boolean;
 isBirthday: boolean;
+isHoliday: boolean;
 };
 export type CalendarEventsRequest = {
 from: string;
@@ -100,6 +101,7 @@ isVirtual: boolean;
 };
 export type CalendarSettingsResult = {
 birthdayColor?: string;
+showHolidays: boolean;
 };
 export type CategoriesPageResult = {
 categories: Array<CategoryData>;
@@ -471,6 +473,7 @@ labels: Array<CalendarLabelInputData>;
 };
 export type UpdateCalendarSettingsRequest = {
 birthdayColor?: string;
+showHolidays?: boolean;
 };
 export type UpdateCategoryRequest = {
 name: string;

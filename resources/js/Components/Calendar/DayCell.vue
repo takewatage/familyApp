@@ -22,6 +22,8 @@ const maxEvents = computed(() => props.maxEvents ?? 2)
 const visibleEvents = computed(() =>
     props.cell.events.slice(0, maxEvents.value),
 )
+/** 祝日・休日の日（日付の数字を日曜と同じ色にする） */
+const isHoliday = computed(() => props.cell.events.some((ev) => ev.isHoliday))
 const overflowCount = computed(() =>
     Math.max(0, props.cell.events.length - maxEvents.value),
 )
@@ -43,6 +45,7 @@ function onClick(): void {
             'day-cell--selected': selected,
             'day-cell--sun': cell.dow === 0,
             'day-cell--sat': cell.dow === 6,
+            'day-cell--holiday': isHoliday,
         }"
         @click="onClick">
         <!-- 日付番号: slotで差し替え可能 -->
@@ -71,7 +74,8 @@ function onClick(): void {
                     v-for="ev in visibleEvents"
                     :key="ev.id"
                     class="day-cell__event"
-                    :style="{ background: resolveEventColor(ev), color: eventTextColor(ev) }">
+                    :class="{ 'day-cell__event--holiday': ev.isHoliday }"
+                    :style="ev.isHoliday ? undefined : { background: resolveEventColor(ev), color: eventTextColor(ev) }">
                     <img
                         v-if="ev.iconImage"
                         :src="ev.iconImage"
@@ -168,6 +172,11 @@ function onClick(): void {
     color: rgb(var(--v-theme-info));
 }
 
+/* 祝日は土曜でも赤（土曜の指定より後に書く） */
+.day-cell--holiday .day-cell__num:not(.day-cell__num--today) {
+    color: rgb(var(--v-theme-error));
+}
+
 .day-cell__events {
     display: flex;
     flex-direction: column;
@@ -190,6 +199,12 @@ function onClick(): void {
     text-overflow: clip;
     line-height: 1.3;
     flex-shrink: 0;
+}
+
+/* 祝日: 予定と見分けられるよう、塗りつぶさず赤文字・薄い赤の背景にする */
+.day-cell__event--holiday {
+    background: rgba(var(--v-theme-error), 0.12);
+    color: rgb(var(--v-theme-error));
 }
 
 .day-cell__event-icon {

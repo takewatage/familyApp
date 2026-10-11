@@ -24,7 +24,7 @@ family-app/
 │   │       └── Concerns/             # コントローラー共通トレイト（AuthorizesFamilyOwnership, ProvidesBudgetOptions）
 │   ├── Models/                       # Eloquentモデル（User, Family, VirtualUser, Task等）
 │   ├── Policies/                     # Laravel認可ポリシー（FamilyPolicy等）
-│   ├── Services/                     # ビジネスロジック（CurrentFamilyService, FamilyMemberService, CalendarEventService, CalendarLabelService, CalendarSettingsService, FamilyProvisionService, SocialAuthService, ExpenseService, RecurringExpenseGenerator, RecurringExpenseService, BudgetService, BudgetCalculationService, BudgetAlertService, RecurringExpenseReminderService, PwaManifestService等）
+│   ├── Services/                     # ビジネスロジック（CurrentFamilyService, FamilyMemberService, CalendarEventService, CalendarLabelService, CalendarSettingsService, JapaneseHolidayService, FamilyProvisionService, SocialAuthService, ExpenseService, RecurringExpenseGenerator, RecurringExpenseService, BudgetService, BudgetCalculationService, BudgetAlertService, RecurringExpenseReminderService, PwaManifestService等）
 │   │   └── Concerns/                 # サービス共通トレイト（ValidatesFamilyMember）
 │   └── Support/                      # 共通ヘルパー（BudgetScopeRules: カテゴリー family スコープ validation / CalendarRecurrence: 予定の RRULE の検証・展開）
 ├── database/
@@ -40,7 +40,7 @@ family-app/
 │   │   │   ├── App/                  # アプリケーション全体コンポーネント
 │   │   │   ├── Auth/                 # 認証関連コンポーネント
 │   │   │   ├── Budget/               # 家計簿コンポーネント（ExpenseForm等）
-│   │   │   ├── Calendar/             # スワイプカレンダー（SwipeCalendar, MonthGrid, DayCell, 各種Sheet, EventEditForm, RecurrenceField, RecurrenceScopeDialog, ParticipantSelectSheet, ParticipantAvatars, LabelSelectSheet, LabelEditForm, CalendarSettingsSheet）
+│   │   │   ├── Calendar/             # スワイプカレンダー（SwipeCalendar, MonthGrid, DayCell, 各種Sheet, EventEditForm, RecurrenceField, RecurrenceScopeDialog, ParticipantSelectSheet, ParticipantAvatars, LabelSelectSheet, LabelEditForm, CalendarSettingsSheet, EventMemo）
 │   │   │   ├── Common/               # 共通コンポーネント（再利用可能。PwaUpdateNotifier, DatePickerDialog, TimePickerDialog, PickerField 等）
 │   │   │   ├── Dok/                  # Dok機能コンポーネント
 │   │   │   ├── Family/               # 家族設定・メンバー管理・切り替えコンポーネント（FamilyPwaSettingsForm, FamilyImageSettingsForm 等）

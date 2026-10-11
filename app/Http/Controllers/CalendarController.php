@@ -10,6 +10,7 @@ use App\Services\CalendarLabelService;
 use App\Services\CalendarSettingsService;
 use App\Services\CurrentFamilyService;
 use App\Services\FamilyMemberService;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -28,7 +29,7 @@ class CalendarController extends Controller
      * 参加者の選択肢（現在の家族のメンバー・仮想ユーザー）とラベルを渡す。
      * 予定は表示中の月に合わせて画面から GET /calendar/events で取得する。
      */
-    public function index(): Response
+    public function index(Request $request): Response
     {
         $family = $this->currentFamilyService->getCurrentFamily();
 
@@ -53,7 +54,7 @@ class CalendarController extends Controller
         return Inertia::render('Calendar/Index', CalendarPageResult::from([
             'participants' => [...$members, ...$virtualUsers],
             'labels' => $this->calendarLabelService->list($family),
-            'settings' => $this->calendarSettingsService->get($family),
+            'settings' => $this->calendarSettingsService->get($family, $request->user()),
         ]));
     }
 }

@@ -28,6 +28,10 @@ export interface CalendarEvent {
     icon?: string
     /** タイトルの前に表示する画像アイコンの URL（例: 誕生日のケーキ） */
     iconImage?: string
+    /** 祝日・休日（日付の数字を日曜と同じ色にし、予定とは違う見た目で表示する） */
+    isHoliday?: boolean
+    /** メモ（予定一覧の時刻の下に表示する） */
+    memo?: string | null
     /** 予定に関係する人（リストの右端にアイコンを表示する） */
     participants?: CalendarParticipant[]
     /** 任意の追加データ。利用側が自由に使ってよい。 */

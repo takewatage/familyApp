@@ -8,6 +8,7 @@ import { Head, usePage } from '@inertiajs/vue3'
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
 import SwipeCalendar from '@/Components/Calendar/SwipeCalendar.vue'
 import EventEditForm from '@/Components/Calendar/EventEditForm.vue'
+import EventMemo from '@/Components/Calendar/EventMemo.vue'
 import ParticipantAvatars from '@/Components/Calendar/ParticipantAvatars.vue'
 import RecurrenceScopeDialog from '@/Components/Calendar/RecurrenceScopeDialog.vue'
 import CalendarSettingsSheet from '@/Components/Calendar/CalendarSettingsSheet.vue'
@@ -17,7 +18,7 @@ import { useDialogService } from '@/Composables/Common/useDialogService'
 import { useConfirmDialog } from '@/Composables/Common/useConfirmDialogService'
 import { fromDateKey, toDateKey, todayKey } from '@/Utils/calendarDate'
 import { resolveEventColor } from '@/Utils/calendarColor'
-import { BIRTHDAY_COLOR, BIRTHDAY_ICON, DEFAULT_CALENDAR_COLOR } from '@/Constants/calendarColors'
+import { BIRTHDAY_COLOR, BIRTHDAY_ICON, DEFAULT_CALENDAR_COLOR, HOLIDAY_COLOR } from '@/Constants/calendarColors'
 import type {
     CalendarEvent,
     CalendarLabel,
@@ -60,7 +61,7 @@ const { confirm } = useConfirmDialog()
 
 // ---------------------------------------------------------------- カレンダー設定
 
-/** 家族のカレンダー設定（誕生日のラベル等） */
+/** カレンダー設定（誕生日のカラーは家族で共有、祝日の表示はユーザーごと） */
 const settings = ref<CalendarSettingsResult>({ ...(props.settings ?? {}) })
 const settingsOpen = ref(false)
 
@@ -89,6 +90,20 @@ async function onBirthdayColorChange(color: string | null): Promise<void> {
     } catch {
         // エラーは client が表示する
     }
+}
+
+/** 祝日はサーバーが設定に合わせて含める・含めないを決めるため、変更したら予定を取り直す */
+async function onShowHolidaysChange(value: boolean): Promise<void> {
+    try {
+        const res = await calendarApi.updateSettings({ showHolidays: value })
+
+        settings.value = res.data.settings
+    } catch {
+        // エラーは client が表示する
+        return
+    }
+
+    await fetchEvents()
 }
 
 // ---------------------------------------------------------------- 予定の取得
@@ -138,11 +153,17 @@ async function fetchMonth(): Promise<void> {
     }
 }
 
+// 設定の切り替えが続いたとき、古い結果で上書きしないよう最新のリクエストだけを反映する
+let upcomingSeq = 0
+
 /** 「これから7日間」は表示中の月に関係しないため、月移動では取り直さない */
 async function fetchUpcoming(): Promise<void> {
+    const seq = ++upcomingSeq
     const res = await calendarApi.events(todayKey(), keyFromToday(6))
 
-    upcomingResults.value = res.data.events
+    if (seq === upcomingSeq) {
+        upcomingResults.value = res.data.events
+    }
 }
 
 /** 保存・削除の後: 表示中の月と「これから7日間」の両方を取り直す */
@@ -175,12 +196,16 @@ function toCalendarEvent(r: CalendarEventResult): CalendarEvent {
         id: `${r.id}:${r.occurrenceDate}`,
         title: r.title,
         time: formatTime(r),
+        memo: r.memo,
         // 誕生日はカレンダー設定の「誕生日のカラー」（未設定なら既定の色）
-        color: r.isBirthday
-            ? (settings.value.birthdayColor ?? BIRTHDAY_COLOR)
-            : (labelColor.value.get(r.labelId ?? '') ?? DEFAULT_CALENDAR_COLOR),
+        color: r.isHoliday
+            ? HOLIDAY_COLOR
+            : r.isBirthday
+                ? (settings.value.birthdayColor ?? BIRTHDAY_COLOR)
+                : (labelColor.value.get(r.labelId ?? '') ?? DEFAULT_CALENDAR_COLOR),
         icon: r.isBirthday ? 'mdi-cake-variant' : r.isRecurring ? 'mdi-repeat' : undefined,
         iconImage: r.isBirthday ? BIRTHDAY_ICON : undefined,
+        isHoliday: r.isHoliday,
         participants: participants.value.filter((p) => r.participantIds.includes(p.id)),
         meta: { result: r },
     }
@@ -198,7 +223,8 @@ function toEventMap(results: CalendarEventResult[]): EventMap {
         while (d <= last) {
             const key = toDateKey(d)
 
-            map[key] = [...(map[key] ?? []), event]
+            // 祝日はその日の先頭に置く（前の日から続く複数日の予定より前。サーバーの並びは開始日順のため）
+            map[key] = event.isHoliday ? [event, ...(map[key] ?? [])] : [...(map[key] ?? []), event]
             d.setDate(d.getDate() + 1)
         }
     }
@@ -346,11 +372,11 @@ async function openAddDialog(): Promise<void> {
     })
 }
 
-// 日別の予定一覧で予定をタップしたら、同じフォームを編集モードで開く（誕生日は編集できない）
+// 日別の予定一覧で予定をタップしたら、同じフォームを編集モードで開く（誕生日・祝日は編集できない）
 async function onEventClick(payload: { date: DateKey; event: CalendarEvent }): Promise<void> {
     const r = payload.event.meta?.result as CalendarEventResult | undefined
 
-    if (!r || r.isBirthday) {
+    if (!r || r.isBirthday || r.isHoliday) {
         return
     }
 
@@ -460,7 +486,8 @@ function toEditModel(r: CalendarEventResult): EventEditModel {
             v-model:open="settingsOpen"
             :settings="settings"
             @edit-labels="openLabelEditorFromSettings"
-            @update-birthday-color="onBirthdayColorChange" />
+            @update-birthday-color="onBirthdayColorChange"
+            @update-show-holidays="onShowHolidaysChange" />
 
         <div class="d-flex justify-end pr-4 pt-2">
             <v-btn
@@ -503,6 +530,9 @@ function toEditModel(r: CalendarEventResult): EventEditModel {
                                     :participants="event.participants"
                                     :size="32" />
                             </template>
+                            <EventMemo
+                                v-if="event.memo"
+                                :memo="event.memo" />
                         </v-list-item>
                     </template>
                 </v-list>
